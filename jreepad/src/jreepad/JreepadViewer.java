@@ -35,7 +35,8 @@ import java.lang.reflect.*;
 
 public class JreepadViewer extends JFrame
 {
-  private static JreepadViewer theApp;
+  private /* static */ JreepadViewer theApp;
+  private static Vector theApps = new Vector(1,1);
   private Box toolBar;
   private JreepadView theJreepad;
   private Container content;
@@ -97,6 +98,7 @@ public class JreepadViewer extends JFrame
   
   private JMenuBar menuBar;
   private JMenu fileMenu;
+  private JMenuItem newWindowMenuItem;
   private JMenuItem newMenuItem;
   private JMenuItem openMenuItem;
     private JMenu openRecentMenu;
@@ -161,6 +163,7 @@ public class JreepadViewer extends JFrame
   }
   public JreepadViewer(String fileNameToLoad)
   {
+    theApp = this;
     // Check if a preferences file exists - and if so, load it
     try
     {
@@ -208,6 +211,9 @@ public class JreepadViewer extends JFrame
     newMenuItem = new JMenuItem("New");
     newMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { newAction();}});
     fileMenu.add(newMenuItem);
+    newWindowMenuItem = new JMenuItem("New window");
+    newWindowMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { new JreepadViewer();}});
+    fileMenu.add(newWindowMenuItem);
     openMenuItem = new JMenuItem("Open");
     openMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {openAction();}});
     fileMenu.add(openMenuItem);
@@ -1032,6 +1038,7 @@ public class JreepadViewer extends JFrame
     nodeUrlDisplayDialog.setBounds((int)(wndSize.width*0.1f),(int)(chosenHeight*0.7f),
               (int)(chosenWidth*1.3f), chosenHeight/3);
 
+    theApps.add(theApp);
     macOSXRegistration();
 
     setVisible(true);
@@ -1040,9 +1047,9 @@ public class JreepadViewer extends JFrame
   public static void main(String[] args)
   {
     if(args.length==0)
-      theApp = new JreepadViewer();
+      /* theApp = */ new JreepadViewer();
     else if(args.length==1)
-      theApp = new JreepadViewer(args[0]);
+      /* theApp = */ new JreepadViewer(args[0]);
     else
       System.err.println("Only one (optional) argument can be passed - the name of the HJT file to load.");
   }

@@ -423,18 +423,44 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
   {
     public int compare(Object o1, Object o2)
     {
-      return ((JreepadNode)o1).getTitle().compareToIgnoreCase(
-            ((JreepadNode)o2).getTitle());
+//      return ((JreepadNode)o1).getTitle().compareToIgnoreCase(
+//            ((JreepadNode)o2).getTitle());
+      return ((JreepadNode)o1).compareTo(o2);
     }
     public boolean equals(Object obj)
     {
       return obj.equals(this); // Lazy!
     }
   }
-  public int compareTo(Object o)
+  public int OLDSIMPLEcompareTo(Object o)
   {
     return getTitle().compareToIgnoreCase(
             ((JreepadNode)o).getTitle());
+  }
+  // The following function is a halfway-house on the way to "natural numerical ordering"
+  public int compareTo(Object o)
+  {
+    String a = getTitle();
+    String b = ((JreepadNode)o).getTitle();
+    if(a.length()!=0 && b.length()!=0 && Character.isDigit(a.charAt(0)) && Character.isDigit(b.charAt(0)))
+    {
+      // Both strings begin with digits - so implement natural numerical ordering here
+      StringBuffer aBuf = new StringBuffer("");
+      StringBuffer bBuf = new StringBuffer("");
+      int i;
+      for(i=0; i<a.length(); i++)
+        if(Character.isDigit(a.charAt(i)))
+          aBuf.append(a.charAt(i));
+        else
+          break;
+      for(i=0; i<b.length(); i++)
+        if(Character.isDigit(b.charAt(i)))
+          bBuf.append(b.charAt(i));
+        else
+          break;
+      return (new Integer(aBuf.toString())).compareTo(new Integer(bBuf.toString()));
+    }
+    return a.compareToIgnoreCase(b);
   }
   // End of: Stuff to use Java's built-in mergesort
 
