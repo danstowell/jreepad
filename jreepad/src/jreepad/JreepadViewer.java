@@ -45,6 +45,8 @@ public class JreepadViewer extends JFrame
 //  private static final String[] fonts = GraphicsEnvironment.getLocalGraphicsEnvironment().getAvailableFontFamilyNames(null);  
 //  private static final String[] fontSizes = new String[] {"8","9","10","11","12","13","14","16","18","20","24","30","36"};
 
+  private File tempToBrowserFile;
+
   private JFileChooser fileChooser;
   
   private String windowTitle;
@@ -127,6 +129,8 @@ public class JreepadViewer extends JFrame
   private JMenuItem downMenuItem;
   private JMenuItem indentMenuItem;
   private JMenuItem outdentMenuItem;
+  private JMenuItem expandAllMenuItem;
+  private JMenuItem collapseAllMenuItem;
   private JMenuItem sortMenuItem;
   private JMenuItem sortRecursiveMenuItem;
   private JMenu searchMenu;
@@ -306,12 +310,12 @@ public class JreepadViewer extends JFrame
     outdentMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { theJreepad.outdentCurrentNode(); theJreepad.returnFocusToTree(); setWarnAboutUnsaved(true);updateWindowTitle(); }});
     editMenu.add(outdentMenuItem);
     editMenu.add(new JSeparator());
-    sortMenuItem = new JMenuItem("Sort children (one level)");
-    sortMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { theJreepad.sortChildren(); setWarnAboutUnsaved(true);updateWindowTitle(); }});
-    editMenu.add(sortMenuItem);
-    sortRecursiveMenuItem = new JMenuItem("Sort children (all levels)");
-    sortRecursiveMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { theJreepad.sortChildrenRecursive(); setWarnAboutUnsaved(true);updateWindowTitle(); }});
-    editMenu.add(sortRecursiveMenuItem);
+    expandAllMenuItem = new JMenuItem("Expand subtree");
+    expandAllMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { theJreepad.expandAllCurrentNode(); }});
+    editMenu.add(expandAllMenuItem);
+    collapseAllMenuItem = new JMenuItem("Collapse subtree");
+    collapseAllMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { theJreepad.collapseAllCurrentNode(); }});
+    editMenu.add(collapseAllMenuItem);
     //
     searchMenuItem = new JMenuItem("Search");
     searchMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { openSearchDialog(); }});
@@ -332,6 +336,13 @@ public class JreepadViewer extends JFrame
     insertDateMenuItem = new JMenuItem("Insert date");
     insertDateMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { insertDate(); }});
     searchMenu.add(insertDateMenuItem);
+    searchMenu.add(new JSeparator());
+    sortMenuItem = new JMenuItem("Sort children (one level)");
+    sortMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { theJreepad.sortChildren(); setWarnAboutUnsaved(true);updateWindowTitle(); }});
+    searchMenu.add(sortMenuItem);
+    sortRecursiveMenuItem = new JMenuItem("Sort children (all levels)");
+    sortRecursiveMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { theJreepad.sortChildrenRecursive(); setWarnAboutUnsaved(true);updateWindowTitle(); }});
+    searchMenu.add(sortRecursiveMenuItem);
     //
     viewBothMenuItem = new JMenuItem("Both tree and article");
     viewBothMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { setViewMode(JreepadPrefs.VIEW_BOTH); }});
@@ -552,6 +563,10 @@ public class JreepadViewer extends JFrame
     indentMenuItem.setAccelerator(KeyStroke.getKeyStroke(']', MENU_MASK));
     outdentMenuItem.setMnemonic('o');
     outdentMenuItem.setAccelerator(KeyStroke.getKeyStroke('[', MENU_MASK));
+    expandAllMenuItem.setMnemonic('x');
+    expandAllMenuItem.setAccelerator(KeyStroke.getKeyStroke('=', MENU_MASK));
+    collapseAllMenuItem.setMnemonic('l');
+    collapseAllMenuItem.setAccelerator(KeyStroke.getKeyStroke('-', MENU_MASK));
     deleteMenuItem.setMnemonic('k');
     deleteMenuItem.setAccelerator(KeyStroke.getKeyStroke('K', MENU_MASK));
     searchMenu.setMnemonic('t');
@@ -1012,6 +1027,8 @@ public class JreepadViewer extends JFrame
     else
       getPrefs().saveLocation = null;
 
+    // Make sure the temporary file doesn't exist?
+    tempToBrowserFile = new File(System.getProperty("user.home"), "TMPjreeprXOX.html");
 
     // Set close operation
     setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
@@ -1367,9 +1384,7 @@ public class JreepadViewer extends JFrame
 
 		String output = theJreepad.getCurrentNode().exportAsHtml();
 
-        File outFile = new File(System.getProperty("user.home"), "TMPjreepr.html");
-
-        FileOutputStream fO = new FileOutputStream(outFile);
+        FileOutputStream fO = new FileOutputStream(tempToBrowserFile);
         DataOutputStream dO = new DataOutputStream(fO);
         dO.writeBytes(output);
         dO.close();
@@ -1406,9 +1421,8 @@ public class JreepadViewer extends JFrame
     }
 
     // Tidy up temporary file, if exists
-    File outFile = new File(System.getProperty("user.home"), "TMPjreepr.html");
-    if(outFile.isFile())
-      outFile.delete();
+    if(tempToBrowserFile.isFile())
+      tempToBrowserFile.delete();
 
     // Save preferences
     getPrefs().windowLeft = getX();

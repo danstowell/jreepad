@@ -569,6 +569,41 @@ public class JreepadView extends Box
   {
     tree.requestFocus();
   }
+  
+  public void expandAllCurrentNode()
+  {
+    expandAll(currentNode, tree.getLeadSelectionPath());
+  }
+  public void expandAll(JreepadNode thisNode, TreePath tp)
+  {
+    // It's at this point that we expand the current element
+    tree.expandPath(tp);
+    
+    Enumeration getKids = thisNode.children();
+    JreepadNode thisKid;
+    while(getKids.hasMoreElements())
+    {
+      thisKid = (JreepadNode)getKids.nextElement();
+      expandAll(thisKid, tp.pathByAddingChild(thisKid));
+    }
+  }
+  public void collapseAllCurrentNode()
+  {
+    collapseAll(currentNode, tree.getLeadSelectionPath());
+  }
+  public void collapseAll(JreepadNode thisNode, TreePath tp)
+  {
+    Enumeration getKids = thisNode.children();
+    JreepadNode thisKid;
+    while(getKids.hasMoreElements())
+    {
+      thisKid = (JreepadNode)getKids.nextElement();
+      collapseAll(thisKid, tp.pathByAddingChild(thisKid));
+    }
+    // It's at this point that we collapse the current element
+    tree.collapsePath(tp);
+  }
+
 
   // Functions and inner class for searching nodes
   private JreepadSearchResult[] searchResults;
