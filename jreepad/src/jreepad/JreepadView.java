@@ -53,6 +53,11 @@ public class JreepadView extends Box
   private JEditorPane editorPane;
   private JSplitPane splitPane;
 
+  // The following boolean should be FALSE while we're changing from node to node, and true otherwise
+  private boolean copyEditorPaneContentToNodeContent = true;
+
+  private boolean warnAboutUnsaved = false;
+
   // Things concerned with the "undo" function
   private JreepadNode oldRootForUndo, oldCurrentNodeForUndo;
   private TreePath[] oldExpandedPaths;
@@ -167,6 +172,24 @@ public class JreepadView extends Box
 
     editorPane = new JEditorPane("text/plain", root.getContent());
     editorPane.setEditable(true);
+    // Add a listener to make sure the editorpane's content is always stored when it changes
+    editorPane.addCaretListener(new CaretListener() {
+    				public void caretUpdate(CaretEvent e)
+    				{
+    				  if(!copyEditorPaneContentToNodeContent)
+    				    return; // i.e. we are deactivated while changing from node to node
+    				
+    				  if(!editorPane.getText().equals(currentNode.getContent()))
+    				  {
+    				    // System.out.println("UPDATE - I'd now overwrite node content with editorpane content");
+    				    currentNode.setContent(editorPane.getText());
+    				    setWarnAboutUnsaved(true);
+    				  }
+    				  else
+    				  {
+    				    // System.out.println("  No need to update content.");
+    				  }
+    				}});
     articleView = new JScrollPane(editorPane, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
     articleView.addComponentListener(new ComponentListener()
     					{
@@ -260,12 +283,14 @@ public class JreepadView extends Box
   */
   private void setCurrentNode(JreepadNode n)
   {
+    copyEditorPaneContentToNodeContent = false; // Deactivate the caret-listener, effectively
     if(currentNode != null)
     {
       currentNode.setContent(editorPane.getText());
     }
     currentNode = n;
     editorPane.setText(n.getContent());
+    copyEditorPaneContentToNodeContent = true; // Reactivate the caret listener
   }
 
   public JTree getTree()
@@ -948,6 +973,16 @@ System.out.println(err);
     
   }
   // End of: Searching (for wikilike action)
+
+  public boolean warnAboutUnsaved()
+  {
+    return warnAboutUnsaved;
+  }
+  void setWarnAboutUnsaved(boolean yo)
+  {
+    warnAboutUnsaved = yo;
+  }
+
 
   class JreepadTreeModelListener implements TreeModelListener
   {
