@@ -162,6 +162,26 @@ public class JreepadView extends Box
     treeModel.reload(currentNode.getParent());
   }
   
+  public JreepadNode addNodeAbove()
+  {
+    int index = currentNode.getIndex();
+    if(index==-1)
+      return null;
+    JreepadNode parent = currentNode.getParentNode();
+    JreepadNode ret = parent.addChild(index);
+    treeModel.nodesWereInserted(parent, new int[]{index});
+    return ret;
+  }
+  public JreepadNode addNodeBelow()
+  {
+    int index = currentNode.getIndex();
+    if(index==-1)
+      return null;
+    JreepadNode parent = currentNode.getParentNode();
+    JreepadNode ret = parent.addChild(index+1);
+    treeModel.nodesWereInserted(parent, new int[]{index+1});
+    return ret;
+  }
   public JreepadNode addNode()
   {
     JreepadNode ret = currentNode.addChild();

@@ -224,6 +224,12 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode
     children.add(theChild);
     return theChild;
   }
+  public JreepadNode addChild(int index)
+  {
+    JreepadNode theChild = new JreepadNode(this);
+    children.add(index, theChild);
+    return theChild;
+  }
   
   public int getIndex(TreeNode child)
   {
@@ -237,6 +243,14 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode
     if(getParent()==null)
       return -1;
     return getParent().getIndex(this);
+  }
+  
+  public void sortChildren()
+  {
+  }
+
+  public void sortChildrenRecursive()
+  {
   }
   
   public boolean getAllowsChildren() { return true; } // Required by TreeNode interface
