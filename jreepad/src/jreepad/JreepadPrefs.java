@@ -72,6 +72,13 @@ public class JreepadPrefs implements Serializable
   
   Vector openRecentList;
   int openRecentListLength;
+  File getMostRecentFile() // This is used, specifically, by the command-line "find" tool
+  {
+    if(openRecentList.size()==0)
+      return null;
+    else
+      return (File)openRecentList.get(0);
+  }  
   
   Font treeFont;
   Font articleFont;

@@ -534,7 +534,7 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
     for(int i=0; i<childrenArray.length; i++)
       children.add((JreepadNode)childrenArray[i]);
   }
-  private class OurSortComparator implements Comparator
+  private static class OurSortComparator implements Comparator, Serializable
   {
     public int compare(Object o1, Object o2)
     {
@@ -542,10 +542,16 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
 //            ((JreepadNode)o2).getTitle());
       return ((JreepadNode)o1).compareTo(o2);
     }
+/*
     public boolean equals(Object obj)
     {
       return obj.equals(this); // Lazy!
     }
+    public int hashCode() // Apparently this is required by the contract of Object.hashCode()
+    {
+      return this.hashCode();
+    }
+*/
   }
   public int OLDSIMPLEcompareTo(Object o)
   {

@@ -36,7 +36,7 @@ public class JreepadView extends Box
 
   // Code to ensure that the article word-wraps follows
   //   - contributed by Michael Labhard based on code found on the web...
-  class JPEditorKit extends StyledEditorKit
+  static class JPEditorKit extends StyledEditorKit
   {
 	public ViewFactory getViewFactory()
 	{
@@ -44,7 +44,7 @@ public class JreepadView extends Box
 	}
   }
 
-  class JPRTFViewFactory implements ViewFactory
+  static class JPRTFViewFactory implements ViewFactory
   {
 	public View create(Element elem)
 	{
@@ -66,8 +66,8 @@ public class JreepadView extends Box
 	}
   }
 
-  private short paraRightMargin = 0; 
-  class JPParagraphView extends javax.swing.text.ParagraphView
+  private static short paraRightMargin = 0; 
+  static class JPParagraphView extends javax.swing.text.ParagraphView
   {
 	public JPParagraphView(Element e)
 	{
@@ -89,6 +89,8 @@ public class JreepadView extends Box
   private JScrollPane articleView;
   private JEditorPane editorPane;
   private JSplitPane splitPane;
+
+  private JreepadSearcher searcher;
 
   // The following boolean should be FALSE while we're changing from node to node, and true otherwise
   private boolean copyEditorPaneContentToNodeContent = true;
@@ -144,6 +146,8 @@ public class JreepadView extends Box
     renderer.setClosedIcon(null);
     renderer.setLeafIcon(null);
     tree.setCellRenderer(renderer);
+
+    searcher = new JreepadSearcher(root);
 
     //Listen for when the selection changes.
     tree.addTreeSelectionListener(new TreeSelectionListener()
@@ -649,11 +653,30 @@ public class JreepadView extends Box
 
 
   // Functions and inner class for searching nodes
+  public boolean performSearch(String inNodes, String inArticles, int searchWhat // 0=selected, 1=all
+  							, boolean orNotAnd, boolean caseSensitive, int maxResults)
+  {
+    switch(searchWhat)
+    {
+      case 0: // search selected node
+        searcher.performSearch(inNodes, inArticles, tree.getSelectionPath(), orNotAnd, caseSensitive, maxResults);
+        break;
+      default: // case 1==search whole tree
+        searcher.performSearch(inNodes, inArticles, new TreePath(root), orNotAnd, caseSensitive, maxResults);
+        break;
+    }
+	return true;
+  }
+  public JreepadSearcher.JreepadSearchResult[] getSearchResults()
+  {
+    return searcher.getSearchResults();
+  }
+/*
   private JreepadSearchResult[] searchResults;
   private Vector searchResultsVec;
   private Object foundObject;
-  public boolean performSearch(String inNodes, String inArticles, int searchWhat /* 0=selected, 1=all */,
-  							boolean orNotAnd, boolean caseSensitive, int maxResults)
+  public boolean performSearch(String inNodes, String inArticles, int searchWhat // 0=selected, 1=all
+  							, boolean orNotAnd, boolean caseSensitive, int maxResults)
   {
     searchResults = null;
     searchResultsVec = new Vector();
@@ -669,17 +692,13 @@ public class JreepadView extends Box
         break;
     }
 
-  //  if(searchResultsVec.size()>0)
-  //  {
-      searchResults = new JreepadSearchResult[searchResultsVec.size()];
-      for(int i=0; i<searchResults.length; i++)
-      {
-        foundObject = searchResultsVec.get(i);
-        searchResults[i] = (JreepadSearchResult)foundObject;
-      }
-      return true;
-  //  }
-  //  return false;
+	searchResults = new JreepadSearchResult[searchResultsVec.size()];
+	for(int i=0; i<searchResults.length; i++)
+	{
+	  foundObject = searchResultsVec.get(i);
+	  searchResults[i] = (JreepadSearchResult)foundObject;
+	}
+	return true;
   }
   private static final int articleQuoteMaxLen = 40;
   private void recursiveSearchNode(String inNodes, String inArticles, JreepadNode thisNode, TreePath pathSoFar,
@@ -772,6 +791,8 @@ public class JreepadView extends Box
     public JreepadNode getNode()	{ return node;		}
   }
   // End of: functions and inner class for searching nodes
+*/
+
 
   public void addChildrenFromTextFiles(File[] inFiles) throws IOException
   {

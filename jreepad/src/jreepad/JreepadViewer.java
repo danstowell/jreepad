@@ -166,7 +166,7 @@ public class JreepadViewer extends JFrame
   private JMenuItem aboutMenuItem;
   private JMenuItem licenseMenuItem;
   
-  private boolean htmlExportOkChecker = false; // Just used to check whether OK or Cancel has been pressed in a certain dialogue box
+  // private boolean htmlExportOkChecker = false; // Just used to check whether OK or Cancel has been pressed in a certain dialogue box
   
   // Check whether we are on Mac OS X.  This is crucial to loading and using the OSXAdapter class.
   public static boolean MAC_OS_X = (System.getProperty("os.name").toLowerCase().startsWith("mac os x"));
@@ -272,9 +272,9 @@ public class JreepadViewer extends JFrame
       exportMenu.add(exportHjtMenuItem);
       exportHtmlMenuItem = new JMenuItem("...subtree to HTML");
       exportHtmlMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {
-                  		    htmlExportOkChecker = false;
-                  		    htmlExportDialog.show();
-                  		    if(htmlExportOkChecker)
+     //DELETE             		    htmlExportOkChecker = false;
+     //DELETE             		    htmlExportDialog.show();
+     //DELETE             		    if(htmlExportOkChecker)
                   		      exportAction(FILE_FORMAT_HTML);}});
       exportMenu.add(exportHtmlMenuItem);
       exportSimpleXmlMenuItem = new JMenuItem("...subtree to simple XML");
@@ -800,7 +800,7 @@ public class JreepadViewer extends JFrame
       }
       public int getRowCount()
       {
-        JreepadView.JreepadSearchResult[] results = theJreepad.getSearchResults();
+        JreepadSearcher.JreepadSearchResult[] results = theJreepad.getSearchResults();
         if(results==null || results.length==0)
           return 1;
         else
@@ -808,7 +808,7 @@ public class JreepadViewer extends JFrame
       }
       public Object getValueAt(int row, int col)
       {
-        JreepadView.JreepadSearchResult[] results = theJreepad.getSearchResults();
+        JreepadSearcher.JreepadSearchResult[] results = theJreepad.getSearchResults();
         if(results==null || results.length==0)
           switch(col)
           {
@@ -845,7 +845,7 @@ public class JreepadViewer extends JFrame
     {
       public void mouseClicked(MouseEvent e)
       {
-        JreepadView.JreepadSearchResult[] results = theJreepad.getSearchResults();
+        JreepadSearcher.JreepadSearchResult[] results = theJreepad.getSearchResults();
         int selectedRow = searchResultsTable.getSelectedRow();
         if(results==null || results.length==0 || selectedRow==-1)
           return;
@@ -935,7 +935,7 @@ public class JreepadViewer extends JFrame
     // Finished establishing the autosave dialogue box
 
     // Establish the HTML export dialogue box
-    htmlExportDialog = new JDialog(theApp, "HTML export - options", true);
+/*    htmlExportDialog = new JDialog(theApp, "HTML export - options", true);
     htmlExportDialog.setVisible(false);
     vBox = Box.createVerticalBox();
     hBox = Box.createHorizontalBox();
@@ -989,7 +989,7 @@ public class JreepadViewer extends JFrame
     hBox.add(Box.createGlue());
     vBox.add(hBox);
     htmlExportDialog.getContentPane().add(vBox);
-    // Finished establishing the HTML export dialogue box
+*/    // Finished establishing the HTML export dialogue box
 
     // Establish the prefs dialogue box
     prefsDialog = new JDialog(theApp, "Preferences", true);
@@ -1071,6 +1071,44 @@ public class JreepadViewer extends JFrame
     webSearchPanel.add(webSearchPrefsBox);
     webSearchPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), "Web search"));
     vBox.add(webSearchPanel);
+
+    // Now the HTML export options
+    genPanel = new JPanel();
+    genPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), "HTML export preferences (also used for printing)"));
+    Box htmlVBox = Box.createVerticalBox();
+    hBox = Box.createHorizontalBox();
+    hBox.add(Box.createGlue());
+    hBox.add(new JLabel("Treat text in articles as:"));
+    htmlExportModeSelector = new JComboBox(JreepadNode.getHtmlExportArticleTypes());
+    htmlExportModeSelector.setSelectedIndex(getPrefs().htmlExportArticleType);
+    htmlExportModeSelector.addActionListener(new ActionListener(){
+                               public void actionPerformed(ActionEvent e){ 
+                       if(htmlExportModeSelector.getSelectedIndex()==2)
+                       {
+                         urlsToLinksCheckBox.setEnabled(false);
+                         urlsToLinksCheckBox.setSelected(false);
+                       }
+                       else
+                       {
+                         urlsToLinksCheckBox.setEnabled(true);
+                         urlsToLinksCheckBox.setSelected(getPrefs().htmlExportUrlsToLinks);
+                       }
+                               }});
+    hBox.add(htmlExportModeSelector);
+    hBox.add(Box.createGlue());
+    htmlVBox.add(hBox);
+    htmlVBox.add(urlsToLinksCheckBox = new JCheckBox("Convert URLs to links", getPrefs().htmlExportUrlsToLinks));
+    hBox = Box.createHorizontalBox();
+    hBox.add(Box.createGlue());
+    hBox.add(new JLabel("Which type of 'internal' link to detect:"));
+    htmlExportAnchorTypeSelector = new JComboBox(JreepadNode.getHtmlExportAnchorLinkTypes());
+    htmlExportAnchorTypeSelector.setSelectedIndex(getPrefs().htmlExportAnchorLinkType);
+    hBox.add(htmlExportAnchorTypeSelector);
+    hBox.add(Box.createGlue());
+    htmlVBox.add(hBox);
+    genPanel.add(htmlVBox);
+    vBox.add(genPanel);
+
     
     hBox = Box.createHorizontalBox();
     hBox.add(prefsOkButton = new JButton("OK"));
@@ -1089,6 +1127,12 @@ public class JreepadViewer extends JFrame
 							//		setFontsFromPrefsBox();
 //									getPrefs().wrapToWindow = wrapToWindowCheckBox.isSelected();
 //							        theJreepad.setEditorPaneKit();
+                                    getPrefs().htmlExportArticleType = htmlExportModeSelector.getSelectedIndex();
+                                    getPrefs().htmlExportAnchorLinkType = htmlExportAnchorTypeSelector.getSelectedIndex();
+                                    
+                                    // If exporting as HTML then we ignore this checkbox
+                                    if(htmlExportModeSelector.getSelectedIndex()!=2)
+                                      getPrefs().htmlExportUrlsToLinks = urlsToLinksCheckBox.isSelected();
 									prefsDialog.hide();
                                    }});
     prefsCancelButton.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e){prefsDialog.hide();}});
@@ -1165,8 +1209,8 @@ public class JreepadViewer extends JFrame
               (int)(getPrefs().windowWidth*0.7f),(int)(getPrefs().windowHeight*0.9f));
     autoSaveDialog.setBounds((int)(wndSize.width*0.5f),getPrefs().windowHeight/2,
               getPrefs().windowWidth/2, getPrefs().windowHeight/4);
-    htmlExportDialog.setBounds(getPrefs().windowLeft+getPrefs().windowWidth/4,getPrefs().windowTop+getPrefs().windowHeight/3,
-              (int)(getPrefs().windowWidth*0.8f), getPrefs().windowHeight/3);
+//DELETE    htmlExportDialog.setBounds(getPrefs().windowLeft+getPrefs().windowWidth/4,getPrefs().windowTop+getPrefs().windowHeight/3,
+//DELETE              (int)(getPrefs().windowWidth*0.8f), getPrefs().windowHeight/3);
     prefsDialog.setBounds(getPrefs().windowWidth/2,getPrefs().windowHeight/3,
               getPrefs().windowWidth, getPrefs().windowHeight);
     nodeUrlDisplayDialog.setBounds((int)(wndSize.width*0.1f),(int)(getPrefs().windowHeight*0.7f),
@@ -1176,7 +1220,7 @@ public class JreepadViewer extends JFrame
     //  - but hopefully gives a better mixture of sizes set programmatically and by the OS
     searchDialog.pack();
     autoSaveDialog.pack();
-    htmlExportDialog.pack();
+//DELETE    htmlExportDialog.pack();
     prefsDialog.pack();
     nodeUrlDisplayDialog.pack();
 
@@ -1943,7 +1987,7 @@ public class JreepadViewer extends JFrame
 
 
   // Replacement for the "JSpinner" which is not available in Java 1.3 or 1.2
-  class DSpinner extends Box
+  static class DSpinner extends Box
   {
     private int min, max, val;
     private JTextField textField;
@@ -2003,7 +2047,7 @@ public class JreepadViewer extends JFrame
     
   } // End of class DSpinner
 
-  class ColouredStrip extends JPanel
+  static class ColouredStrip extends JPanel
   {
     Color col;
     ColouredStrip(Color col)
