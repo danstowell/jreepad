@@ -16,7 +16,7 @@ public class JreepadViewer extends JFrame
   private JreepadView theJreepad;
   private Container content;
 //  private JreepadPrefs prefs;
-  private static final File prefsFile = new File(".jreepref");
+  private static final File prefsFile = new File(System.getProperty("user.dir"), ".jreepref");
   
   private boolean warnAboutUnsaved = false;
   
@@ -90,6 +90,7 @@ public class JreepadViewer extends JFrame
   private JMenuItem sortRecursiveMenuItem;
   private JMenu searchMenu;
   private JMenuItem searchMenuItem;
+  private JMenuItem launchUrlMenuItem;
   private JMenu viewMenu;
   private JMenuItem viewBothMenuItem;
   private JMenuItem viewTreeMenuItem;
@@ -100,6 +101,7 @@ public class JreepadViewer extends JFrame
   private JMenuItem prefsMenuItem;
   private JMenu helpMenu;
   private JMenuItem keyboardHelpMenuItem;
+  private JMenuItem linksHelpMenuItem;
   private JMenuItem dragDropHelpMenuItem;
   private JMenuItem aboutMenuItem;
   
@@ -144,7 +146,7 @@ public class JreepadViewer extends JFrame
     //
     fileMenu = new JMenu("File");
     editMenu = new JMenu("Edit");
-    searchMenu = new JMenu("Search");
+    searchMenu = new JMenu("Actions");
     viewMenu = new JMenu("View");
     optionsMenu = new JMenu("Options");
     helpMenu = new JMenu("Help");
@@ -242,6 +244,9 @@ public class JreepadViewer extends JFrame
     searchMenuItem = new JMenuItem("Search");
     searchMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { openSearchDialog(); }});
     searchMenu.add(searchMenuItem);
+    launchUrlMenuItem = new JMenuItem("Follow link in article");
+    launchUrlMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { theJreepad.openURLSelectedInArticle(); }});
+    searchMenu.add(launchUrlMenuItem);
     //
     viewBothMenuItem = new JMenuItem("Both tree and article");
     viewBothMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { setViewMode(JreepadPrefs.VIEW_BOTH); }});
@@ -310,6 +315,53 @@ public class JreepadViewer extends JFrame
               JOptionPane.INFORMATION_MESSAGE); 
     		}});
     helpMenu.add(keyboardHelpMenuItem);
+    linksHelpMenuItem = new JMenuItem("Help with links");
+    linksHelpMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e)
+    		{
+              JOptionPane.showMessageDialog(theApp, 
+              "\nSelect any piece of text in an article," +
+              "\nthen choose \"Actions > Follow link in article\"." +
+              "\n" +
+              "\nTYPES OF LINK:" +
+              "\n" +
+              "\n\"Normal\" link - We've tested these types of link:" +
+              "\n      Web:   e.g. http://jreepad.sourceforge.net" +
+              "\n      Email: e.g. mailto:billg@microsoft.com" +
+              "\n      FTP:   e.g. ftp://ftp.compaq.com/pub/" +
+              "\n      File:  (can't get these to work, on OSX at least)" +
+              "\n" +
+              "\nWiki link - If the selected text begins " +
+              "\n            with \"[[\" and ends with \"]]\" then " +
+              "\n            Jreepad will search for a node of the same " +
+              "\n            title, and jump directly to it. If one " +
+              "\n            isn't found then it'll offer to create one " +
+              "\n            for you. Try it!" +
+              "\n" + 
+              "\nTreepad link - Treepad Lite uses links which begin " +
+              "\n            with \"node://\", and specify the exact path" +
+              "\n            to a different node within the same file."+
+              "\n              e.g. \"node://TreePad manual/Using Treepad\"" +
+              "\n" +
+              "\n" +
+              "\n" +
+              "\n" +
+/*
+              "\n" +
+              "\n" +
+              "\n" +
+              "\n" +
+              "\n" +
+              "\n" +
+              "\n" +
+              "\n[] " +
+              "\n" +
+*/
+              ""
+              ,
+              "Links in Jreepad", 
+              JOptionPane.INFORMATION_MESSAGE); 
+    		}});
+    helpMenu.add(linksHelpMenuItem);
     dragDropHelpMenuItem = new JMenuItem("Help with drag-and-drop");
     dragDropHelpMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e)
     		{
@@ -369,7 +421,7 @@ public class JreepadViewer extends JFrame
               "Jreepad is an open-source Java program\n" +
               "designed to provide the functionality\n" +
               "(including file interoperability) of\n" +
-              "a Windows program called \"Treepad Lite\"\n" +
+              "a Windows program called \"Treepad Lite\",\n" +
               "part of the \"Treepad\" suite of software \n" +
               "written by Henk Hagedoorn.\n" +
               "\n" +
@@ -382,6 +434,7 @@ public class JreepadViewer extends JFrame
               "About Jreepad", 
               JOptionPane.INFORMATION_MESSAGE); 
             }});
+    helpMenu.add(new JSeparator());
     helpMenu.add(aboutMenuItem);
     //
     menuBar.add(fileMenu);
@@ -419,8 +472,9 @@ public class JreepadViewer extends JFrame
     indentMenuItem.setMnemonic('i');
     outdentMenuItem.setMnemonic('o');
     deleteMenuItem.setMnemonic('k');
-    searchMenu.setMnemonic('S');
+    searchMenu.setMnemonic('t');
     searchMenuItem.setMnemonic('s');
+    launchUrlMenuItem.setMnemonic('l');
     viewMenu.setMnemonic('V');
     viewBothMenuItem.setMnemonic('b');
     viewTreeMenuItem.setMnemonic('t');

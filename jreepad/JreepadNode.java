@@ -466,6 +466,14 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
     }
     return ret;
   }
+  
+  public JreepadNode getChildByTitle(String title)
+  {
+    for(int i=0; i<getChildCount(); i++)
+      if(((JreepadNode)getChildAt(i)).getTitle().equals(title))
+        return (JreepadNode)getChildAt(i);
+    return null;
+  }
 
   public String getTitle() { return title; }
   public String getContent() { return content; }

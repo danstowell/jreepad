@@ -38,7 +38,7 @@ public class JreepadPrefs implements Serializable
   
   JreepadPrefs()
   {
-    openLocation = new File("~/");
+    openLocation = new File(System.getProperty("user.dir"));
     
     autoSavePeriod = 10;
     autoSave = false;

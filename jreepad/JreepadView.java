@@ -3,6 +3,7 @@ package jreepad;
 import javax.swing.*;
 import javax.swing.tree.*;
 import javax.swing.event.*;
+import javax.swing.text.BadLocationException;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.Enumeration;
@@ -675,6 +676,202 @@ public class JreepadView extends Box
     oldRootForUndo = null;
   }
   // End of: stuff concerned with undo
+
+  // Stuff concerned with linking
+  public void openURLSelectedInArticle()
+  {
+    String url = editorPane.getSelectedText();
+    if(url == null)
+    {
+      try
+      {
+      String text = editorPane.getText();
+      int startpos = editorPane.getCaretPosition();
+      int endpos = startpos;
+      if(text != null)
+      {
+        // Select the character before/after the current position, and grow it until we hit whitespace...
+        while(startpos>0 && !Character.isWhitespace(editorPane.getText(startpos-1,1).charAt(0)))
+          startpos--;
+        while(endpos<(text.length()-1) && !Character.isWhitespace(editorPane.getText(endpos,1).charAt(0)))
+          endpos++;
+        if(endpos>startpos)
+        {
+          editorPane.setSelectionStart(startpos);
+          editorPane.setSelectionEnd(endpos);
+          url = editorPane.getSelectedText();
+        }
+      }
+      }
+      catch(BadLocationException err)
+      {
+      }
+    }
+    openURL(url);
+  }
+  public static boolean isPureWord(String in)
+  {
+    char[] c = in.toCharArray();
+    for(int i=0; i<c.length; i++)
+      if(c[i]==':' || c[i]=='/' || c[i]=='[' || c[i]==']')
+        return false;
+    return true;
+  }
+  public void openURL(String url)
+  {
+    if(url==null || url=="")
+      return;
+    url = url.trim();
+
+    // Wiki-like links
+    if(url.length()>4 && url.startsWith("[[") && url.endsWith("]]"))
+    {
+      followWikiLink(url.substring(2, url.length()-2));
+      return;
+    }
+    if(isPureWord(url))
+    {
+      followWikiLink(url);
+      return;
+    }
+    
+    // Strip quotes off
+    if(url.length()>2 && url.startsWith("\"") && url.endsWith("\""))
+      url = url.substring(1, url.length()-1);
+
+    // Treepad node:// links
+    if(url.startsWith("node://"))
+    {
+      if(!followTreepadInternalLink(url))
+	    JOptionPane.showMessageDialog(this, "No node found in the current file\nto match that path.", "Not found" , JOptionPane.ERROR_MESSAGE);
+      return;
+    }
+    
+    // It's probably a web-link, so let's do something to it and then try and launch it
+    char[] curl = url.toCharArray();
+    StringBuffer surl = new StringBuffer();
+//    if(url.indexOf(":") == -1)
+//      surl.append("http://");
+    for(int i=0; i<curl.length; i++)
+      if(curl[i]==' ')
+        surl.append("%20");
+      else
+        surl.append(curl[i]);
+    try
+    {
+      BrowserLauncher.openURL(surl.toString());
+    }
+    catch(IOException err)
+    {
+	  JOptionPane.showMessageDialog(this, "I/O error while opening URL:\n"+surl+"\n\nWe'd appreciate it if you could submit a bug report to\nhttp://sourceforge.net/projects/jreepad\nThe browser-launching code is taken from a separate open-source project,\nso bug reporting is particularly important.", "Error" , JOptionPane.ERROR_MESSAGE);
+    }
+  }
+
+  public boolean followTreepadInternalLink(String url)
+  {
+      url = url.substring(7);
+      // Split it at slashes, and then add each one to the new TreePath object as we go
+      Vector pathNames = new Vector();
+      StringBuffer buf = new StringBuffer();
+      char[] curl = url.toCharArray();
+      for(int i=0; i<curl.length; i++)
+        if(curl[i]=='/')
+        {
+          pathNames.add(buf.toString());
+          buf = new StringBuffer();
+        }
+        else
+          buf.append(curl[i]);
+      if(buf.length()>0)
+        pathNames.add(buf.toString());
+
+//      System.out.println(pathNames);
+
+      // OK, so we've got the names into an array. Now how do we actually follow the path?
+      if(pathNames.size()<1 || !((String)pathNames.get(0)).equals(root.getTitle()))
+        return false;
+      TreePath goTo = new TreePath(root);
+      JreepadNode nextNode = root;
+      for(int i=1; i<pathNames.size(); i++)
+      {
+        nextNode = nextNode.getChildByTitle((String)pathNames.get(i));
+        if(nextNode == null)
+          return false;
+        goTo = goTo.pathByAddingChild(nextNode);
+      }
+      tree.setSelectionPath(goTo);
+	  tree.scrollPathToVisible(goTo);
+	  return true;
+  }
+  // End of: stuff concerned with linking
+
+  // Searching (for wikilike action)
+  public void followWikiLink(String text)
+  {
+    TreePath tp = findNearestNodeTitled(text);
+    if(tp == null)
+    {
+	  if(JOptionPane.showConfirmDialog(this, "No node named \n\"" + text + "\"\nwas found. Create it?", "Not found" , JOptionPane.YES_NO_OPTION, JOptionPane.ERROR_MESSAGE)
+	             == JOptionPane.YES_OPTION)
+	  {
+        JreepadNode newNode;
+        TreePath newPath;
+	    newNode = new JreepadNode(text, "", currentNode);
+	    addChild(newNode);
+	    TreePath leadPath = tree.getLeadSelectionPath();
+	    if(leadPath != null)
+	      newPath = leadPath.pathByAddingChild(newNode);
+	    else
+	      newPath = new TreePath(newNode);
+	    
+	    // Now we need to select it... how do we do that?
+	    tree.setSelectionPath(newPath);
+	    tree.scrollPathToVisible(newPath);
+	  }
+    }
+    else
+      tree.setSelectionPath(tp);
+  }
+  public TreePath findNearestNodeTitled(String text)
+  {
+    TreePath curPath = tree.getLeadSelectionPath();
+    TreePath tp;
+    while(curPath != null && curPath.getPathCount()>0)
+    {
+      tp = findChildTitled(text, curPath);
+      if(tp!=null)
+        return tp;
+      // Else try again but using the parent...
+      curPath = curPath.getParentPath();
+    }
+    return null;
+  }
+  public TreePath findChildTitled(String text)
+  {
+    return findChildTitled(text, tree.getLeadSelectionPath());
+  }
+  public TreePath findChildTitled(String text, TreePath pathToNode)
+  {
+    JreepadNode myNode = (JreepadNode)pathToNode.getLastPathComponent();
+    JreepadNode myChild;
+    TreePath childPath;
+    for(int i=0; i<myNode.getChildCount(); i++)
+    {
+      myChild = (JreepadNode)myNode.getChildAt(i);
+      childPath = pathToNode.pathByAddingChild(myChild);
+      if(myChild.getTitle().equals(text))
+        return childPath;
+      else
+      { // Ask the child to search its descendents
+        childPath = findChildTitled(text, childPath);
+        if(childPath!=null)
+          return childPath;
+      }
+    }
+    return null;
+    
+  }
+  // End of: Searching (for wikilike action)
 
   class JreepadTreeModelListener implements TreeModelListener
   {
