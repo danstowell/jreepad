@@ -1,4 +1,4 @@
-package uk.co.mcld.jreepad;
+package jreepad;
 
 import java.io.*;
 
