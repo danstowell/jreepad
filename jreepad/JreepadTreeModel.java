@@ -49,7 +49,10 @@ import java.awt.event.*;
     }
     
 
-
+    public void setRoot(JreepadNode root)
+    {
+      this.root = root;
+    }
 
 
 

@@ -24,6 +24,7 @@ Todo:
 
 public class JreepadView extends Box
 {
+  private static JreepadPrefs prefs;
   private JreepadNode root;
   private JreepadNode currentNode;
   private JreepadNode currentDragDropNode;
@@ -34,6 +35,11 @@ public class JreepadView extends Box
   private JScrollPane articleView;
   private JEditorPane editorPane;
   private JSplitPane splitPane;
+
+  // Things concerned with the "undo" function
+  private JreepadNode oldRootForUndo, oldCurrentNodeForUndo;
+  private TreePath[] oldExpandedPaths;
+  private TreePath oldSelectedPath;
 
   public JreepadView()
   {
@@ -129,7 +135,7 @@ public class JreepadView extends Box
           if(e.isPopupTrigger())
           {
             // Now we can implement the pop-up content menu
-            System.out.println("Context menu would be launched here!");
+      //      System.out.println("Context menu would be launched here!");
           }
         }
       }
@@ -154,33 +160,76 @@ public class JreepadView extends Box
     					  public void componentShown(ComponentEvent e){}
     					}
     					);
+    articleView.getViewport().addChangeListener(new ChangeListener()
+    					{
+    					  public void stateChanged(ChangeEvent e)
+    					  {
+ 			     editorPane.setPreferredSize(articleView.getViewport().getExtentSize());
+    					    editorPane.setSize(articleView.getViewport().getViewSize());
+    					  }
+    					}
+    					);
 
     setViewBoth();
     setCurrentNode(root);
     tree.setSelectionRow(0);
   }
 
-  public void setViewBoth()
-  {   
-      splitPane.setLeftComponent(treeView);    splitPane.setRightComponent(articleView);
-      this.add(splitPane);
-      setSize(getSize()); 
-      editorPane.setSize(articleView.getViewport().getViewSize());
+  public void setViewMode(int mode)
+  {
+//      System.out.println("-------------------------------------------------------------");
+//      System.out.println("editorPane size: " + editorPane.getSize());
+//      System.out.println("articleView size: " + articleView.getSize());
+//      System.out.println("articleView viewport size: " + articleView.getViewport().getSize());
+//      System.out.println();
+      
+    switch(mode)
+    {
+      case JreepadPrefs.VIEW_BOTH:
+        setViewBoth();
+        break;
+      case JreepadPrefs.VIEW_TREE:
+        setViewTreeOnly();
+        break;
+      case JreepadPrefs.VIEW_ARTICLE:
+        setViewArticleOnly();
+        break;
+      default:
+        System.err.println("Invalid argument to JreepadView.setViewMode()!");
+        return;
+    }
+      setSize(getSize());
+      editorPane.setPreferredSize(articleView.getViewport().getExtentSize());
+      editorPane.setSize(articleView.getViewport().getExtentSize());
       validate(); 
       repaint();
+//      System.out.println("editorPane size: " + editorPane.getSize());
+//      System.out.println("articleView size: " + articleView.getSize());
+//      System.out.println("articleView viewport size: " + articleView.getViewport().getSize());
+//      System.out.println();
+//      System.out.println();
   }
-  public void setViewTreeOnly()
+
+  private void setViewBoth()
+  {   
+      splitPane.setLeftComponent(treeView);
+      splitPane.setRightComponent(articleView);
+      this.add(splitPane);
+//      editorPane.setSize(articleView.getSize());
+//      editorPane.setSize(articleView.getViewport().getViewSize());
+  }
+  private void setViewTreeOnly()
   {   this.remove(splitPane);
       this.remove(articleView);
       this.add(treeView);
-      setSize(getSize());  treeView.setSize(getSize());
-      validate(); repaint();
+      treeView.setSize(getSize());
   }
-  public void setViewArticleOnly()
-  {    this.remove(splitPane);
+  private void setViewArticleOnly()
+  {
+       this.remove(splitPane);
        this.remove(treeView);
        this.add(articleView); 
-       setSize(getSize());  articleView.setSize(getSize()); validate(); repaint();
+       articleView.setSize(getSize());   
   }
   /*
   private void setCurrentNode(DefaultMutableTreeNode node)
@@ -220,6 +269,9 @@ public class JreepadView extends Box
     {
       return;
     }
+    
+    storeForUndo();
+    
     JreepadNode oldParent = node.getParentNode();
 
     // Now make a note of the expanded/collapsed state of the subtree of the moving node
@@ -233,7 +285,7 @@ public class JreepadView extends Box
       while(enum.hasMoreElements())
       {
         expanded.add((TreePath)enum.nextElement());
-        System.out.println(expanded.lastElement());
+//        System.out.println(expanded.lastElement());
       }
     }
 
@@ -259,6 +311,8 @@ public class JreepadView extends Box
     int pos = currentNode.getIndex();
     if(pos<1) return;
     
+    storeForUndo();
+    
     JreepadNode newParent = ((JreepadNode)currentNode.getParent().getChildAt(pos-1));
     
     if(currentNode.indent())
@@ -278,6 +332,8 @@ public class JreepadView extends Box
     TreePath parentParentPath = parentPath.getParentPath();
     if(parentParentPath==null) return;
 
+    storeForUndo();
+
     if(currentNode.outdent())
     {
       TreePath myPath = parentParentPath.pathByAddingChild(currentNode);
@@ -285,13 +341,13 @@ public class JreepadView extends Box
       // Now use scrollPathToVisible() or scrollRowToVisible() to make sure it's visible
       tree.scrollPathToVisible(myPath);
       tree.setSelectionPath(myPath);
-      System.out.println("New path: " + myPath);
     }
   }
 
   public void moveCurrentNodeUp()
   {
     TreePath nodePath = tree.getSelectionPath();
+    storeForUndo();
     currentNode.moveUp();
     treeModel.reload(currentNode.getParent());
     tree.setSelectionPath(nodePath);
@@ -299,9 +355,18 @@ public class JreepadView extends Box
   public void moveCurrentNodeDown()
   {
     TreePath nodePath = tree.getSelectionPath();
+    storeForUndo();
     currentNode.moveDown();
     treeModel.reload(currentNode.getParent());
     tree.setSelectionPath(nodePath);
+  }
+  
+  private String getContentForNewNode()
+  {
+    if(prefs.autoDateInArticles)
+      return java.text.DateFormat.getDateInstance().format(new java.util.Date());
+    else
+      return "";
   }
   
   public JreepadNode addNodeAbove()
@@ -309,9 +374,11 @@ public class JreepadView extends Box
     int index = currentNode.getIndex();
     if(index==-1)
       return null;
+    storeForUndo();
     TreePath parentPath = tree.getSelectionPath().getParentPath();
     JreepadNode parent = currentNode.getParentNode();
     JreepadNode ret = parent.addChild(index);
+    ret.setContent(getContentForNewNode());
     treeModel.nodesWereInserted(parent, new int[]{index});
     tree.startEditingAtPath(parentPath.pathByAddingChild(ret));
     return ret;
@@ -321,16 +388,20 @@ public class JreepadView extends Box
     int index = currentNode.getIndex();
     if(index==-1)
       return null;
+    storeForUndo();
     TreePath parentPath = tree.getSelectionPath().getParentPath();
     JreepadNode parent = currentNode.getParentNode();
     JreepadNode ret = parent.addChild(index+1);
+    ret.setContent(getContentForNewNode());
     treeModel.nodesWereInserted(parent, new int[]{index+1});
     tree.startEditingAtPath(parentPath.pathByAddingChild(ret));
     return ret;
   }
   public JreepadNode addNode()
   {
+    storeForUndo();
     JreepadNode ret = currentNode.addChild();
+    ret.setContent(getContentForNewNode());
     TreePath nodePath = tree.getSelectionPath();
     treeModel.nodesWereInserted(currentNode, new int[]{currentNode.getIndex(ret)});
     tree.startEditingAtPath(nodePath.pathByAddingChild(ret));
@@ -342,6 +413,7 @@ public class JreepadView extends Box
     TreePath parentPath = tree.getSelectionPath().getParentPath();
     if(parent != null)
     {
+      storeForUndo();
       int index = parent.getIndex(currentNode);
       JreepadNode ret = parent.removeChild(index);
       setCurrentNode(parent);
@@ -358,12 +430,14 @@ public class JreepadView extends Box
 
   public void sortChildren()
   {
+    storeForUndo();
     currentNode.sortChildren();
     treeModel.reload(currentNode);
     // System.out.println(currentNode.toFullString());
   }
   public void sortChildrenRecursive()
   {
+    storeForUndo();
     currentNode.sortChildrenRecursive();
     treeModel.reload(currentNode);
     // System.out.println(currentNode.toFullString());
@@ -501,6 +575,7 @@ public class JreepadView extends Box
 
   public void addChildrenFromTextFiles(File[] inFiles) throws IOException
   {
+    storeForUndo();
 	for(int i=0; i<inFiles.length; i++)
       getCurrentNode().addChildFromTextFile(inFiles[i]);
     treeModel.reload(currentNode);
@@ -509,6 +584,7 @@ public class JreepadView extends Box
   
   public void addChild(JreepadNode newKid)
   {
+    storeForUndo();
 	getCurrentNode().addChild(newKid);
     treeModel.reload(currentNode);
     tree.expandPath(tree.getSelectionPath());
@@ -538,6 +614,51 @@ public class JreepadView extends Box
     }
   }
   // End of: stuff concerned with printing
+  
+  public static JreepadPrefs getPrefs()
+  {
+    return prefs;
+  }
+  public static void setPrefs(JreepadPrefs thesePrefs)
+  {
+    prefs = thesePrefs;
+  }
+  
+  // Stuff concerned with undo
+  public void undoAction()
+  {
+    if(!canWeUndo())
+      return;
+  
+    // Swap the old root / selectionpath / expandedpaths for the current ones
+    JreepadNode tempRoot = root;
+    root = oldRootForUndo;
+    oldRootForUndo = tempRoot;
+
+    // Fire a tree-structure-changed event for the entire tree
+    treeModel.setRoot(root);
+    treeModel.reload(root);
+    // Set the correct selection and expanded paths
+    tree.setSelectionPath(oldSelectedPath); // I hope this ends up firing the setCurrentNode() function...
+
+    editorPane.setText(currentNode.getContent());
+  }
+  public boolean canWeUndo()
+  {
+    return oldRootForUndo != null;
+  }
+  private void storeForUndo()
+  {
+    // Use JreepadNode.getCopy() on the root node to get a copy of the whole tree
+    oldRootForUndo = root.getCopy();
+    // Also get the tree's entire set of open TreePaths and selected TreePaths
+    oldSelectedPath = tree.getSelectionPath();
+  }
+  void clearUndoCache()
+  {
+    oldRootForUndo = null;
+  }
+  // End of: stuff concerned with undo
 
   class JreepadTreeModelListener implements TreeModelListener
   {

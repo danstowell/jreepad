@@ -18,32 +18,40 @@ permanent way which can be carried across from different versions
 
 public class JreepadPrefs implements Serializable
 {
-  File openLocation, saveLocation, importLocation, exportLocation, lastOpenFile;
+  File openLocation, saveLocation, importLocation, exportLocation, backupLocation;
   
   int autoSavePeriod;
   boolean autoSave;
   
-  public static final int VIEW_TREE = 0;
-  public static final int VIEW_ARTICLE = 1;
-  public static final int VIEW_BOTH = 2;
+  public static final int VIEW_BOTH = 0;
+  public static final int VIEW_TREE = 1;
+  public static final int VIEW_ARTICLE = 2;
   int viewWhich;
   
   boolean viewToolbar;
   
   int searchMaxNum;
+
+  boolean autoDateInArticles;
+
+  boolean loadLastFileOnOpen;
   
   JreepadPrefs()
   {
-    openLocation = new File("/");
+    openLocation = new File("~/");
     
     autoSavePeriod = 10;
     autoSave = false;
     
-    viewWhich = 2;
+    viewWhich = 0;
     
     viewToolbar = true;
     
     searchMaxNum = 200;
+    
+    autoDateInArticles = false;
+    
+    loadLastFileOnOpen = true;
   }
   
   // We override the serialization routines so that different versions of our class can read 
@@ -55,7 +63,7 @@ public class JreepadPrefs implements Serializable
     out.writeObject(saveLocation);
     out.writeObject(importLocation);
     out.writeObject(exportLocation);
-    out.writeObject(lastOpenFile);
+    out.writeObject(backupLocation);
     
     out.writeInt(autoSavePeriod);
     out.writeBoolean(autoSave);
@@ -65,6 +73,10 @@ public class JreepadPrefs implements Serializable
     out.writeBoolean(viewToolbar);
     
     out.writeInt(searchMaxNum);
+    
+    out.writeBoolean(autoDateInArticles);
+    
+    out.writeBoolean(loadLastFileOnOpen);
   }
   private void readObject(java.io.ObjectInputStream in)
      throws IOException, ClassNotFoundException
@@ -73,7 +85,7 @@ public class JreepadPrefs implements Serializable
     saveLocation = (File)in.readObject();
     importLocation = (File)in.readObject();
     exportLocation = (File)in.readObject();
-    lastOpenFile = (File)in.readObject();
+    backupLocation = (File)in.readObject();
     
     autoSavePeriod = in.readInt();
     autoSave = in.readBoolean();
@@ -83,5 +95,9 @@ public class JreepadPrefs implements Serializable
     viewToolbar = in.readBoolean();
     
     searchMaxNum = in.readInt();
+    
+    autoDateInArticles = in.readBoolean();
+    
+    loadLastFileOnOpen = in.readBoolean();
   } 
 }

@@ -19,7 +19,11 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
   }
   public JreepadNode(JreepadNode parentNode)
   {
-    this("<Untitled node>","", parentNode);
+    this("", parentNode);
+  }
+  public JreepadNode(String content, JreepadNode parentNode)
+  {
+    this("<Untitled node>",content, parentNode);
   }
   public JreepadNode(String title, String content, JreepadNode parentNode)
   {
@@ -399,6 +403,7 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
   public void setUserObject(Object object)
   {
     // ?
+    setContent(object.toString());
   }
   public void insert(MutableTreeNode child, int index)
   {
@@ -415,6 +420,17 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
       contentString.append(currentLine + "\n");
     // Then just create the node
     addChild(new JreepadNode(textFile.getName(), contentString.toString(), this));
+  }
+
+  // This getCopy() function is intended to return a copy of the entire subtree, used for Undo
+  public JreepadNode getCopy()
+  {
+    JreepadNode ret = new JreepadNode(getTitle(), getContent(), null);
+    for(int i=0; i<getChildCount(); i++)
+    {
+      ret.addChild(((JreepadNode)getChildAt(i)).getCopy());
+    }
+    return ret;
   }
 
   public String getTitle() { return title; }
