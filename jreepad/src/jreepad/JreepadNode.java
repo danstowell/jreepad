@@ -82,7 +82,7 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
     }
     else
     {
-      throw new IOException("\"<Treepad>\" tag not found at beginning of file! (This can be caused by having the wrong character set specified.)");
+      throw new IOException("\"<Treepad>\" tag not found at beginning of file!\n(This can be caused by having the wrong character set specified.)");
     }
     
     dtLine = "dt=text";

@@ -26,6 +26,8 @@ _______________________________
 
 
 
+
+
 <end node> 5P9i0s8y19Z
 dt=Text
 <node>
@@ -391,31 +393,6 @@ You can specify which of these you want to happen in the Options > Preferences p
 <end node> 5P9i0s8y19Z
 dt=Text
 <node>
-Character encodings
-2
-For maximum compatibility with 
-Treepad Lite, we set the default text
-encoding to ISO-8859-1 (this is a 
-standard text encoding used by Windows).
-
-If you want to preserve accented 
-characters and other special characters, 
-you might prefer to use Unicode
-(UTF-8 or UTF-16).
-
-UTF-16 is a good one 
-to use on Mac OSX, especially if you 
-don't need to exchange Treepad files with 
-Windows-Treepad users.
-
-Choose your character encoding
-(used for loading and saving)
-using the Preferences window!
-
-
-<end node> 5P9i0s8y19Z
-dt=Text
-<node>
 File import and export
 2
 Look in the "File" menu and see what 
@@ -505,6 +482,30 @@ articles).
 It should be straightforward to 
 use this data in an XML editor or in other 
 applications.
+<end node> 5P9i0s8y19Z
+dt=Text
+<node>
+Character encodings
+2
+For maximum compatibility with 
+Treepad Lite, we set the default text
+encoding to ISO-8859-1 (this is a 
+standard text encoding used by Windows).
+
+If you want to preserve accented 
+characters and other special characters, 
+you might prefer to use Unicode
+(UTF-8 or UTF-16).
+
+UTF-16 is a good one 
+to use on Mac OSX, especially if you 
+don't need to exchange Treepad files with 
+Windows-Treepad users.
+
+Choose your preferred character encoding
+using the Preferences window!
+
+
 <end node> 5P9i0s8y19Z
 dt=Text
 <node>

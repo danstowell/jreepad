@@ -27,6 +27,7 @@ import javax.swing.text.html.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
+import java.util.Vector;
 
 /*
 
@@ -69,6 +70,9 @@ public class JreepadPrefs implements Serializable
   String getEncoding()
   {    return characterEncodings[fileEncoding];  }
   
+  Vector openRecentList;
+  int openRecentListLength;
+  
   JreepadPrefs()
   {
     openLocation = new File(System.getProperty("user.home"));
@@ -95,6 +99,9 @@ public class JreepadPrefs implements Serializable
     wikiBehaviourActive = true;
     
     fileEncoding = 0;
+    
+    openRecentList = new Vector();
+    openRecentListLength = 10;
   }
   
   // We override the serialization routines so that different versions of our class can read 
@@ -130,6 +137,9 @@ public class JreepadPrefs implements Serializable
     out.writeBoolean(wikiBehaviourActive);
 
     out.writeInt(fileEncoding);
+
+    out.writeObject(openRecentList);
+    out.writeInt(openRecentListLength);
   }
   private void readObject(java.io.ObjectInputStream in)
      throws IOException, ClassNotFoundException
@@ -164,6 +174,9 @@ public class JreepadPrefs implements Serializable
     wikiBehaviourActive = in.readBoolean();
  
     fileEncoding = in.readInt();
+    
+    openRecentList = (Vector)in.readObject();
+    openRecentListLength = in.readInt();
    }
    catch(EOFException e)
    {

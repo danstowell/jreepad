@@ -27,6 +27,7 @@ import javax.swing.text.html.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
+import java.util.*;
 
 public class JreepadViewer extends JFrame
 {
@@ -91,6 +92,7 @@ public class JreepadViewer extends JFrame
   private JMenu fileMenu;
   private JMenuItem newMenuItem;
   private JMenuItem openMenuItem;
+    private JMenu openRecentMenu;
   private JMenuItem saveMenuItem;
   private JMenuItem saveAsMenuItem;
   private JMenuItem backupToMenuItem;
@@ -192,6 +194,9 @@ public class JreepadViewer extends JFrame
     openMenuItem = new JMenuItem("Open");
     openMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {openAction();}});
     fileMenu.add(openMenuItem);
+      openRecentMenu = new JMenu("Open recent");
+      updateOpenRecentMenu();
+      fileMenu.add(openRecentMenu);
     saveMenuItem = new JMenuItem("Save");
     saveMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {saveAction();}});
     fileMenu.add(saveMenuItem);
@@ -501,6 +506,7 @@ public class JreepadViewer extends JFrame
     newMenuItem.setAccelerator(KeyStroke.getKeyStroke('N', Event.META_MASK));
     openMenuItem.setMnemonic('O');
     openMenuItem.setAccelerator(KeyStroke.getKeyStroke('O', Event.META_MASK));
+    openRecentMenu.setMnemonic('R');
     saveMenuItem.setMnemonic('S');
     saveMenuItem.setAccelerator(KeyStroke.getKeyStroke('S', Event.META_MASK));
     saveAsMenuItem.setMnemonic('A');
@@ -540,7 +546,7 @@ public class JreepadViewer extends JFrame
     searchMenuItem.setAccelerator(KeyStroke.getKeyStroke('F', Event.META_MASK));
     webSearchMenuItem.setMnemonic('g');
     webSearchMenuItem.setAccelerator(KeyStroke.getKeyStroke('G', Event.META_MASK));
-    launchUrlMenuItem.setAccelerator(KeyStroke.getKeyStroke('W', Event.META_MASK));
+    launchUrlMenuItem.setAccelerator(KeyStroke.getKeyStroke('L', Event.META_MASK));
     launchUrlMenuItem.setMnemonic('l');
     thisNodesUrlMenuItem.setMnemonic('n');
     viewMenu.setMnemonic('V');
@@ -1021,17 +1027,23 @@ public class JreepadViewer extends JFrame
           return; // This cancels quit if the save action failed or was cancelled
     }
 
-    setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-    try
+    fileChooser.setCurrentDirectory(getPrefs().openLocation);
+    if(fileChooser.showOpenDialog(theApp) == JFileChooser.APPROVE_OPTION)
     {
-      fileChooser.setCurrentDirectory(getPrefs().openLocation);
-      if(fileChooser.showOpenDialog(theApp) == JFileChooser.APPROVE_OPTION)
+      openHjtFile(fileChooser.getSelectedFile());
+    }
+  } // End of: openAction()
+  private void openHjtFile(File f)
+  {
+      try
       {
-        getPrefs().openLocation = fileChooser.getSelectedFile();
+        setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+        getPrefs().openLocation = f;
         content.remove(theJreepad);
         theJreepad = new JreepadView(new JreepadNode(new InputStreamReader(new FileInputStream(getPrefs().openLocation), getPrefs().getEncoding())));
         getPrefs().saveLocation = getPrefs().openLocation;
         content.add(theJreepad);
+        addToOpenRecentMenu(getPrefs().openLocation);
         setTitleBasedOnFilename(getPrefs().openLocation.getName());
         validate();
         repaint();
@@ -1039,13 +1051,13 @@ public class JreepadViewer extends JFrame
         theJreepad.clearUndoCache();
         setCursor(Cursor.getDefaultCursor());
       }
-    }
-    catch(IOException err)
-    {
-      setCursor(Cursor.getDefaultCursor());
-      JOptionPane.showMessageDialog(theApp, err, "File input error" , JOptionPane.ERROR_MESSAGE);
-    }
-  } // End of: openAction()
+      catch(IOException err)
+      {
+        setCursor(Cursor.getDefaultCursor());
+        JOptionPane.showMessageDialog(theApp, err, "File input error" , JOptionPane.ERROR_MESSAGE);
+      }
+  } // End of: openHjtFile()
+  
   
   private boolean saveAction()
   {
@@ -1415,4 +1427,73 @@ public class JreepadViewer extends JFrame
   {
     theJreepad.setWarnAboutUnsaved(yo);
   }
+
+
+  private void addToOpenRecentMenu(File f)
+  {
+    // Remove the file from the list if it's already in there...
+    ListIterator iter = getPrefs().openRecentList.listIterator();
+    File tempFile;
+    while(iter.hasNext())
+    {
+      tempFile = (File)iter.next();
+      if(tempFile == null || tempFile.equals(f))
+        iter.remove();
+    }
+    
+    getPrefs().openRecentList.insertElementAt(f, 0);
+    updateOpenRecentMenu();
+  }
+  private File[] openRecentTempFileList;
+  private void updateOpenRecentMenu()
+  {
+    if(getPrefs().openRecentList.size() > getPrefs().openRecentListLength)
+      getPrefs().openRecentList.setSize(getPrefs().openRecentListLength);
+
+    try
+    {
+//      openRecentTempFileList = (File[])getPrefs().openRecentList.toArray();
+      openRecentTempFileList = new File[getPrefs().openRecentList.size()];
+      for(int i=0; i<getPrefs().openRecentList.size(); i++)
+      {
+        openRecentTempFileList[i] = (File)getPrefs().openRecentList.get(i);
+      }
+    }
+    catch(ClassCastException e)
+    {
+      System.err.println(e);
+      openRecentTempFileList = new File[0];
+    }
+
+    openRecentMenu.setEnabled(getPrefs().openRecentList.size()!=0);
+
+    openRecentMenu.removeAll();
+    
+    JMenuItem tempMenuItem;
+    File tempFile;
+    char theChar;
+    for(int i=0; i<openRecentTempFileList.length; i++)
+    {
+      tempFile = openRecentTempFileList[i];
+      tempMenuItem = new JMenuItem(tempFile.getParentFile().getName() + "/" + tempFile.getName());
+      if(i<9)
+      {
+        theChar = ("" + (i+1)).charAt(0);
+        tempMenuItem.setText("("+theChar+") "+tempMenuItem.getText());
+        tempMenuItem.setMnemonic(theChar);
+      }
+      // ADD THE ACTIONLISTENER HERE
+      tempMenuItem.addActionListener(new FileOpeningActionListener(tempFile));
+      openRecentMenu.add(tempMenuItem); 
+    }
+  }
+
+  private class FileOpeningActionListener implements ActionListener
+  {
+    File f;
+    FileOpeningActionListener(File f) 		   {this.f = f;}
+    public void actionPerformed(ActionEvent e) {openHjtFile(f);}
+  } // End of:   private class FileOpeningActionListener extends ActionListener
+
+
 }
