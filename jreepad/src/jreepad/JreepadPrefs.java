@@ -63,6 +63,12 @@ public class JreepadPrefs implements Serializable
   
   boolean wikiBehaviourActive;
   
+  static final String[] characterEncodings = 
+                 new String[]{"ISO-8859-1", "UTF-8", "UTF-16", "US-ASCII", "8859_15"};
+  int fileEncoding;
+  String getEncoding()
+  {    return characterEncodings[fileEncoding];  }
+  
   JreepadPrefs()
   {
     openLocation = new File(System.getProperty("user.home"));
@@ -87,6 +93,8 @@ public class JreepadPrefs implements Serializable
     defaultSearchMode = 0;
     
     wikiBehaviourActive = true;
+    
+    fileEncoding = 0;
   }
   
   // We override the serialization routines so that different versions of our class can read 
@@ -120,10 +128,14 @@ public class JreepadPrefs implements Serializable
     out.writeInt(defaultSearchMode);
     
     out.writeBoolean(wikiBehaviourActive);
+
+    out.writeInt(fileEncoding);
   }
   private void readObject(java.io.ObjectInputStream in)
      throws IOException, ClassNotFoundException
   {
+   try
+   {
     openLocation = (File)in.readObject();
     saveLocation = (File)in.readObject();
     importLocation = (File)in.readObject();
@@ -150,5 +162,11 @@ public class JreepadPrefs implements Serializable
     defaultSearchMode = in.readInt();
     
     wikiBehaviourActive = in.readBoolean();
-  } 
+ 
+    fileEncoding = in.readInt();
+   }
+   catch(EOFException e)
+   {
+   }
+ } 
 }

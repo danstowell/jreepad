@@ -22,6 +22,10 @@ _______________________________
 
 
 
+
+
+
+
 <end node> 5P9i0s8y19Z
 dt=Text
 <node>
@@ -87,6 +91,115 @@ navigate your way around the tree - try it!
 <end node> 5P9i0s8y19Z
 dt=Text
 <node>
+Opening/closing subtrees
+3
+If you're using the mouse, you can 
+double-click on any node to 
+open/close its subtree. (Of course, if the
+node doesn't have a subtree nothing will 
+happen!) Similarly, you can use the little
+icon to the left of the node's title, which 
+you can use to open/close a subtree with 
+a single click.
+
+If you're using the keyboard, you can use 
+the left/right cursor keys to respectively 
+close/open the selected node.
+N.B.: This only works if the "tree" view is
+the one you're using at the time. If you're
+editing in the article view, the cursor keys
+will move you around in the article!
+<end node> 5P9i0s8y19Z
+dt=Text
+<node>
+Adding/deleting nodes
+3
+When you have a node selected (such as
+this one titled "Adding/deleting nodes"),
+you have a choice of three places you
+can add a new node:
+
+- Above the selected node
+- Below the selected node
+- As a child of the selected node
+
+The first three buttons on the toolbar give you 
+these three possibilities. (They're in the Edit
+menu too....)
+<end node> 5P9i0s8y19Z
+dt=Text
+<node>
+Arranging trees
+3
+The easiest way to rearrange the nodes on a tree
+is to click-and-drag to move them around. In this
+way you can move a node to a different place 
+in the tree (so it has a different "parent").
+
+You also have four buttons for moving nodes
+around, on the toolbar:
+
+- Up
+- Down
+- In
+- Out
+
+(They're also in the Edit menu!)
+
+"Up" and "Down" can move a node up and down
+relative to its siblings. "In" will promote the node 
+so that it becomes a sibling of the node that was
+previously its parent. "Out" will demote the node 
+so that it becomes a child of the sibling just 
+above it (if there is one).
+<end node> 5P9i0s8y19Z
+dt=Text
+<node>
+Sorting the nodes in a tree
+4
+If you look at the "Edit" menu you'll see there are
+two options for sorting nodes:
+
+- Sort children (one level)
+- Sort children (all levels)
+
+Whichever of these you choose, the child nodes
+of the currently-selected node will be rearranged
+into alphabetical order.
+
+(If you chose the second of those two options, 
+then the children of the child nodes will be 
+sorted too. 
+And the children of the children of the
+child nodes. 
+And the children of the children of
+the children of the child nodes. 
+And....)
+
+
+<end node> 5P9i0s8y19Z
+dt=Text
+<node>
+Editing nodes' titles
+3
+Editing a node's title should work just like 
+editing (for example) a filename. On my Mac OSX,
+I can select the node, wait a second, and click 
+on it again, or I can select it and then press F2.
+Both methods put the node in a mode where I
+can edit the title.
+
+When you've edited the title, simply press Enter
+to commit the change.
+
+(On my computer, if I decide I don't want to make 
+the change after all, I press Escape and the node 
+title jumps back to what it was before!)
+
+
+<end node> 5P9i0s8y19Z
+dt=Text
+<node>
 Article
 2
 
@@ -95,13 +208,79 @@ dt=Text
 <node>
 Searching within a tree
 2
+Go to the "Actions" menu and choose
+"Search" to open up the search window.
+
+The search window has TWO boxes for you
+to type search text in: one box to search 
+the node titles, and one box to search the 
+article text. Type something into either one
+of the boxes - or into both if you have a 
+very specific requirement!
+
+Remember to choose the correct option in
+the "Search where" dropdown: you can 
+search in the selected node and its 
+children, or in the entire file.
+
+Press "Search" and you'll see the table
+at the bottom of the window fill up with 
+results. Double-click on any row in the 
+results table, and you'll be taken to the 
+appropriate node, in the main window.
+
+
 
 <end node> 5P9i0s8y19Z
 dt=Text
 <node>
 Searching on the web
 2
+If you have some text highlighted in the 
+article window, you can choose
+"Actions > Google search for highlighted text".
 
+This will launch a Google search in a
+web-browser window!
+
+You can customise the search to your 
+own taste....
+
+
+<end node> 5P9i0s8y19Z
+dt=Text
+<node>
+Customising the web search
+3
+If you choose "Preferences" from the
+"Options" menu, you'll see there's a 
+section about the web search.
+
+By default, the search is labelled
+"Google search for highlighted text"
+and searches www.google.co.uk.
+
+To search for (for example) the words
+"make a cake" on Google, we call the 
+following URL:
+
+http://www.google.co.uk/search?q=make%20a%20cake&hl=en
+
+The words we search for are "wrapped" 
+in the rest of the URL. Similarly, for a 
+Yahoo web search we can use the URL:
+
+http://uk.search.yahoo.com/search/ukie?p=make%20a%20cake&y=i
+
+So to make Jreepad search on Yahoo 
+instead of Google, we can take the 
+beginning of the URL (most of it!) and 
+the end, and enter those into the 
+appropriate boxes in the Preferences
+window.
+
+Customise it to use your favourite
+search engine!
 <end node> 5P9i0s8y19Z
 dt=Text
 <node>
@@ -120,8 +299,12 @@ dt=Text
 <node>
 Normal hyperlinks - http:// , ftp:// , mailto:
 3
-Most of the standard forms of links should work as you expect.
-Try these examples - either select them, or just position the cursor somewhere inside them, then choose "Actions > Follow highlighted link" from the menu.
+Most of the standard forms of links should 
+work as you expect.
+Try these examples - either select them, or 
+just position the cursor somewhere inside 
+them, then choose "Actions > Follow 
+highlighted link" from the menu.
 
 Web link:
 http://jreepad.sourceforge.net/
@@ -134,17 +317,23 @@ mailto:bgates@microsoft.com
 
 
 
-__________________________________________________
+_________________________________________
 
 
-
-At the time of writing, "file://" links don't seem to work correctly - not on Mac OSX, at least. It's possible that they'll work on your operating system... who knows?
+At the time of writing, "file://" links don't 
+seem to work correctly - not on Mac OSX, at 
+least. It's possible that they'll work on your 
+operating system... who knows?
 <end node> 5P9i0s8y19Z
 dt=Text
 <node>
 Treepad internal hyperlinks - node://
 3
-Treepad Lite uses a URI-like format for links to a specific node within the current node. Try this one, for example - select the whole link and choose the menu option "Actions > Follow highlighted link".
+Treepad Lite uses a URI-like format for links 
+to a specific node within the current node. 
+Try this one, for example - select the whole 
+link and choose the menu option "Actions > 
+Follow highlighted link".
 
 "node://Jreepad manual/Using Jreepad/File import and export"
 
@@ -153,19 +342,35 @@ dt=Text
 <node>
 WikiLikeBehaviour
 3
-If you've used a wiki before you'll know what this is about - but if not, fear not! The idea behind a Wiki is simply to make it easy to create an interconnected web of articles, just as easily as typing text.
+If you've used a wiki before you'll know what 
+this is about - but if not, fear not! The idea 
+behind a Wiki is simply to make it easy to 
+create an interconnected web of articles, just 
+as easily as typing text.
 
-Jreepad adapts some of the ideas from wiki. The key ingredient in a wiki is that if you type a WikiWord, which is any word which begins with a capital letter and has other capital letter(s) somewhere in the middle, the wiki converts this into a link to an article of that name. If the article exists, you can jump straight to it. If the article doesn't exist, it gets created and you can start to type text into it.
+Jreepad adapts some of the ideas from wiki. 
+The key ingredient in a wiki is that if you 
+type a WikiWord, which is any word which 
+begins with a capital letter and has other 
+capital letter(s) somewhere in the middle, the 
+wiki converts this into a link to an article of 
+that name. If the article exists, you can jump 
+straight to it. If the article doesn't exist, it 
+gets created and you can start to type text 
+into it.
 
-You can also force a chunk of text to behave like a WikiWord by wrapping it in [[double square brackets]].
+You can also force a chunk of text to behave 
+like a WikiWord by wrapping it in 
+[[double square brackets]].
 
-Try selecting these wiki-links and chosing "Actions > Follow highlighted link":
-
-  WikiWikiWeb
+Try selecting these wiki-links and chosing 
+"Actions > Follow highlighted link":
 
   DanStowell
 
-  [[The importance of being earnest]]
+  [[HTML]]
+
+  WikiWikiWeb
 
 
 <end node> 5P9i0s8y19Z
@@ -182,6 +387,31 @@ If you choose "follow link" but you haven't actually selected something which is
 - Do a web-search for the text
 
 You can specify which of these you want to happen in the Options > Preferences panel.
+
+<end node> 5P9i0s8y19Z
+dt=Text
+<node>
+Character encodings
+2
+For maximum compatibility with 
+Treepad Lite, we set the default text
+encoding to ISO-8859-1 (this is a 
+standard text encoding used by Windows).
+
+If you want to preserve accented 
+characters and other special characters, 
+you might prefer to use Unicode
+(UTF-8 or UTF-16).
+
+UTF-16 is a good one 
+to use on Mac OSX, especially if you 
+don't need to exchange Treepad files with 
+Windows-Treepad users.
+
+Choose your character encoding
+(used for loading and saving)
+using the Preferences window!
+
 
 <end node> 5P9i0s8y19Z
 dt=Text
@@ -205,38 +435,76 @@ dt=Text
 <node>
 Importing / exporting a Treepad file
 3
+You can import one Treepad file into 
+another - it'll become a subtree branching
+off the node currently selected.
 
+Similarly, you can export the selected 
+subtree as a standalone Treepad file; 
+for example, if you need to send a branch 
+of Treepad information to a colleague.
 <end node> 5P9i0s8y19Z
 dt=Text
 <node>
-Importing / exporting text files
+Text files
 3
+Jreepad can export the currently-selected
+article as a simple plain-text file.
+
+When *importing* plain-text, Jreepad
+can import multiple text files at the same
+time. Choose a selection of text files, and 
+they'll be each imported as a new child 
+node (the node titles will match the 
+filenames).
 
 <end node> 5P9i0s8y19Z
 dt=Text
 <node>
-Importing / exporting text lists
+Text lists
 3
+Often in a text file, you have a list -
+one line per entry.
 
+Jreepad lets you import a text list directly,
+so that if you have your shopping list as a
+text file, containing the text:
+
+Bread
+Milk
+Eggs
+
+then Jreepad will create three new nodes,
+entitled "Bread", "Milk", and "Eggs".
 <end node> 5P9i0s8y19Z
 dt=Text
 <node>
-Exporting XML / HTML
+HTML
 3
-The XML export creates an XML file with a very simple structure. It contains all of the information from the selected Jreepad subtree (node structure, titles, and articles). It should be straightforward to use this data in an XML editor or in other applications.
+Jreepad's HTML export creates a nice, 
+human-readable output. The output 
+includes a simple embedded CSS 
+stylesheet which formats the HTML page 
+quite neatly.
 
- - 
-
-The HTML export creates a nice, human-readable output. The output includes a nice simple embedded CSS stylesheet which formats the HTML page quite neatly.
-
+HTML export is very useful, for creating 
+printouts or for sending an output of 
+a Jreepad subtree to a colleague who may
+not use Jreepad or Treepad.
 <end node> 5P9i0s8y19Z
 dt=Text
 <node>
-Toolbars
-2
-The toolbar gives you shortcuts to
-some of the main options for working
-with nodes.
+XML
+3
+The XML export creates an XML file with 
+a very simple structure. It contains all of 
+the information from the selected Jreepad 
+subtree (node structure, titles, and 
+articles).
+
+It should be straightforward to 
+use this data in an XML editor or in other 
+applications.
 <end node> 5P9i0s8y19Z
 dt=Text
 <node>
@@ -254,9 +522,16 @@ dt=Text
 <node>
 Treepad
 2
-The concept for Jreepad is based on Treepad Lite. Treepad Lite is free software created by Henk Hagedoorn, primarily for Windows computers. The "Treepad" suite includes more feature-rich versions (these are not free!). Jreepad is only designed to be compatible with Treepad Lite files....
+The concept for Jreepad is based on Treepad 
+Lite. Treepad Lite is free software created by 
+Henk Hagedoorn, primarily for Windows 
+computers. The "Treepad" suite includes more 
+feature-rich versions (these are not free!). 
+Jreepad is only designed to be compatible 
+with Treepad Lite files....
 
-See http://www.treepad.com/ for more about the Treepad suite of software.
+See http://www.treepad.com/ for more about 
+the Treepad suite of software.
 
 <end node> 5P9i0s8y19Z
 dt=Text

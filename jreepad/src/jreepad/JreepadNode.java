@@ -52,15 +52,15 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
     ourSortComparator = new OurSortComparator();
     children = new Vector();
   }
-  public JreepadNode(InputStream treeInputStream) throws IOException
+  public JreepadNode(InputStreamReader treeInputStream) throws IOException
   {
     constructFromInputStream(treeInputStream);
   }
-  private void constructFromInputStream(InputStream treeInputStream) throws IOException
+  private void constructFromInputStream(InputStreamReader treeInputStream) throws IOException
   {
     int lineNum = 2;
     int depthMarker;
-    BufferedReader bReader = new BufferedReader(new InputStreamReader(treeInputStream));
+    BufferedReader bReader = new BufferedReader(treeInputStream);
     JreepadNode babyNode;
     children = new Vector();
 
@@ -82,7 +82,7 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
     }
     else
     {
-      throw new IOException("\"<Treepad>\" tag not found at beginning of file!");
+      throw new IOException("\"<Treepad>\" tag not found at beginning of file! (This can be caused by having the wrong character set specified.)");
     }
     
     dtLine = "dt=text";
@@ -247,9 +247,13 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
   {
     out.writeBytes(this.toTreepadString());
   }
+//  private void writeObject(OutputStreamWriter out) throws IOException
+//  {
+//    out.write(this.toTreepadString());
+//  }
   private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException
   {
-    constructFromInputStream(in);
+    constructFromInputStream(new InputStreamReader(in));
   }
   public String toTreepadString()
   {

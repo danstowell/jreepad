@@ -60,6 +60,7 @@ public class JreepadViewer extends JFrame
   private JDialog prefsDialog;
   private JCheckBox loadLastFileOnOpenCheckBox;
   private JCheckBox autoDateNodesCheckBox;
+  private JComboBox fileEncodingSelector;
   private Box webSearchPrefsBox;
     private JComboBox defaultSearchModeSelector;
     private JTextField webSearchNameField;
@@ -847,6 +848,11 @@ public class JreepadViewer extends JFrame
     Box genPrefVBox = Box.createVerticalBox();
     genPrefVBox.add(loadLastFileOnOpenCheckBox = new JCheckBox("When Jreepad starts, automatically load the last-saved file", getPrefs().loadLastFileOnOpen));
     genPrefVBox.add(autoDateNodesCheckBox = new JCheckBox("Autodate nodes: whenever a new node is created, add the date into its article", getPrefs().autoDateInArticles));
+
+    genPrefVBox.add(new JLabel("Character encoding for load/save:"));
+    genPrefVBox.add(fileEncodingSelector = new JComboBox(getPrefs().characterEncodings));
+    fileEncodingSelector.setSelectedIndex(getPrefs().fileEncoding);
+
     JPanel genPanel = new JPanel();
     genPanel.add(genPrefVBox);
     genPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), "General"));
@@ -888,6 +894,7 @@ public class JreepadViewer extends JFrame
 									getPrefs().webSearchPrefix = webSearchPrefixField.getText();
 									getPrefs().webSearchPostfix = webSearchPostfixField.getText();
 									getPrefs().defaultSearchMode = defaultSearchModeSelector.getSelectedIndex();
+									getPrefs().fileEncoding = fileEncodingSelector.getSelectedIndex();
 									prefsDialog.hide();
                                    }});
     prefsCancelButton.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e){prefsDialog.hide();}});
@@ -926,7 +933,7 @@ public class JreepadViewer extends JFrame
       {
         getPrefs().openLocation = firstTimeFile;
         content.remove(theJreepad);
-        theJreepad = new JreepadView(new JreepadNode(new FileInputStream(getPrefs().openLocation)));
+        theJreepad = new JreepadView(new JreepadNode(new InputStreamReader(new FileInputStream(getPrefs().openLocation), getPrefs().getEncoding())));
         getPrefs().saveLocation = getPrefs().exportLocation = getPrefs().importLocation = getPrefs().openLocation;
         content.add(theJreepad);
 	    getPrefs().saveLocation = getPrefs().openLocation;
@@ -1022,7 +1029,7 @@ public class JreepadViewer extends JFrame
       {
         getPrefs().openLocation = fileChooser.getSelectedFile();
         content.remove(theJreepad);
-        theJreepad = new JreepadView(new JreepadNode(new FileInputStream(getPrefs().openLocation)));
+        theJreepad = new JreepadView(new JreepadNode(new InputStreamReader(new FileInputStream(getPrefs().openLocation), getPrefs().getEncoding())));
         getPrefs().saveLocation = getPrefs().openLocation;
         content.add(theJreepad);
         setTitleBasedOnFilename(getPrefs().openLocation.getName());
@@ -1052,7 +1059,9 @@ public class JreepadViewer extends JFrame
       String writeMe = theJreepad.getRootJreepadNode().toTreepadString();
       FileOutputStream fO = new FileOutputStream(getPrefs().saveLocation);
       DataOutputStream dO = new DataOutputStream(fO);
-      dO.writeBytes(writeMe);
+      BufferedWriter bO = new BufferedWriter(new OutputStreamWriter(dO, getPrefs().getEncoding()));
+      bO.write(writeMe);
+      bO.close();
       dO.close();
       fO.close();
       setWarnAboutUnsaved(false);
@@ -1079,7 +1088,9 @@ public class JreepadViewer extends JFrame
         String writeMe = theJreepad.getRootJreepadNode().toTreepadString();
         FileOutputStream fO = new FileOutputStream(getPrefs().saveLocation);
         DataOutputStream dO = new DataOutputStream(fO);
-        dO.writeBytes(writeMe);
+        BufferedWriter bO = new BufferedWriter(new OutputStreamWriter(dO, getPrefs().getEncoding()));
+        bO.write(writeMe);
+        bO.close();
         dO.close();
         fO.close();
         setWarnAboutUnsaved(false);
@@ -1192,7 +1203,7 @@ public class JreepadViewer extends JFrame
 		switch(importFormat)
 		{
 		  case FILE_FORMAT_HJT:
-			theJreepad.addChild(new JreepadNode(new FileInputStream(getPrefs().importLocation)));
+			theJreepad.addChild(new JreepadNode(new InputStreamReader(new FileInputStream(getPrefs().importLocation), getPrefs().getEncoding())));
 			break;
 		  case FILE_FORMAT_TEXT:
 		    theJreepad.addChildrenFromTextFiles(fileChooser.getSelectedFiles());

@@ -435,7 +435,9 @@ public class JreepadView extends Box
     JreepadNode ret = parent.addChild(index);
     ret.setContent(getContentForNewNode());
     treeModel.nodesWereInserted(parent, new int[]{index});
-    tree.startEditingAtPath(parentPath.pathByAddingChild(ret));
+    TreePath newPath = (parentPath.pathByAddingChild(ret));
+    if(newPath!=null)
+      tree.startEditingAtPath(newPath);
     return ret;
   }
   public JreepadNode addNodeBelow()
