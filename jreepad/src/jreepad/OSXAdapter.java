@@ -94,7 +94,7 @@ public class OSXAdapter extends ApplicationAdapter {
 	// Added by Dan
 	public void handleOpenFile(ApplicationEvent ae)
 	{
-       openHjtFile(ae.getFileName());
+       openHjtFile(ae.getFilename());
 	}
 	
 	public void handleQuit(ApplicationEvent ae) {

@@ -655,8 +655,8 @@ public class JreepadView extends Box
         break;
     }
 
-    if(searchResultsVec.size()>0)
-    {
+  //  if(searchResultsVec.size()>0)
+  //  {
       searchResults = new JreepadSearchResult[searchResultsVec.size()];
       for(int i=0; i<searchResults.length; i++)
       {
@@ -664,8 +664,8 @@ public class JreepadView extends Box
         searchResults[i] = (JreepadSearchResult)foundObject;
       }
       return true;
-    }
-    return false;
+  //  }
+  //  return false;
   }
   private static final int articleQuoteMaxLen = 40;
   private void recursiveSearchNode(String inNodes, String inArticles, JreepadNode thisNode, TreePath pathSoFar,

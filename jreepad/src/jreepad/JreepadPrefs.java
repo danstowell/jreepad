@@ -65,7 +65,7 @@ public class JreepadPrefs implements Serializable
   boolean wikiBehaviourActive;
   
   static final String[] characterEncodings = 
-                 new String[]{"ISO-8859-1", "UTF-8", "UTF-16", "US-ASCII", "8859_15"};
+                 new String[]{"ISO-8859-1", "ISO-8859-15", "UTF-8", "UTF-16", "US-ASCII", "8859_15"};
   int fileEncoding;
   String getEncoding()
   {    return characterEncodings[fileEncoding];  }
@@ -116,7 +116,7 @@ public class JreepadPrefs implements Serializable
     
     searchMaxNum = 200;
     
-    autoDateInArticles = false;
+    autoDateInArticles = true;
     
     loadLastFileOnOpen = true;
 

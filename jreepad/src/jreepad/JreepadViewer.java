@@ -58,6 +58,7 @@ public class JreepadViewer extends JFrame
   private JDialog htmlExportDialog;
   private JCheckBox urlsToLinksCheckBox;
   private JButton htmlExportOkButton;
+  private JButton htmlExportCancelButton;
   private JComboBox htmlExportModeSelector;
   private JComboBox htmlExportAnchorTypeSelector;
 
@@ -165,6 +166,8 @@ public class JreepadViewer extends JFrame
   private JMenuItem aboutMenuItem;
   private JMenuItem licenseMenuItem;
   
+  private boolean htmlExportOkChecker = false; // Just used to check whether OK or Cancel has been pressed in a certain dialogue box
+  
   // Check whether we are on Mac OS X.  This is crucial to loading and using the OSXAdapter class.
   public static boolean MAC_OS_X = (System.getProperty("os.name").toLowerCase().startsWith("mac os x"));
   
@@ -263,8 +266,10 @@ public class JreepadViewer extends JFrame
       exportMenu.add(exportHjtMenuItem);
       exportHtmlMenuItem = new JMenuItem("...subtree to HTML");
       exportHtmlMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {
+                  		    htmlExportOkChecker = false;
                   		    htmlExportDialog.show();
-                  		    exportAction(FILE_FORMAT_HTML);}});
+                  		    if(htmlExportOkChecker)
+                  		      exportAction(FILE_FORMAT_HTML);}});
       exportMenu.add(exportHtmlMenuItem);
       exportSimpleXmlMenuItem = new JMenuItem("...subtree to simple XML");
       exportSimpleXmlMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {exportAction(FILE_FORMAT_XML);}});
@@ -291,7 +296,9 @@ public class JreepadViewer extends JFrame
     //
     undoMenuItem = new JMenuItem("Undo");
     undoMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { undoAction();}});
-    editMenu.add(undoMenuItem);
+// Fairly sensibly, someone suggested removing the Undo button since it behaves oddly and because there's no "Redo".
+// So I've removed it from the menu - will leave it in the code, though, in the optimistic hope that we can fix it later...
+//    editMenu.add(undoMenuItem);
     editMenu.add(new JSeparator());
     addAboveMenuItem = new JMenuItem("Add sibling above");
     addAboveMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { theJreepad.addNodeAbove(); theJreepad.returnFocusToTree(); setWarnAboutUnsaved(true); updateWindowTitle();}});
@@ -702,12 +709,15 @@ public class JreepadViewer extends JFrame
     //
     Box hBox = Box.createHorizontalBox();
     nodeSearchField = new JTextField("");
-    vBox.add(new JLabel("Search in node titles for: "));
+    vBox.add(new JLabel("Search for: "));
     hBox.add(nodeSearchField);
     nodeSearchField.addActionListener(new ActionListener(){ public void actionPerformed(ActionEvent e){
-                                           searchGoButton.doClick();}});
+                                           doTheSearch();}});
+    nodeSearchField.addCaretListener(new CaretListener(){ public void caretUpdate(CaretEvent e){
+                                           doTheSearch();}});
     vBox.add(hBox);
     //
+/* SIMPLIFYING THE SEARCH BOX - USE "OR" AND ABANDON THE LESS USEFUL "AND" OPTION
     hBox = Box.createHorizontalBox();
     articleSearchField = new JTextField("");
     vBox.add(new JLabel("Search in article text for: "));
@@ -715,49 +725,62 @@ public class JreepadViewer extends JFrame
     articleSearchField.addActionListener(new ActionListener(){ public void actionPerformed(ActionEvent e){
                                            searchGoButton.doClick();}});
     vBox.add(hBox);
+*/
     //
+/* SIMPLIFYING THE SEARCH BOX - USE "OR" AND ABANDON THE LESS USEFUL "AND" OPTION
     searchCombinatorSelector = new JComboBox(new String[]{"\"OR\" (Either one must be found)", "\"AND\" (Both must be found)"});
     searchCombinatorSelector.setEditable(false);
     hBox = Box.createHorizontalBox();
     hBox.add(new JLabel("Combine searches using: "));
     hBox.add(searchCombinatorSelector);
     vBox.add(hBox);
-    //
-    vBox.add(searchCaseCheckBox = new JCheckBox("Case sensitive search", false));
+*/
     //
     searchWhereSelector = new JComboBox(new String[]{"Selected node and its children", "Entire tree"});
+    searchWhereSelector.setSelectedIndex(1);
     searchWhereSelector.setEditable(false);
+    searchWhereSelector.addActionListener(new ActionListener(){ public void actionPerformed(ActionEvent e){
+                                           doTheSearch();}});
     hBox = Box.createHorizontalBox();
+    hBox.add(Box.createGlue());
     hBox.add(new JLabel("Search where: "));
     hBox.add(searchWhereSelector);
+    hBox.add(Box.createGlue());
+    hBox.add(searchCaseCheckBox = new JCheckBox("Case sensitive", false));
+    searchCaseCheckBox.addActionListener(new ActionListener(){ public void actionPerformed(ActionEvent e){
+                                           doTheSearch();}});
+    hBox.add(Box.createGlue());
     vBox.add(hBox);
     //
 //    searchMaxNumSpinner = new JSpinner(new SpinnerNumberModel(getPrefs().searchMaxNum,1,1000,1));
     searchMaxNumSpinner = new DSpinner(1,1000,getPrefs().searchMaxNum);
+    searchMaxNumSpinner.addCaretListener(new CaretListener(){ public void caretUpdate(CaretEvent e){
+                                           doTheSearch();}});
+    searchMaxNumSpinner.addActionListener(new ActionListener(){ public void actionPerformed(ActionEvent e){
+                                           doTheSearch();}});
     hBox = Box.createHorizontalBox();
+    hBox.add(Box.createGlue());
     hBox.add(new JLabel("Max number of results: "));
     hBox.add(searchMaxNumSpinner);
+    hBox.add(Box.createGlue());
     vBox.add(hBox);
     //
+/* SIMPLIFYING THE SEARCH BOX - USE "OR" AND ABANDON THE LESS USEFUL "AND" OPTION
     hBox = Box.createHorizontalBox();
+    hBox.add(Box.createGlue());
     hBox.add(searchGoButton = new JButton("Search"));
     searchGoButton.setDefaultCapable(true);
     searchGoButton.addActionListener(new ActionListener(){
                                public void actionPerformed(ActionEvent e)
                                {
-//                                 getPrefs().searchMaxNum = (Integer.valueOf(searchMaxNumSpinner.getValue().toString())).intValue();
-                                 getPrefs().searchMaxNum = searchMaxNumSpinner.getValue();
-
-                                 performSearch(nodeSearchField.getText(), articleSearchField.getText(), 
-                                 searchWhereSelector.getSelectedIndex(), searchCombinatorSelector.getSelectedIndex()==0,
-                                 searchCaseCheckBox.isSelected(), 
-                                 getPrefs().searchMaxNum
-                                 );
+                                 doTheSearch();
                                } });
     hBox.add(searchCloseButton = new JButton("Close"));
     searchCloseButton.addActionListener(new ActionListener(){
                                public void actionPerformed(ActionEvent e){ searchDialog.hide(); } });
+    hBox.add(Box.createGlue());
     vBox.add(hBox);
+*/
     //
     // NOW FOR THE SEARCH RESULTS TABLE - COULD BE TRICKY!
     searchResultsTableModel = new AbstractTableModel()
@@ -785,7 +808,7 @@ public class JreepadViewer extends JFrame
             case 2:
               return "";
             case 1:
-              return "Results will appear here...";
+              return (nodeSearchField.getText()=="" ? "Results will appear here..." : "No matches.");
             default:
               return "";
           }
@@ -825,6 +848,7 @@ public class JreepadViewer extends JFrame
           // Select the node in the tree, and move focus to the tree
           theJreepad.getTree().setSelectionPath(results[selectedRow].getTreePath());
           theJreepad.getTree().scrollPathToVisible(results[selectedRow].getTreePath());
+          searchDialog.hide();
           theApp.toFront();
           theJreepad.returnFocusToTree();
         }
@@ -874,12 +898,14 @@ public class JreepadViewer extends JFrame
     autoSaveDialog = new JDialog(theApp, "Autosave", true);
     autoSaveDialog.setVisible(false);
     vBox = Box.createVerticalBox();
-    vBox.add(autoSaveCheckBox = new JCheckBox("Autosave", getPrefs().autoSave));
+    vBox.add(Box.createGlue());
     hBox = Box.createHorizontalBox();
-    hBox.add(new JLabel("Frequency (minutes):"));
+    hBox.add(autoSaveCheckBox = new JCheckBox("Autosave every ", getPrefs().autoSave));
 ///    hBox.add(autoSavePeriodSpinner = new JSpinner(new SpinnerNumberModel(getPrefs().autoSavePeriod,1,1000,1)));
     hBox.add(autoSavePeriodSpinner = new DSpinner(1, 1000, getPrefs().autoSavePeriod));
+    hBox.add(new JLabel(" minutes"));
     vBox.add(hBox);
+    vBox.add(Box.createGlue());
     hBox = Box.createHorizontalBox();
     hBox.add(autoSaveOkButton = new JButton("OK"));
     hBox.add(autoSaveCancelButton = new JButton("Cancel"));
@@ -896,6 +922,7 @@ public class JreepadViewer extends JFrame
 									updateWindowTitle();
                                    }});
     autoSaveCancelButton.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e){autoSaveDialog.hide();}});
+    vBox.add(Box.createGlue());
     vBox.add(hBox);
     autoSaveDialog.getContentPane().add(vBox);
     // Finished establishing the autosave dialogue box
@@ -904,25 +931,55 @@ public class JreepadViewer extends JFrame
     htmlExportDialog = new JDialog(theApp, "HTML export - options", true);
     htmlExportDialog.setVisible(false);
     vBox = Box.createVerticalBox();
-//    hBox = Box.createHorizontalBox();
-    vBox.add(new JLabel("Treat text in articles as:"));
+    hBox = Box.createHorizontalBox();
+    hBox.add(Box.createGlue());
+    hBox.add(new JLabel("Treat text in articles as:"));
     htmlExportModeSelector = new JComboBox(JreepadNode.getHtmlExportArticleTypes());
     htmlExportModeSelector.setSelectedIndex(getPrefs().htmlExportArticleType);
-    vBox.add(htmlExportModeSelector);
-    vBox.add(urlsToLinksCheckBox = new JCheckBox("Convert URLs to links (in plain-text or preformatted)", getPrefs().htmlExportUrlsToLinks));
-    vBox.add(new JLabel("Which type of 'internal' link to use:"));
+    htmlExportModeSelector.addActionListener(new ActionListener(){
+                               public void actionPerformed(ActionEvent e){ 
+                       if(htmlExportModeSelector.getSelectedIndex()==2)
+                       {
+                         urlsToLinksCheckBox.setEnabled(false);
+                         urlsToLinksCheckBox.setSelected(false);
+                       }
+                       else
+                       {
+                         urlsToLinksCheckBox.setEnabled(true);
+                         urlsToLinksCheckBox.setSelected(getPrefs().htmlExportUrlsToLinks);
+                       }
+                               }});
+    hBox.add(htmlExportModeSelector);
+    hBox.add(Box.createGlue());
+    vBox.add(hBox);
+    vBox.add(urlsToLinksCheckBox = new JCheckBox("Convert URLs to links", getPrefs().htmlExportUrlsToLinks));
+    hBox = Box.createHorizontalBox();
+    hBox.add(Box.createGlue());
+    hBox.add(new JLabel("Which type of 'internal' link to detect:"));
     htmlExportAnchorTypeSelector = new JComboBox(JreepadNode.getHtmlExportAnchorLinkTypes());
     htmlExportAnchorTypeSelector.setSelectedIndex(getPrefs().htmlExportAnchorLinkType);
-    vBox.add(htmlExportAnchorTypeSelector);
-//    vBox.add(hBox);
+    hBox.add(htmlExportAnchorTypeSelector);
+    hBox.add(Box.createGlue());
+    vBox.add(hBox);
     hBox = Box.createHorizontalBox();
-    hBox.add(htmlExportOkButton = new JButton("OK"));
-    htmlExportOkButton.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e){
-                                    getPrefs().htmlExportArticleType = htmlExportModeSelector.getSelectedIndex();
-                                    getPrefs().htmlExportAnchorLinkType = htmlExportAnchorTypeSelector.getSelectedIndex();
-                                    getPrefs().htmlExportUrlsToLinks = urlsToLinksCheckBox.isSelected();
+    hBox.add(Box.createGlue());
+    hBox.add(htmlExportCancelButton = new JButton("Cancel"));
+    htmlExportCancelButton.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e){
+                                    htmlExportOkChecker = false;
                                     htmlExportDialog.hide();
                                    }});
+    hBox.add(htmlExportOkButton = new JButton("Export"));
+    htmlExportOkButton.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e){
+                                    htmlExportOkChecker = true;
+                                    getPrefs().htmlExportArticleType = htmlExportModeSelector.getSelectedIndex();
+                                    getPrefs().htmlExportAnchorLinkType = htmlExportAnchorTypeSelector.getSelectedIndex();
+                                    
+                                    // If exporting as HTML then we ignore this checkbox
+                                    if(htmlExportModeSelector.getSelectedIndex()!=2)
+                                      getPrefs().htmlExportUrlsToLinks = urlsToLinksCheckBox.isSelected();
+                                    htmlExportDialog.hide();
+                                   }});
+    hBox.add(Box.createGlue());
     vBox.add(hBox);
     htmlExportDialog.getContentPane().add(vBox);
     // Finished establishing the HTML export dialogue box
@@ -935,8 +992,12 @@ public class JreepadViewer extends JFrame
     genPrefVBox.add(loadLastFileOnOpenCheckBox = new JCheckBox("When Jreepad starts, automatically load the last-saved file", getPrefs().loadLastFileOnOpen));
     genPrefVBox.add(autoDateNodesCheckBox = new JCheckBox("Autodate nodes: whenever a new node is created, add the date into its article", getPrefs().autoDateInArticles));
 
-    genPrefVBox.add(new JLabel("Character encoding for load/save:"));
-    genPrefVBox.add(fileEncodingSelector = new JComboBox(getPrefs().characterEncodings));
+    hBox = Box.createHorizontalBox();
+    hBox.add(Box.createGlue());
+    hBox.add(new JLabel("Character encoding for load/save:"));
+    hBox.add(fileEncodingSelector = new JComboBox(getPrefs().characterEncodings));
+    hBox.add(Box.createGlue());
+    genPrefVBox.add(hBox);
     fileEncodingSelector.setSelectedIndex(getPrefs().fileEncoding);
 
     JPanel genPanel = new JPanel();
@@ -959,10 +1020,12 @@ public class JreepadViewer extends JFrame
 //    hBox.add(wrapToWindowCheckBox = new JCheckBox("Wrap article to window width", getPrefs().wrapToWindow));
 //    hBox.add(new JLabel("(won't take effect until you restart Jreepad)"));
 //    genPrefVBox.add(hBox);
- //   hBox = Box.createHorizontalBox();
-    vBox.add(new JLabel("Column width to use for hard-wrap action:"));
+    hBox = Box.createHorizontalBox();
+    hBox.add(new JLabel("Column width to use for hard-wrap action:"));
 //    hBox.add(wrapWidthSpinner = new JSpinner(new SpinnerNumberModel(getPrefs().characterWrapWidth,1,1000,1)));
-    vBox.add(wrapWidthSpinner = new DSpinner(1,1000,getPrefs().characterWrapWidth));
+    hBox.add(Box.createGlue());
+    hBox.add(wrapWidthSpinner = new DSpinner(1,1000,getPrefs().characterWrapWidth));
+    hBox.add(Box.createGlue());
     genPrefVBox.add(hBox);
     genPanel.add(genPrefVBox);
     genPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), "Wrapping article text"));
@@ -1293,20 +1356,20 @@ public class JreepadViewer extends JFrame
 
   private void openSearchDialog()
   {
-//    searchDialog.setVisible(true);
     searchDialog.show();
+    nodeSearchField.requestFocus();
   } // End of: openSearchDialog()
   
   private boolean performSearch(String inNodes, String inArticles, int searchWhat /* 0=selected, 1=all */, 
                                 boolean orNotAnd, boolean caseSensitive, int maxResults)
   {
-    setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+    // setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
     boolean ret = theJreepad.performSearch(inNodes, inArticles, searchWhat, orNotAnd, 
                                           caseSensitive, maxResults);
-    setCursor(Cursor.getDefaultCursor());
+    // setCursor(Cursor.getDefaultCursor());
     if(!ret)
     {
-      JOptionPane.showMessageDialog(searchDialog, "Found nothing.", "Search result..." , JOptionPane.INFORMATION_MESSAGE);
+      // JOptionPane.showMessageDialog(searchDialog, "Found nothing.", "Search result..." , JOptionPane.INFORMATION_MESSAGE);
       searchResultsLabel.setText("Search results: ");
     }
     else
@@ -1852,38 +1915,75 @@ public class JreepadViewer extends JFrame
   } 
 
 
+  public void doTheSearch()
+  {
+	 getPrefs().searchMaxNum = searchMaxNumSpinner.getValue();
+
+	 performSearch(nodeSearchField.getText(), nodeSearchField.getText(), // articleSearchField.getText(), 
+	 searchWhereSelector.getSelectedIndex(), true /* searchCombinatorSelector.getSelectedIndex()==0 */,
+	 searchCaseCheckBox.isSelected(), 
+	 getPrefs().searchMaxNum
+	 );
+  }
+
+
   // Replacement for the "JSpinner" which is not available in Java 1.3 or 1.2
   class DSpinner extends Box
   {
     private int min, max, val;
     private JTextField textField;
     private JButton upBut, downBut;
+    private ActionListener al;
     
     DSpinner(int min, int max, int myVal)
     {
       super(BoxLayout.X_AXIS);
       this.min=this.val=min;
       this.max=max;
+      this.add(Box.createGlue());
       this.add(textField = new JTextField(val));
       this.add(downBut = new JButton("-"));
       this.add(upBut = new JButton("+"));
+      this.add(Box.createGlue());
       
       downBut.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {
-                  		    setValue(val-1);}});
+                  		    setValue(val-1);
+                  		    if(al!=null)
+                  		      al.actionPerformed(null);
+                  		    }});
       upBut.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {
-                  		    setValue(val+1);}});
+                  		    setValue(val+1);
+                  		    if(al!=null)
+                  		      al.actionPerformed(null);
+                  		    }});
       setValue(myVal);
     }
     
     int getValue()
     {
-      return Integer.parseInt(textField.getText());
+      try
+      {
+        val = Integer.parseInt(textField.getText());
+      }
+      catch(NumberFormatException e)
+      {
+      }
+      return val;
     }
     void setValue(int newVal)
     {
       if(newVal>=min && newVal<=max)
         val=newVal;
         textField.setText("" + val);
+    }
+    void addActionListener(ActionListener al)
+    {
+      this.al = al;
+      textField.addActionListener(al);
+    }
+    void addCaretListener(CaretListener cl)
+    {
+      textField.addCaretListener(cl);
     }
     
   } // End of class DSpinner
