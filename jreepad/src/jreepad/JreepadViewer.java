@@ -1280,7 +1280,7 @@ public class JreepadViewer extends JFrame
 		    theJreepad.addChildrenFromTextFiles(fileChooser.getSelectedFiles());
 			break;
 		  case FILE_FORMAT_TEXTASLIST:
-		    theJreepad.addChildrenFromListTextFile(getPrefs().importLocation);
+		    theJreepad.addChildrenFromListTextFile(new InputStreamReader(new FileInputStream(getPrefs().importLocation), getPrefs().getEncoding()));
 			break;
 		  default:
             setCursor(Cursor.getDefaultCursor());
@@ -1342,9 +1342,12 @@ public class JreepadViewer extends JFrame
 		}
 
         FileOutputStream fO = new FileOutputStream(getPrefs().exportLocation);
-        DataOutputStream dO = new DataOutputStream(fO);
-        dO.writeBytes(output);
-        dO.close();
+//        DataOutputStream dO = new DataOutputStream(fO);
+        OutputStreamWriter osw = new OutputStreamWriter(fO, getPrefs().getEncoding());
+//        dO.writeBytes(output);
+        osw.write(output);
+        osw.close();
+//        dO.close();
         fO.close();
         setCursor(Cursor.getDefaultCursor());
       }

@@ -533,16 +533,16 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
     children.insertElementAt((JreepadNode)child, index);
   }
 
-  public void addChildFromTextFile(File textFile) throws IOException
+  public void addChildFromTextFile(InputStreamReader textFile, String nodeName) throws IOException
   {
     // Load the content as a string
     StringBuffer contentString = new StringBuffer();
     String currentLine;
-    BufferedReader bReader = new BufferedReader(new InputStreamReader(new FileInputStream(textFile)));
+    BufferedReader bReader = new BufferedReader(textFile);
     while((currentLine = bReader.readLine())!=null)
       contentString.append(currentLine + "\n");
     // Then just create the node
-    addChild(new JreepadNode(textFile.getName(), contentString.toString(), this));
+    addChild(new JreepadNode(nodeName, contentString.toString(), this));
   }
 
   // This getCopy() function is intended to return a copy of the entire subtree, used for Undo
