@@ -28,8 +28,9 @@ import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
 import java.util.*;
+import java.net.URL;
 
-import javax.swing.plaf.metal.MetalIconFactory; // For icons
+//import javax.swing.plaf.metal.MetalIconFactory; // For icons
 
 // For reflection and Mac OSX specific things
 import com.apple.eawt.*;
@@ -38,7 +39,7 @@ import java.lang.reflect.*;
 public class JreepadViewer extends JFrame
 {
   private static Vector theApps = new Vector(1,1);
-  private Box toolBar;
+  private Box toolBar, toolBarIconic;
   private JreepadView theJreepad;
   private Container content;
   private static final File prefsFile = new File(System.getProperty("user.home"), ".jreepref");
@@ -52,8 +53,28 @@ public class JreepadViewer extends JFrame
   
   private String windowTitle;
   
-  private JComboBox viewSelector;
+  private JButton addAboveButton;
+  private JButton addBelowButton;
+  private JButton addButton;
+  private JButton removeButton;
+  private JButton upButton;
+  private JButton downButton;
+  private JButton indentButton;
+  private JButton outdentButton;
+  private JComboBox viewSelector, viewSelectorIconic;
   
+  private JButton newIconButton;
+  private JButton openIconButton;
+  private JButton saveIconButton;
+  private JButton addAboveIconButton;
+  private JButton addBelowIconButton;
+  private JButton addIconButton;
+  private JButton removeIconButton;
+  private JButton upIconButton;
+  private JButton downIconButton;
+  private JButton indentIconButton;
+  private JButton outdentIconButton;
+
   private Thread autoSaveThread;
 
   private JDialog htmlExportDialog;
@@ -137,6 +158,7 @@ public class JreepadViewer extends JFrame
   private JMenuItem quitMenuItem;
   private JMenu editMenu;
   private JMenuItem undoMenuItem;
+  private JMenuItem editNodeTitleMenuItem;
   private JMenuItem addAboveMenuItem;
   private JMenuItem addBelowMenuItem;
   private JMenuItem addChildMenuItem;
@@ -161,7 +183,10 @@ public class JreepadViewer extends JFrame
   private JMenuItem viewBothMenuItem;
   private JMenuItem viewTreeMenuItem;
   private JMenuItem viewArticleMenuItem;
-  private JCheckBoxMenuItem viewToolbarMenuItem;
+  private JMenu viewToolbarMenu;
+	private JCheckBoxMenuItem viewToolbarIconsMenuItem;
+	private JCheckBoxMenuItem viewToolbarTextMenuItem;
+	private JCheckBoxMenuItem viewToolbarOffMenuItem;
   // private JMenuItem renderHtmlMenuItem;
   private JMenuItem articleViewModeMenuItem;
     private JMenuItem articleViewModeTextMenuItem;
@@ -197,6 +222,10 @@ public class JreepadViewer extends JFrame
     java.net.URL iconUrl = loader.getResource("images/jreepadlogo-01-iconsize.gif");
     setIconImage(new ImageIcon(iconUrl).getImage());
 
+    Toolkit theToolkit = getToolkit();
+    Dimension wndSize = theToolkit.getScreenSize();
+
+
     // Check if a preferences file exists - and if so, load it
     try
     {
@@ -209,12 +238,12 @@ public class JreepadViewer extends JFrame
       else
       {
         showLicense(); // A very crude way of showing the license on first visit
-        setPrefs(new JreepadPrefs(getToolkit().getScreenSize()));
+        setPrefs(new JreepadPrefs(wndSize));
       }
     }
     catch(Exception err)
     {
-      setPrefs(new JreepadPrefs(getToolkit().getScreenSize()));
+      setPrefs(new JreepadPrefs(wndSize));
     }
     
     fileChooser = new JFileChooser();
@@ -257,8 +286,10 @@ public class JreepadViewer extends JFrame
     // Finished establishing the autosave thread
     
     content.setLayout(new BoxLayout(content, BoxLayout.Y_AXIS));
-    content.add(new ColouredStrip(new Color(0.09f, 0.4f, 0.12f)));
+    content.add(new ColouredStrip(new Color(0.09f, 0.4f, 0.12f), wndSize.width, 10));
     content.add(toolBar);
+    content.add(toolBarIconic);
+    setToolbarMode(getPrefs().toolbarMode);
     content.add(theJreepad);
 
     // Load the file - if it has been specified, and if it can be found, and if it's a valid HJT file
@@ -300,8 +331,6 @@ public class JreepadViewer extends JFrame
     setTitleBasedOnFilename("");
 
     // Finally, make the window visible and well-sized
-    Toolkit theToolkit = getToolkit();
-    Dimension wndSize = theToolkit.getScreenSize();
     setBounds(getPrefs().windowLeft,getPrefs().windowTop,
               getPrefs().windowWidth, getPrefs().windowHeight);
     searchDialog.setBounds(getPrefs().windowWidth/2,getPrefs().windowHeight/6,
@@ -438,6 +467,10 @@ public class JreepadViewer extends JFrame
     addChildMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { theJreepad.addNode(); /* theJreepad.returnFocusToTree(); */ setWarnAboutUnsaved(true);updateWindowTitle(); }});
     editMenu.add(addChildMenuItem);
     editMenu.add(new JSeparator());
+    editNodeTitleMenuItem = new JMenuItem("Edit node title");
+    editNodeTitleMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { theJreepad.editNodeTitleAction(); }});
+    editMenu.add(editNodeTitleMenuItem);
+    editMenu.add(new JSeparator());
     deleteMenuItem = new JMenuItem("Delete node");
     deleteMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { deleteNodeAction(); }});
     editMenu.add(deleteMenuItem);
@@ -500,9 +533,27 @@ public class JreepadViewer extends JFrame
     viewArticleMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { setViewMode(JreepadPrefs.VIEW_ARTICLE); }});
     viewMenu.add(viewArticleMenuItem);
     viewMenu.add(new JSeparator());
-    viewToolbarMenuItem = new JCheckBoxMenuItem("Toolbar", true);
-    viewToolbarMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { setViewToolbar(viewToolbarMenuItem.isSelected()); }});
-    viewMenu.add(viewToolbarMenuItem);
+
+    viewToolbarMenu = new JMenu("Toolbar");
+    viewMenu.add(viewToolbarMenu);
+	  viewToolbarIconsMenuItem = new JCheckBoxMenuItem("Icons", true);
+	  viewToolbarIconsMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { 
+	                                              setToolbarMode(JreepadPrefs.TOOLBAR_ICON);
+	                                              }});
+	  viewToolbarMenu.add(viewToolbarIconsMenuItem);
+	  viewToolbarTextMenuItem = new JCheckBoxMenuItem("Text", true);
+	  viewToolbarTextMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { 
+	                                              setToolbarMode(JreepadPrefs.TOOLBAR_TEXT);
+	                                              }});
+	  viewToolbarMenu.add(viewToolbarTextMenuItem);
+	  viewToolbarOffMenuItem = new JCheckBoxMenuItem("Off", true);
+	  viewToolbarOffMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { 
+	                                              setToolbarMode(JreepadPrefs.TOOLBAR_OFF);
+	                                              }});
+	  viewToolbarMenu.add(viewToolbarOffMenuItem);
+
+   
+
     viewMenu.add(new JSeparator());
 
     articleViewModeMenuItem = new JMenu("View this article as...");
@@ -646,11 +697,13 @@ public class JreepadViewer extends JFrame
     viewBothMenuItem.setAccelerator(KeyStroke.getKeyStroke('1', MENU_MASK));
     viewTreeMenuItem.setAccelerator(KeyStroke.getKeyStroke('2', MENU_MASK));
     viewArticleMenuItem.setAccelerator(KeyStroke.getKeyStroke('3', MENU_MASK));
-    viewToolbarMenuItem.setAccelerator(KeyStroke.getKeyStroke('4', MENU_MASK));
-    articleViewModeTextMenuItem.setAccelerator(KeyStroke.getKeyStroke('5', MENU_MASK));
-    articleViewModeHtmlMenuItem.setAccelerator(KeyStroke.getKeyStroke('6', MENU_MASK));
-    articleViewModeCsvMenuItem.setAccelerator(KeyStroke.getKeyStroke('7', MENU_MASK));
-    viewToolbarMenuItem.setMnemonic('o');
+    viewToolbarIconsMenuItem.setAccelerator(KeyStroke.getKeyStroke('4', MENU_MASK));
+    viewToolbarTextMenuItem.setAccelerator(KeyStroke.getKeyStroke('5', MENU_MASK));
+    viewToolbarOffMenuItem.setAccelerator(KeyStroke.getKeyStroke('6', MENU_MASK));
+    articleViewModeTextMenuItem.setAccelerator(KeyStroke.getKeyStroke('7', MENU_MASK));
+    articleViewModeHtmlMenuItem.setAccelerator(KeyStroke.getKeyStroke('8', MENU_MASK));
+    articleViewModeCsvMenuItem.setAccelerator(KeyStroke.getKeyStroke('9', MENU_MASK));
+    viewToolbarMenu.setMnemonic('o');
     optionsMenu.setMnemonic('O');
     autoSaveMenuItem.setMnemonic('a');
     prefsMenuItem.setMnemonic('p');
@@ -667,36 +720,18 @@ public class JreepadViewer extends JFrame
   {
     // Add the toolbar buttons
     toolBar = Box.createHorizontalBox();
-   ///* THESE BUTTONS HAVE BEEN REMOVED. But leave the code here, since they may later be replaced with iconic buttons.
+    toolBarIconic = Box.createHorizontalBox();
 
-
-new MetalIconFactory.FileIcon16();
-
-    JButton newButton = new JButton("New");
-    toolBar.add(newButton);
-    JButton openButton = new JButton("Open");
-    toolBar.add(openButton);
-    JButton saveButton = new JButton("Save");
-    toolBar.add(saveButton);
-   //*/
     //
-    JButton addAboveButton = new JButton("Add above");
-    toolBar.add(addAboveButton);
-    JButton addBelowButton = new JButton("Add below");
-    toolBar.add(addBelowButton);
-    JButton addButton = new JButton("Add child");
-    toolBar.add(addButton);
-    JButton removeButton = new JButton("Del");
-    toolBar.add(removeButton);
+    addAboveButton = new JButton("Add above");
+    addBelowButton = new JButton("Add below");
+    addButton = new JButton("Add child");
+    removeButton = new JButton("Del");
     //
-    JButton upButton = new JButton("Up");
-    toolBar.add(upButton);
-    JButton downButton = new JButton("Down");
-    toolBar.add(downButton);
-    JButton indentButton = new JButton("In");
-    toolBar.add(indentButton);
-    JButton outdentButton = new JButton("Out");
-    toolBar.add(outdentButton);
+    upButton = new JButton("Up");
+    downButton = new JButton("Down");
+    indentButton = new JButton("In");
+    outdentButton = new JButton("Out");
     //
     // Now the mnemonics...
     addAboveButton.setMnemonic('a');
@@ -723,26 +758,37 @@ new MetalIconFactory.FileIcon16();
                                    setViewMode(JreepadPrefs.VIEW_BOTH); break;
                                }
                                } });
-    toolBar.add(viewSelector);
-    toolBar.add(Box.createGlue());
+    viewSelectorIconic = new JComboBox(new String[]{"Tree+Article","Tree","Article"});
+    viewSelectorIconic.setEditable(false);
+    viewSelectorIconic.setSelectedIndex(0);
+    viewSelectorIconic.addActionListener(new ActionListener(){
+                               public void actionPerformed(ActionEvent e){ 
+                               switch(viewSelectorIconic.getSelectedIndex())
+                               {
+                                 case 1:
+                                   setViewMode(JreepadPrefs.VIEW_TREE); break;
+                                 case 2:
+                                   setViewMode(JreepadPrefs.VIEW_ARTICLE); break;
+                                 default:
+                                   setViewMode(JreepadPrefs.VIEW_BOTH); break;
+                               }
+                               } });
     
     // Add the actions to the toolbar buttons
-   /* THESE BUTTONS HAVE BEEN REMOVED. But leave the code here, since they may later be replaced with iconic buttons.
-    newButton.addActionListener(new ActionListener(){
-                               public void actionPerformed(ActionEvent e){ content.remove(theJreepad); theJreepad = new JreepadView(); content.add(theJreepad); repaint(); } });
-    openButton.addActionListener(new ActionListener(){
-                               public void actionPerformed(ActionEvent e){ openAction(); } });
-    saveButton.addActionListener(new ActionListener(){
-                               public void actionPerformed(ActionEvent e){ saveAction(); } });
-   */
     upButton.addActionListener(new ActionListener(){
                                public void actionPerformed(ActionEvent e){ theJreepad.moveCurrentNodeUp(); repaint();  theJreepad.returnFocusToTree(); setWarnAboutUnsaved(true);updateWindowTitle();} });
     downButton.addActionListener(new ActionListener(){
                                public void actionPerformed(ActionEvent e){ theJreepad.moveCurrentNodeDown(); repaint();  theJreepad.returnFocusToTree(); setWarnAboutUnsaved(true);updateWindowTitle();} });
+
+
     indentButton.addActionListener(new ActionListener(){
                                public void actionPerformed(ActionEvent e){ theJreepad.indentCurrentNode(); repaint();  theJreepad.returnFocusToTree(); setWarnAboutUnsaved(true);updateWindowTitle();} });
     outdentButton.addActionListener(new ActionListener(){
                                public void actionPerformed(ActionEvent e){ theJreepad.outdentCurrentNode(); repaint(); theJreepad.returnFocusToTree(); setWarnAboutUnsaved(true);updateWindowTitle(); } });
+
+
+
+
     addAboveButton.addActionListener(new ActionListener(){
                                public void actionPerformed(ActionEvent e){ theJreepad.addNodeAbove(); repaint(); /* theJreepad.returnFocusToTree(); */ setWarnAboutUnsaved(true);updateWindowTitle();} });
     addBelowButton.addActionListener(new ActionListener(){
@@ -751,7 +797,197 @@ new MetalIconFactory.FileIcon16();
                                public void actionPerformed(ActionEvent e){ theJreepad.addNode(); repaint(); /* theJreepad.returnFocusToTree(); */ setWarnAboutUnsaved(true);updateWindowTitle();} });
     removeButton.addActionListener(new ActionListener(){
                                public void actionPerformed(ActionEvent e){ deleteNodeAction(); } });
+
+
+    // Now establish the iconic buttons (code contributed by Coen Schalkwijk)
+        // New file
+        newIconButton = new JButton();
+        newIconButton.setToolTipText("New");
+        newIconButton.setBorderPainted(false);
+        newIconButton.setIcon(this.getIcon("New16.gif"));
+        
+        // Open existing
+		openIconButton = new JButton();
+		openIconButton.setToolTipText("Open");
+		openIconButton.setBorderPainted(false);
+		openIconButton.setIcon(this.getIcon("Open16.gif"));
+				
+		// Save current
+	    saveIconButton = new JButton();
+	    saveIconButton.setToolTipText("Save");
+	    saveIconButton.setBorderPainted(false);
+	    saveIconButton.setIcon(this.getIcon("Save16.gif"));
+		
+		// Insert node before
+	    addAboveIconButton = new JButton("Add above");
+//	    addAboveIconButton = new JButton();
+	    addAboveIconButton.setToolTipText("Add above");
+//	    addAboveIconButton.setBorderPainted(false);
+//	    addAboveIconButton.setMnemonic('a');
+//	    addAboveIconButton.setIcon(this.getIcon("InsertBefore16.gif"));
+	    
+	    // Insert node after
+	    addBelowIconButton = new JButton("Add below");
+//	    addBelowIconButton = new JButton();
+	    addBelowIconButton.setMnemonic('b');
+//	    addBelowIconButton.setToolTipText("Add below");
+//	    addBelowIconButton.setBorderPainted(false);
+//	    addBelowIconButton.setIcon(this.getIcon("InsertAfter16.gif"));
+    
+		// Add child node
+		addIconButton = new JButton();
+		addIconButton.setMnemonic('c');
+		addIconButton.setToolTipText("Add child");
+		addIconButton.setBorderPainted(false);
+		addIconButton.setIcon(this.getIcon("Add16.gif"));
+    
+    	// Remove node
+	    removeIconButton = new JButton();
+	    removeIconButton.setMnemonic('k');
+	    removeIconButton.setToolTipText("Delete node");
+	    removeIconButton.setBorderPainted(false);
+	    removeIconButton.setIcon(this.getIcon("Remove16.gif"));
+		    
+	    // Move node up
+	    upIconButton = new JButton();
+	    upIconButton.setMnemonic('u');
+	    upIconButton.setToolTipText("Move up");
+	    upIconButton.setBorderPainted(false);
+	    upIconButton.setIcon(this.getIcon("Up16.gif"));
+	    
+	    // Move node down
+	    downIconButton = new JButton();
+	    downIconButton.setMnemonic('d');
+	    downIconButton.setToolTipText("Move down");
+	    downIconButton.setBorderPainted(false);
+	    downIconButton.setIcon(this.getIcon("Down16.gif"));
+    
+	    // Move node from current
+	    outdentIconButton = new JButton();
+	    outdentIconButton.setMnemonic('i');
+	    outdentIconButton.setToolTipText("Indent");
+	    outdentIconButton.setBorderPainted(false);
+	    outdentIconButton.setIcon(this.getIcon("Back16.gif"));
+    
+	    // Move node to previous
+	    indentIconButton = new JButton();
+	    indentIconButton.setMnemonic('o');
+	    indentIconButton.setToolTipText("Outdent");
+	    indentIconButton.setBorderPainted(false);
+	    indentIconButton.setIcon(this.getIcon("Forward16.gif"));
+	    
+    // Add the actions to the toolbar buttons
+    newIconButton.addActionListener(new ActionListener(){
+                               public void actionPerformed(ActionEvent e){ newAction(); } });
+    openIconButton.addActionListener(new ActionListener(){
+                               public void actionPerformed(ActionEvent e){ openAction(); } });
+    saveIconButton.addActionListener(new ActionListener(){
+                               public void actionPerformed(ActionEvent e){ saveAction(); } });
+    upIconButton.addActionListener(new ActionListener(){
+                               public void actionPerformed(ActionEvent e){ theJreepad.moveCurrentNodeUp(); repaint(); 
+		  theJreepad.returnFocusToTree();
+		  setWarnAboutUnsaved(true);updateWindowTitle();} });
+    downIconButton.addActionListener(new ActionListener(){
+                               public void actionPerformed(ActionEvent e){ theJreepad.moveCurrentNodeDown(); repaint(); 
+		  theJreepad.returnFocusToTree();
+		  setWarnAboutUnsaved(true);updateWindowTitle();} });
+    indentIconButton.addActionListener(new ActionListener(){
+                               public void actionPerformed(ActionEvent e){ theJreepad.indentCurrentNode(); repaint(); 
+		  theJreepad.returnFocusToTree();
+		  setWarnAboutUnsaved(true);updateWindowTitle();} });
+    outdentIconButton.addActionListener(new ActionListener(){
+                               public void actionPerformed(ActionEvent e){ theJreepad.outdentCurrentNode(); repaint();
+		  theJreepad.returnFocusToTree();
+		  setWarnAboutUnsaved(true);updateWindowTitle(); } });
+    addAboveIconButton.addActionListener(new ActionListener(){
+                               public void actionPerformed(ActionEvent e){ theJreepad.addNodeAbove(); repaint(); /*
+		  theJreepad.returnFocusToTree(); */
+		  setWarnAboutUnsaved(true);updateWindowTitle();} });
+    addBelowIconButton.addActionListener(new ActionListener(){
+                               public void actionPerformed(ActionEvent e){ theJreepad.addNodeBelow(); repaint(); /*
+		  theJreepad.returnFocusToTree(); */
+		  setWarnAboutUnsaved(true);updateWindowTitle();} });
+    addIconButton.addActionListener(new ActionListener(){
+                               public void actionPerformed(ActionEvent e){ theJreepad.addNode(); repaint(); /*
+		  theJreepad.returnFocusToTree(); */
+		  setWarnAboutUnsaved(true);updateWindowTitle();} });
+    removeIconButton.addActionListener(new ActionListener(){
+                               public void actionPerformed(ActionEvent e){ deleteNodeAction(); } });
+    // Finished establishing the iconic buttons
+
+
+
+
+// Add all the buttons to their respective toolbar
+    toolBar.add(addAboveButton);
+    toolBar.add(addBelowButton);
+    toolBar.add(addButton);
+    toolBar.add(removeButton);
+    toolBar.add(upButton);
+    toolBar.add(downButton);
+    toolBar.add(indentButton);
+    toolBar.add(outdentButton);
+    toolBar.add(viewSelector);
+    toolBar.add(Box.createGlue());
+
+
+	toolBarIconic.add(newIconButton);
+	toolBarIconic.add(openIconButton);
+	toolBarIconic.add(saveIconButton);
+	toolBarIconic.add(addAboveIconButton);
+	toolBarIconic.add(addBelowIconButton);
+	toolBarIconic.add(addIconButton);
+	toolBarIconic.add(removeIconButton);
+	toolBarIconic.add(upIconButton);
+	toolBarIconic.add(downIconButton);
+	toolBarIconic.add(outdentIconButton);
+	toolBarIconic.add(indentIconButton);
+    toolBarIconic.add(viewSelectorIconic);
+    toolBarIconic.add(Box.createGlue());
   }
+
+
+  private ClassLoader loader = this.getClass().getClassLoader();
+  private final Icon getIcon(String name){
+    try{
+       // TODO create single funct for all img loading
+       URL iconUrl = loader.getResource("images/"+name);
+       return new ImageIcon(iconUrl);
+       }catch(Exception e){
+         e.printStackTrace();// Ignore, use default icon
+       }
+     return null;
+  }
+    
+    
+  
+  protected void setToolbarMode(int newMode)
+  {
+    switch(newMode)
+    {
+      case JreepadPrefs.TOOLBAR_TEXT:
+        toolBar.setVisible(true);
+        toolBarIconic.setVisible(false);
+        break;
+      case JreepadPrefs.TOOLBAR_ICON:
+        toolBar.setVisible(false);
+        toolBarIconic.setVisible(true);
+        break;
+      case JreepadPrefs.TOOLBAR_OFF:
+        toolBar.setVisible(false);
+        toolBarIconic.setVisible(false);
+        break;
+      default:
+        // Invalid mode passed
+        return;
+    }
+    getPrefs().toolbarMode = newMode;
+    viewToolbarIconsMenuItem.setSelected(newMode==JreepadPrefs.TOOLBAR_ICON);
+    viewToolbarTextMenuItem.setSelected(newMode==JreepadPrefs.TOOLBAR_TEXT);
+    viewToolbarOffMenuItem.setSelected(newMode==JreepadPrefs.TOOLBAR_OFF);
+    repaint();
+  }
+
   
   private void establishSearchDialogue()
   {
@@ -850,11 +1086,50 @@ new MetalIconFactory.FileIcon16();
     vBox.add(searchResultsTableScrollPane);
     //
     // Add mouse listener
-    MouseListener sml = new MouseAdapter(){public void mouseClicked(MouseEvent e){mouseClickedOnSearchResultsTable(e);}};
+    MouseListener sml = new MouseAdapter(){public void mouseClicked(MouseEvent e){
+                   mouseClickedOnSearchResultsTable(e);}};
     searchResultsTable.addMouseListener(sml); 
     //
     searchDialog.getContentPane().add(vBox);
+
+    // Now we'll add some keyboard shortcuts
+    KeyAdapter searchKeyListener = new KeyAdapter(){ public void keyPressed(KeyEvent eek)
+                              {
+                                switch(eek.getKeyCode())
+                                {
+                                  case KeyEvent.VK_ESCAPE:
+                                    closeSearchDialogue();
+                                    break;
+                                  case KeyEvent.VK_W:
+                                    if(eek.isControlDown() || eek.isMetaDown())
+                                      closeSearchDialogue();
+                                    break;
+                                }
+                              }};
+    searchDialog.addKeyListener(searchKeyListener);
+    nodeSearchField.addKeyListener(searchKeyListener);
+    searchCaseCheckBox.addKeyListener(searchKeyListener);
+    searchWhereSelector.addKeyListener(searchKeyListener);
+    searchResultsTable.addKeyListener(searchKeyListener);
+    searchMaxNumSpinner.addKeyListener(searchKeyListener);
+    searchResultsTable.addKeyListener(new KeyAdapter(){ public void keyPressed(KeyEvent eek)
+                              {
+                                switch(eek.getKeyCode())
+                                {
+                                  case KeyEvent.VK_SPACE:
+                                  case KeyEvent.VK_ENTER:
+                                    mouseClickedOnSearchResultsTable(null);
+                                    break;
+                                }
+                              }});
+
+
     // Finished establishing the search dialogue box
+  }
+  
+  private void closeSearchDialogue()
+  {
+    searchDialog.setVisible(false);
   }
   
   private void mouseClickedOnSearchResultsTable(MouseEvent e)
@@ -864,15 +1139,9 @@ new MetalIconFactory.FileIcon16();
 	 if(results==null || results.length==0 || selectedRow==-1)
 	   return;
 	 
-	 if(e.getClickCount()>1)
-	 {
-	   // Select the node in the tree, and move focus to the tree
-	   theJreepad.getTree().setSelectionPath(results[selectedRow].getTreePath());
-	   theJreepad.getTree().scrollPathToVisible(results[selectedRow].getTreePath());
-	   searchDialog.setVisible(false);
-	   this.toFront();
-	   theJreepad.returnFocusToTree();
-	 }
+	 // Select the node in the tree
+	 theJreepad.getTree().setSelectionPath(results[selectedRow].getTreePath());
+	 theJreepad.getTree().scrollPathToVisible(results[selectedRow].getTreePath());
   }
   
   private void establishPrefsDialogue()
@@ -1005,7 +1274,7 @@ new MetalIconFactory.FileIcon16();
     genPanel.add(htmlVBox);
     vBox.add(genPanel);
     vBox.add(quoteCsvCheckBox = new JCheckBox("Add quote marks when converting tables to CSV", getPrefs().addQuotesToCsvOutput));
-    
+
     hBox = Box.createHorizontalBox();
     hBox.add(prefsOkButton = new JButton("OK"));
     hBox.add(prefsCancelButton = new JButton("Cancel"));
@@ -1028,7 +1297,7 @@ new MetalIconFactory.FileIcon16();
                                     getPrefs().htmlExportArticleType = htmlExportModeSelector.getSelectedIndex();
                                     getPrefs().htmlExportAnchorLinkType = htmlExportAnchorTypeSelector.getSelectedIndex();
                                     getPrefs().addQuotesToCsvOutput = quoteCsvCheckBox.isSelected();
-                                    
+
                                     // If exporting as HTML then we ignore this checkbox
                                     if(htmlExportModeSelector.getSelectedIndex()!=2)
                                       getPrefs().htmlExportUrlsToLinks = urlsToLinksCheckBox.isSelected();
@@ -1129,7 +1398,7 @@ new MetalIconFactory.FileIcon16();
           return; // This cancels "New" if the save action failed or was cancelled
     }
 	content.remove(theJreepad);
-	theJreepad = new JreepadView(new JreepadNode());
+	theJreepad = new JreepadView(new JreepadNode("<Untitled node>",theJreepad.getContentForNewNode(), null));
 	getPrefs().saveLocation = null;
 	content.add(theJreepad);
 	setTitleBasedOnFilename("");
@@ -2133,9 +2402,10 @@ new MetalIconFactory.FileIcon16();
   static class ColouredStrip extends JPanel
   {
     Color col;
-    ColouredStrip(Color col)
+    ColouredStrip(Color col, int maxWidth, int maxHeight)
     {
       super(false);
+      setMaximumSize(new Dimension(maxWidth, maxHeight));
       setBackground(col);
 //      this.col = col;
     }

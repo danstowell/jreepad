@@ -172,7 +172,7 @@ public class JreepadView extends Box implements TableModelListener
                       }
                    }); 
 
-    // Fiddle with the cell editor - to ensure that when editing a new node, the <Untitled node> text is selected
+    // Fiddle with the cell editor - to ensure that when editing a new node, you shouldn't be able to leave a blank title
     tree.getCellEditor().addCellEditorListener(new CellEditorListener()
                                    {
                                      public void editingCanceled(ChangeEvent e)
@@ -232,7 +232,20 @@ public class JreepadView extends Box implements TableModelListener
       }
     };
     tree.addMouseListener(ml); 
- 
+
+    tree.addKeyListener(new KeyAdapter(){public void keyPressed(KeyEvent kee) {
+     int key = kee.getKeyCode();
+     switch(key)
+     {
+       case KeyEvent.VK_ENTER:
+         addNodeBelow();
+         break;
+       case KeyEvent.VK_F2:
+         editNodeTitleAction();
+         break;
+     }
+     // System.out.println("Tree detected a keypress: " + kee.getKeyText(kee.getKeyCode()) + " (key code "+ kee.getKeyCode()+")");
+     }}); 
  
     treeView.setViewportView(tree);
 
@@ -458,6 +471,12 @@ public class JreepadView extends Box implements TableModelListener
 
   public void indentCurrentNode()
   {
+    if(currentNode.equals(root))
+    {
+      notForRootNode();
+      return;
+    }
+
     int nodeRow = tree.getLeadSelectionRow();
     TreePath parentPath = tree.getSelectionPath().getParentPath();
     int pos = currentNode.getIndex();
@@ -479,6 +498,12 @@ public class JreepadView extends Box implements TableModelListener
   }
   public void outdentCurrentNode()
   {
+    if(currentNode.equals(root))
+    {
+      notForRootNode();
+      return;
+    }
+
     TreePath parentPath = tree.getSelectionPath().getParentPath();
     if(parentPath==null) return;
     TreePath parentParentPath = parentPath.getParentPath();
@@ -499,6 +524,13 @@ public class JreepadView extends Box implements TableModelListener
   public void moveCurrentNodeUp()
   {
     TreePath nodePath = tree.getSelectionPath();
+    
+    if(currentNode.equals(root))
+    {
+      notForRootNode();
+      return;
+    }
+    
     storeForUndo();
     currentNode.moveUp();
     treeModel.reload(currentNode.getParent());
@@ -507,13 +539,34 @@ public class JreepadView extends Box implements TableModelListener
   public void moveCurrentNodeDown()
   {
     TreePath nodePath = tree.getSelectionPath();
+
+    if(currentNode.equals(root))
+    {
+      notForRootNode();
+      return;
+    }
+
     storeForUndo();
     currentNode.moveDown();
     treeModel.reload(currentNode.getParent());
     tree.setSelectionPath(nodePath);
   }
   
-  private String getContentForNewNode()
+  private void notForRootNode()
+  {
+    // FIXME: If there are no child nodes, assume the user needs some advice about adding nodes
+    if(root.isLeaf())
+      JOptionPane.showMessageDialog(this, 
+       "You can only perform this operation on child nodes.\nPlease choose \"Add child\" to add nodes to the root node,\nand then this option will become more meaningful.", "Root node is selected" , 
+         JOptionPane.INFORMATION_MESSAGE);
+    else 
+      return;
+//      JOptionPane.showMessageDialog(this, 
+//       "The root node is currently selected - you can only perform this operation on child nodes.", "Root node is selected" , 
+//         JOptionPane.INFORMATION_MESSAGE);
+  }
+  
+  protected String getContentForNewNode()
   {
     if(prefs.autoDateInArticles)
       return getCurrentDate(); // java.text.DateFormat.getDateInstance().format(new java.util.Date());
@@ -554,6 +607,12 @@ public class JreepadView extends Box implements TableModelListener
   {
     int index = currentNode.getIndex();
     if(index==-1)
+    {
+      notForRootNode();
+      return null;
+    }
+
+    if(tree.getSelectionpath()==null)
       return null;
     storeForUndo();
     TreePath parentPath = tree.getSelectionPath().getParentPath();
@@ -570,6 +629,12 @@ public class JreepadView extends Box implements TableModelListener
   {
     int index = currentNode.getIndex();
     if(index==-1)
+    {
+      notForRootNode();
+      return null;
+    }
+
+    if(tree.getSelectionpath()==null)
       return null;
     storeForUndo();
     TreePath parentPath = tree.getSelectionPath().getParentPath();
@@ -1293,6 +1358,10 @@ System.out.println(err);
     }
   }
 
+  public void editNodeTitleAction()
+  {
+    tree.startEditingAtPath(tree.getSelectionPath());
+  }
 
   public String jTableContentToCsv()
   {

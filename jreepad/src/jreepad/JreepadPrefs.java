@@ -123,6 +123,7 @@ public class JreepadPrefs implements Serializable
   
   static final int TOOLBAR_TEXT = 0;
   static final int TOOLBAR_ICON = 1;
+  static final int TOOLBAR_OFF = 2;
   int toolbarMode;
   
   JreepadPrefs(Dimension wndSize)
