@@ -31,7 +31,7 @@ import java.util.Vector;
 import java.io.*;
 import java.awt.print.*;
 
-public class JreepadView extends Box
+public class JreepadView extends Box implements TableModelListener
 {
 
   // Code to ensure that the article word-wraps follows
@@ -91,9 +91,10 @@ public class JreepadView extends Box
   // editorPane is supposed to represent the pane currently displayed/edited - so it's the one
   //    to refer to when you're doing GUI-related stuff
   // It will be equal to one of the content-type-specific panes. Need to set the content of BOTH of these...
-  private JEditorPane editorPane;
+//  private JEditorPane editorPane;
   private JEditorPane editorPanePlainText;
   private JEditorPane editorPaneHtml;
+  private JTable editorPaneCsv;
   
   public static final int ARTICLEMODE_ORDINARY = 1;
   public static final int ARTICLEMODE_HTML = 2;
@@ -161,6 +162,8 @@ public class JreepadView extends Box
 
     searcher = new JreepadSearcher(root);
 
+
+
     //Listen for when the selection changes.
     tree.addTreeSelectionListener(new TreeSelectionListener()
                    {
@@ -169,8 +172,6 @@ public class JreepadView extends Box
                         JreepadNode node = (JreepadNode)
                            tree.getLastSelectedPathComponent();
                         if (node == null) return;
-
-                      //  JreepadNode nodeInfo = (JreepadNode)(node.getUserObject());
                         setCurrentNode(node);
                       }
                    }); 
@@ -181,13 +182,10 @@ public class JreepadView extends Box
       public void mousePressed(MouseEvent e)
       {
         TreePath selPath = tree.getPathForLocation(e.getX(), e.getY());
-//        System.out.println("Mouse pressed: path = " + selPath);
         if(selPath != null)
         {
           currentDragDropNode = (JreepadNode)selPath.getLastPathComponent();
           setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-          // if(e.getClickCount() == 1) {mySingleClick(selPath);}
-//            System.out.println("Setting dragdrop node to " + currentDragDropNode);
         }
       }
       public void mouseReleased(MouseEvent e)
@@ -202,7 +200,6 @@ public class JreepadView extends Box
              currentDragDropNode != (JreepadNode)selPath.getLastPathComponent())
           {
             // Then we need to perform a drag-and-drop operation!
-//            System.out.println("Drag-and-drop event occurred!");
             moveNode(currentDragDropNode, (JreepadNode)selPath.getLastPathComponent());
             
             // Ensure that the destination node is open
@@ -215,7 +212,6 @@ public class JreepadView extends Box
       public void mouseClicked(MouseEvent e)
       {
         TreePath selPath = tree.getPathForLocation(e.getX(), e.getY());
- //       System.out.println("Mouse clicked: path = " + selPath);
         if(selPath != null)
         {
           if(e.isPopupTrigger())
@@ -232,22 +228,28 @@ public class JreepadView extends Box
     treeView.setViewportView(tree);
 
 
-    editorPane = editorPanePlainText = new JEditorPane("text/plain", root.getContent());
+    editorPanePlainText = new JEditorPane("text/plain", root.getContent());
+    editorPanePlainText.setEditable(true);
     editorPaneHtml = new JEditorPane("text/html", root.getContent());
-    editorPane.setEditable(true);
-    editorPaneHtml.setEditable(true);
+    editorPaneHtml.setEditable(false);
+    editorPaneCsv = new JTable();
+    editorPaneCsv.getModel().addTableModelListener(this);
+
     setEditorPaneKit();
+
     // Add a listener to make sure the editorpane's content is always stored when it changes
-    editorPane.addCaretListener(new CaretListener() {
+    editorPanePlainText.addCaretListener(new CaretListener() {
     				public void caretUpdate(CaretEvent e)
     				{
     				  if(!copyEditorPaneContentToNodeContent)
     				    return; // i.e. we are deactivated while changing from node to node
+    				  if(currentNode.getArticleMode() != JreepadNode.ARTICLEMODE_ORDINARY)
+    				    return; // i.e. we are only relevant when in plain-text mode
     				
-    				  if(!editorPane.getText().equals(currentNode.getContent()))
+    				  if(!editorPanePlainText.getText().equals(currentNode.getContent()))
     				  {
     				    // System.out.println("UPDATE - I'd now overwrite node content with editorpane content");
-    				    currentNode.setContent(editorPane.getText());
+    				    currentNode.setContent(editorPanePlainText.getText());
     				    setWarnAboutUnsaved(true);
     				  }
     				  else
@@ -255,7 +257,7 @@ public class JreepadView extends Box
     				    // System.out.println("  No need to update content.");
     				  }
     				}});
-    articleView = new JScrollPane(editorPane, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+    articleView = new JScrollPane(getEditorPaneComponent(), JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
     articleView.addComponentListener(new ComponentListener()
     					{
     					  public void componentResized(ComponentEvent e)
@@ -285,6 +287,7 @@ public class JreepadView extends Box
     					);
 
     setCurrentNode(root);
+
     setViewBoth();
     tree.setSelectionRow(0);
   }
@@ -292,7 +295,7 @@ public class JreepadView extends Box
   public void setEditorPaneKit()
   {
     if(getPrefs().wrapToWindow)
-      editorPane.setEditorKit(new JPEditorKit());
+      editorPanePlainText.setEditorKit(new JPEditorKit());
  //   else
  //     editorPane.setEditorKit(new javax.swing.text.StyledEditorKit());
   }
@@ -368,11 +371,12 @@ public class JreepadView extends Box
     copyEditorPaneContentToNodeContent = false; // Deactivate the caret-listener, effectively
     if(currentNode != null)
     {
-      currentNode.setContent(editorPane.getText());
+      currentNode.setContent(getEditorPaneText());
     }
     currentNode = n;
-    editorPanePlainText.setText(n.getContent());
-    editorPaneHtml.setText(n.getContent());
+    setEditorPaneText(n.getContent());
+//    editorPanePlainText.setText(n.getContent());
+//    editorPaneHtml.setText(n.getContent());
     ensureCorrectArticleRenderMode();
     copyEditorPaneContentToNodeContent = true; // Reactivate the caret listener
   }
@@ -516,17 +520,20 @@ public class JreepadView extends Box
   
   public void insertDate()
   {
+    if(currentNode.getArticleMode() != JreepadNode.ARTICLEMODE_ORDINARY)
+      return; // May want to fix this later - allow other modes to have the date inserted...
+  
     storeForUndo();
     String theDate = getCurrentDate();
-    Document doc = editorPane.getDocument();
-    int here = editorPane.getCaretPosition();
+    Document doc = editorPanePlainText.getDocument();
+    int here = editorPanePlainText.getCaretPosition();
     try
     {
       editorPanePlainText.setText(doc.getText(0, here) + theDate + 
                               doc.getText(here, doc.getLength() - here)); 
       editorPaneHtml.setText(doc.getText(0, here) + theDate + 
                               doc.getText(here, doc.getLength() - here)); 
-      editorPane.setCaretPosition(here + theDate.length()); 
+      editorPanePlainText.setCaretPosition(here + theDate.length()); 
     }
     catch(BadLocationException e)
     {
@@ -698,128 +705,6 @@ public class JreepadView extends Box
   {
     return searcher.getSearchResults();
   }
-/*
-  private JreepadSearchResult[] searchResults;
-  private Vector searchResultsVec;
-  private Object foundObject;
-  public boolean performSearch(String inNodes, String inArticles, int searchWhat // 0=selected, 1=all
-  							, boolean orNotAnd, boolean caseSensitive, int maxResults)
-  {
-    searchResults = null;
-    searchResultsVec = new Vector();
-    
-    // Now look through the nodes, adding things to searchResultsVec if found.
-    switch(searchWhat)
-    {
-      case 0: // search selected node
-        recursiveSearchNode(inNodes, inArticles, currentNode, tree.getSelectionPath(), orNotAnd, caseSensitive, maxResults);
-        break;
-      default: // case 1==search whole tree
-        recursiveSearchNode(inNodes, inArticles, root, new TreePath(root), orNotAnd, caseSensitive, maxResults);
-        break;
-    }
-
-	searchResults = new JreepadSearchResult[searchResultsVec.size()];
-	for(int i=0; i<searchResults.length; i++)
-	{
-	  foundObject = searchResultsVec.get(i);
-	  searchResults[i] = (JreepadSearchResult)foundObject;
-	}
-	return true;
-  }
-  private static final int articleQuoteMaxLen = 40;
-  private void recursiveSearchNode(String inNodes, String inArticles, JreepadNode thisNode, TreePath pathSoFar,
-  					boolean orNotAnd, boolean caseSensitive, int maxResults)
-  {
-    if(searchResultsVec.size()>=maxResults) return;
-    
-    String quoteText;
-    
-    // These things ensure case-sensitivity behaves
-    String casedInNodes = caseSensitive    ? inNodes               : inNodes.toUpperCase();
-    String casedInArticles = caseSensitive ? inArticles            : inArticles.toUpperCase();
-    String casedNode = caseSensitive       ? thisNode.getTitle()   : thisNode.getTitle().toUpperCase();
-    String casedArticle = caseSensitive    ? thisNode.getContent() : thisNode.getContent().toUpperCase();
-    
-    // Look in current node. If it matches criteria, add "pathSoFar" to the Vector
-    boolean itMatches;
-    boolean nodeMatches    = inNodes.equals("")    || casedNode.indexOf(casedInNodes)!=-1;
-    boolean articleMatches = inArticles.equals("") || casedArticle.indexOf(casedInArticles)!=-1;
-
-
-    if(inNodes.equals("") && inArticles.equals(""))
-      itMatches = false;
-    else if(inNodes.equals("")) // Only looking in articles
-      itMatches = articleMatches;
-    else if(inArticles.equals("")) // Only looking in nodes
-      itMatches = nodeMatches;
-    else // Looking in both
-      if(orNotAnd) // Use OR combinator
-        itMatches = nodeMatches || articleMatches;
-      else // Use AND combinator
-        itMatches = nodeMatches && articleMatches;
-
-
-    if(itMatches)
-    {
-      if(!articleMatches)
-      {
-        if(thisNode.getContent().length()>articleQuoteMaxLen)
-          quoteText = thisNode.getContent().substring(0,articleQuoteMaxLen) + "...";
-        else
-          quoteText = thisNode.getContent();
-      }
-      else
-      {
-        quoteText = "";
-        int start = casedArticle.indexOf(casedInArticles);
-        String substring;
-        if(start>0)
-          quoteText += "...";
-        else
-          start = 0;
-        substring = thisNode.getContent();
-        if(substring.length() > articleQuoteMaxLen)
-          quoteText += substring.substring(0,articleQuoteMaxLen) + "...";
-        else
-          quoteText += thisNode.getContent().substring(start);
-      }
-      searchResultsVec.add(new JreepadSearchResult(pathSoFar, quoteText, thisNode));
-//      System.out.println("Positive match: "+thisNode);
-    }
-    
-    // Whether or not it matches, make the recursive call on the children
-    Enumeration getKids = thisNode.children();
-    JreepadNode thisKid;
-    while(getKids.hasMoreElements())
-    {
-      thisKid = (JreepadNode)getKids.nextElement();
-      recursiveSearchNode(inNodes, inArticles, thisKid, pathSoFar.pathByAddingChild(thisKid), 
-                          orNotAnd, caseSensitive, maxResults);
-    }
-  }
-  public JreepadSearchResult[] getSearchResults()
-  {
-    return searchResults;
-  }
-  public class JreepadSearchResult
-  {
-    private TreePath treePath;
-    private String articleQuote;
-    private JreepadNode node;
-    public JreepadSearchResult(TreePath treePath, String articleQuote, JreepadNode node)
-    {
-      this.treePath = treePath;
-      this.articleQuote = articleQuote;
-      this.node = node;
-    }
-    public String getArticleQuote()	{ return articleQuote;	}
-    public TreePath getTreePath()	{ return treePath;		}
-    public JreepadNode getNode()	{ return node;		}
-  }
-  // End of: functions and inner class for searching nodes
-*/
-
 
   public void addChildrenFromTextFiles(File[] inFiles) throws IOException
   {
@@ -856,7 +741,16 @@ public class JreepadView extends Box
 
   public String getSelectedTextInArticle()
   {
-    return editorPane.getSelectedText();
+    switch(currentNode.getArticleMode())
+    {
+      case JreepadNode.ARTICLEMODE_CSV:
+        return ""; //editorPane.getSelectedText(); // FIXME - SHOULD BE ABLE TO RETURN SOMETHING SENSIBLE!
+      case JreepadNode.ARTICLEMODE_HTML:
+        return editorPaneHtml.getSelectedText();
+      case JreepadNode.ARTICLEMODE_ORDINARY:
+      default:
+        return editorPanePlainText.getSelectedText();
+    }
   }
 
   // Stuff concerned with printing
@@ -930,7 +824,7 @@ public class JreepadView extends Box
   public void webSearchTextSelectedInArticle()
   {
     // JComponent treeOrArticle;
-    String url = editorPane.getSelectedText();
+    String url = getSelectedTextInArticle();
 
     if(url==null || url.length()==0)
       url = currentNode.getTitle();
@@ -939,21 +833,24 @@ public class JreepadView extends Box
     {
       try
       {
-      String text = editorPane.getText();
-      int startpos = editorPane.getCaretPosition();
+      
+        // FIXME - THIS WILL NOT WORK UNLESS IN PLAINTEXT MODE! CARET POSITION, YOU SEE...
+      
+      String text = getEditorPaneText();
+      int startpos = editorPanePlainText.getCaretPosition();
       int endpos = startpos;
       if(text.length()>0)
       {
         // Select the character before/after the current position, and grow it until we hit whitespace...
-        while(startpos>0 && !Character.isWhitespace(editorPane.getText(startpos-1,1).charAt(0)))
+        while(startpos>0 && !Character.isWhitespace(editorPanePlainText.getText(startpos-1,1).charAt(0)))
           startpos--;
-        while(endpos<(text.length()) && !Character.isWhitespace(editorPane.getText(endpos,1).charAt(0)))
+        while(endpos<(text.length()) && !Character.isWhitespace(editorPanePlainText.getText(endpos,1).charAt(0)))
           endpos++;
         if(endpos>startpos)
         {
-          editorPane.setSelectionStart(startpos);
-          editorPane.setSelectionEnd(endpos);
-          url = editorPane.getSelectedText();
+          editorPanePlainText.setSelectionStart(startpos);
+          editorPanePlainText.setSelectionEnd(endpos);
+          url = editorPanePlainText.getSelectedText();
         }
       }
       }
@@ -974,26 +871,29 @@ System.out.println(err);
   }
   public void openURLSelectedInArticle()
   {
-    String url = editorPane.getSelectedText();
+    String url = getSelectedTextInArticle();
     if(url == null)
     {
       try
       {
-      String text = editorPane.getText();
-      int startpos = editorPane.getCaretPosition();
+      
+        // FIXME - THIS WILL NOT WORK UNLESS IN PLAINTEXT MODE - CARET POSITIONS ETC
+      
+      String text = getEditorPaneText();
+      int startpos = editorPanePlainText.getCaretPosition();
       int endpos = startpos;
       if(text != null)
       {
         // Select the character before/after the current position, and grow it until we hit whitespace...
-        while(startpos>0 && !Character.isWhitespace(editorPane.getText(startpos-1,1).charAt(0)))
+        while(startpos>0 && !Character.isWhitespace(editorPanePlainText.getText(startpos-1,1).charAt(0)))
           startpos--;
-        while(endpos<(text.length()) && !Character.isWhitespace(editorPane.getText(endpos,1).charAt(0)))
+        while(endpos<(text.length()) && !Character.isWhitespace(editorPanePlainText.getText(endpos,1).charAt(0)))
           endpos++;
         if(endpos>startpos)
         {
-          editorPane.setSelectionStart(startpos);
-          editorPane.setSelectionEnd(endpos);
-          url = editorPane.getSelectedText();
+          editorPanePlainText.setSelectionStart(startpos);
+          editorPanePlainText.setSelectionEnd(endpos);
+          url = editorPanePlainText.getSelectedText();
         }
       }
       }
@@ -1263,52 +1163,176 @@ System.out.println(err);
 
   public void setArticleMode(int newMode)
   {
-  
-    currentNode.setArticleMode(newMode);
-  /*
-    switch(newMode)
+    switch(currentNode.getArticleMode())
     {
       case JreepadNode.ARTICLEMODE_ORDINARY:
-        editorPane = editorPanePlainText;
+        currentNode.setContent(editorPanePlainText.getText());
         break;
       case JreepadNode.ARTICLEMODE_HTML:
-        editorPane = editorPaneHtml;
+        currentNode.setContent(editorPaneHtml.getText());
+        break;
+      case JreepadNode.ARTICLEMODE_CSV:
+        currentNode.setContent(jTableContentToCsv());
         break;
       default:
         return;
     }
-  */
+    switch(newMode)
+    {
+      case JreepadNode.ARTICLEMODE_ORDINARY:
+        editorPanePlainText.setText(currentNode.getContent());
+        break;
+      case JreepadNode.ARTICLEMODE_HTML:
+        editorPaneHtml.setText(currentNode.getContent());
+        break;
+      case JreepadNode.ARTICLEMODE_CSV:
+        articleToJTable(currentNode.getContent());
+        break;
+      default:
+        return;
+    }
+    currentNode.setArticleMode(newMode);
     ensureCorrectArticleRenderMode();
-  }
-  public void toggleArticleMode()
-  {
-  
-    currentNode.toggleArticleMode();
-    ensureCorrectArticleRenderMode();
+    getEditorPaneComponent().repaint();
   }
 
   public void ensureCorrectArticleRenderMode()
   {
+    /*
+    currentNode.setContent(getEditorPaneText());
+    
+    setEditorPaneText(getEditorPaneText());
     switch(currentNode.getArticleMode())
     {
       case JreepadNode.ARTICLEMODE_ORDINARY:
-        editorPane = editorPanePlainText;
+        editorPanePlainText.setText(getEditorPaneText());
         break;
       case JreepadNode.ARTICLEMODE_HTML:
-        editorPane = editorPaneHtml;
+        editorPaneHtml.setText(getEditorPaneText());
+        break;
+      case JreepadNode.ARTICLEMODE_CSV:
+        articleToJTable(getEditorPaneText()); // FIXME: This is the WRONG place to do this, but it's OK for dev purposes...
         break;
       default:
-        System.err.println("JreepadNode.getArticleMode() returned an unrecognised value");
+        System.err.println("ensureCorrectArticleRenderMode() says: JreepadNode.getArticleMode() returned an unrecognised value");
         return;
     }
+    */
+    articleView.setViewportView(getEditorPaneComponent());
+  }
 
-    articleView.setViewportView(editorPane);
+  public void articleToJTable()
+  {
+    String[][] rowData = currentNode.interpretContentAsCsv();
+    String[] columnNames = null;
+    
+//    System.out.println("articleToJTable(): rows=" + rowData.length + ", cols="+rowData[0].length);
+    initJTable(rowData, columnNames);
+  }
+  public void articleToJTable(String s)
+  {
+    String[][] rowData = JreepadNode.interpretContentAsCsv(s);
+    String[] columnNames = new String[rowData[0].length];
+    for(int i=0; i<columnNames.length; i++)
+      columnNames[i] = " ";
+    
+//    System.out.println("articleToJTable(s): rows=" + rowData.length + ", cols="+rowData[0].length);
+    initJTable(rowData, columnNames);
+  }
+
+  private void initJTable(String[][] rowData, String[] columnNames)
+  {
+    editorPaneCsv = new JTable(rowData, columnNames);
+    editorPaneCsv.getModel().addTableModelListener(this);
+    editorPaneCsv.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+    editorPaneCsv.setGridColor(Color.GRAY);
+    editorPaneCsv.setShowGrid(true);
+    editorPaneCsv.setShowVerticalLines(true);
+    editorPaneCsv.setShowHorizontalLines(true);
+  }
+
+  // The following functions allow us to use either a JEditorPane or a JTable to display article data
+  JComponent getEditorPaneComponent()
+  {
+    if(currentNode==null)
+      return editorPanePlainText; // This is a bit of a hack - it shouldn't really even be called to act on null
+
+    switch(currentNode.getArticleMode())
+    {
+      case JreepadNode.ARTICLEMODE_ORDINARY:
+        return editorPanePlainText;
+      case JreepadNode.ARTICLEMODE_HTML:
+        return editorPaneHtml;
+      case JreepadNode.ARTICLEMODE_CSV:
+        return editorPaneCsv;
+      default:
+        System.err.println("getEditorPaneComponent() says: JreepadNode.getArticleMode() returned an unrecognised value");
+        return null;
+    }
+  }
+  String getEditorPaneText()
+  {
+    switch(currentNode.getArticleMode())
+    {
+      case JreepadNode.ARTICLEMODE_ORDINARY:
+        return editorPanePlainText.getText();
+      case JreepadNode.ARTICLEMODE_HTML:
+        return editorPaneHtml.getText();
+      case JreepadNode.ARTICLEMODE_CSV:
+		return jTableContentToCsv();
+      default:
+        System.err.println("getEditorPaneText() says: JreepadNode.getArticleMode() returned an unrecognised value");
+        return null;
+    }
+  }
+  void setEditorPaneText(String s)
+  {
+    switch(currentNode.getArticleMode())
+    {
+      case JreepadNode.ARTICLEMODE_ORDINARY:
+	    editorPanePlainText.setText(s);
+        break;
+      case JreepadNode.ARTICLEMODE_HTML:
+	    editorPaneHtml.setText(s);
+        break;
+      case JreepadNode.ARTICLEMODE_CSV:
+        articleToJTable(s);
+        break;
+      default:
+        System.err.println("setEditorPaneText() says: JreepadNode.getArticleMode() returned an unrecognised value");
+        return;
+    }
+  }
+  // End of: functions which should allow us to switch between JEditorPane and JTable
+
+  public String jTableContentToCsv()
+  {
+	int w = editorPaneCsv.getColumnCount();
+	int h = editorPaneCsv.getRowCount();
+	StringBuffer csv = new StringBuffer();
+	String quoteMark = getPrefs().addQuotesToCsvOutput ? "\"" : "";
+	for(int i=0; i<h; i++)
+	{
+	  for(int j=0; j<(w-1); j++)
+		csv.append(quoteMark + (String)editorPaneCsv.getValueAt(i,j) + quoteMark + ",");
+	  csv.append(quoteMark + (String)editorPaneCsv.getValueAt(i,w-1) + quoteMark + "\n");
+	}
+	return csv.toString();
+  }
+
+  // Called by the TableModelListener interface
+  public void tableChanged(TableModelEvent e)
+  {
+    // System.out.println(" -- tableChanged() -- ");
+    if(currentNode.getArticleMode() == JreepadNode.ARTICLEMODE_CSV)
+      currentNode.setContent(jTableContentToCsv());
   }
 
   class JreepadTreeModelListener implements TreeModelListener
   {
     public void treeNodesChanged(TreeModelEvent e)
     {
+      warnAboutUnsaved = true;
       Object[] parentPath = e.getPath(); // Parent of the changed node(s)
       int[] children = e.getChildIndices(); // Indices of the changed node(s)
       JreepadNode parent = (JreepadNode)(parentPath[parentPath.length-1]);
@@ -1316,6 +1340,7 @@ System.out.println(err);
     }
     public void treeNodesInserted(TreeModelEvent e)
     {
+      warnAboutUnsaved = true;
       Object[] parentPath = e.getPath(); // Parent of the new node(s)
       int[] children = e.getChildIndices(); // Indices of the new node(s)
       JreepadNode parent = (JreepadNode)(parentPath[parentPath.length-1]);
@@ -1325,6 +1350,7 @@ System.out.println(err);
     }
     public void treeNodesRemoved(TreeModelEvent e)
     {
+      warnAboutUnsaved = true;
       Object[] parentPath = e.getPath(); // Parent of the removed node(s)
       int[] children = e.getChildIndices(); // Indices the node(s) had before they were removed
       JreepadNode parent = (JreepadNode)(parentPath[parentPath.length-1]);
@@ -1332,10 +1358,14 @@ System.out.println(err);
     }
     public void treeStructureChanged(TreeModelEvent e)
     {
+      warnAboutUnsaved = true;
       Object[] parentPath = e.getPath(); // Parent of the changed node(s)
       JreepadNode parent = (JreepadNode)(parentPath[parentPath.length-1]);
       tree.repaint();
     }
   } // End of: class JreepadTreeModelListener
+
+
+    
 
 }

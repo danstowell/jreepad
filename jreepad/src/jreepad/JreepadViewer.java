@@ -72,6 +72,7 @@ public class JreepadViewer extends JFrame
   private JDialog prefsDialog;
   private JCheckBox loadLastFileOnOpenCheckBox;
   private JCheckBox autoDateNodesCheckBox;
+  private JCheckBox autoDetectHtmlCheckBox;
   private JComboBox fileEncodingSelector;
 //  private Box fontsPrefsBox;
 //    private JComboBox treeFontFamilySelector;
@@ -86,6 +87,7 @@ public class JreepadViewer extends JFrame
     private JTextField webSearchPrefixField;
     private JTextField webSearchPostfixField;
   private JCheckBox wrapToWindowCheckBox;
+  private JCheckBox quoteCsvCheckBox;
   private JButton prefsOkButton;
   private JButton prefsCancelButton;
   
@@ -117,6 +119,8 @@ public class JreepadViewer extends JFrame
   private JMenuItem saveMenuItem;
   private JMenuItem saveAsMenuItem;
   private JMenuItem backupToMenuItem;
+  private JMenuItem printSubtreeMenuItem;
+  private JMenuItem printArticleMenuItem;
     private JMenu importMenu;
     private JMenuItem importHjtMenuItem;
     private JMenuItem importTextMenuItem;
@@ -156,7 +160,11 @@ public class JreepadViewer extends JFrame
   private JMenuItem viewTreeMenuItem;
   private JMenuItem viewArticleMenuItem;
   private JCheckBoxMenuItem viewToolbarMenuItem;
-  private JMenuItem renderHtmlMenuItem;
+  // private JMenuItem renderHtmlMenuItem;
+  private JMenuItem articleViewModeMenuItem;
+    private JMenuItem articleViewModeTextMenuItem;
+    private JMenuItem articleViewModeHtmlMenuItem;
+    private JMenuItem articleViewModeCsvMenuItem;
   private JMenu optionsMenu;
   private JMenuItem autoSaveMenuItem;
   private JMenuItem prefsMenuItem;
@@ -245,6 +253,15 @@ public class JreepadViewer extends JFrame
     backupToMenuItem = new JMenuItem("Backup to...");
     backupToMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {backupToAction();}});
     fileMenu.add(backupToMenuItem);
+	fileMenu.add(new JSeparator());
+
+	printSubtreeMenuItem = new JMenuItem("Print subtree");
+	printSubtreeMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {toBrowserForPrintAction();}});
+	fileMenu.add(printSubtreeMenuItem);
+	printArticleMenuItem = new JMenuItem("Print article");
+	printArticleMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {articleToBrowserForPrintAction();}});
+	fileMenu.add(printArticleMenuItem);
+
     fileMenu.add(new JSeparator());
       importMenu = new JMenu("Import...");
       fileMenu.add(importMenu);
@@ -375,11 +392,26 @@ public class JreepadViewer extends JFrame
     viewToolbarMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { setViewToolbar(viewToolbarMenuItem.isSelected()); }});
     viewMenu.add(viewToolbarMenuItem);
     viewMenu.add(new JSeparator());
-    renderHtmlMenuItem = new JMenuItem("Toggle HTML view for this article");
-    renderHtmlMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { 
-              theJreepad.toggleArticleMode();
-                     }});
-    viewMenu.add(renderHtmlMenuItem);
+
+    articleViewModeMenuItem = new JMenu("View this article as...");
+	  articleViewModeTextMenuItem = new JMenuItem("Text");
+	  articleViewModeTextMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { 
+				theJreepad.setArticleMode(JreepadNode.ARTICLEMODE_ORDINARY);
+					   }});
+	  articleViewModeMenuItem.add(articleViewModeTextMenuItem);
+	  articleViewModeHtmlMenuItem = new JMenuItem("HTML");
+	  articleViewModeHtmlMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { 
+				theJreepad.setArticleMode(JreepadNode.ARTICLEMODE_HTML);
+					   }});
+	  articleViewModeMenuItem.add(articleViewModeHtmlMenuItem);
+	  articleViewModeCsvMenuItem = new JMenuItem("Table (comma-separated data)");
+	  articleViewModeCsvMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { 
+				theJreepad.setArticleMode(JreepadNode.ARTICLEMODE_CSV);
+					   }});
+	  articleViewModeMenuItem.add(articleViewModeCsvMenuItem);
+    viewMenu.add(articleViewModeMenuItem);
+
+
     viewMenu.add(new JSeparator());
     thisNodesUrlMenuItem = new JMenuItem("\"node://\" address for current node");
     thisNodesUrlMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { getTreepadNodeUrl(); }});
@@ -559,6 +591,9 @@ public class JreepadViewer extends JFrame
     saveMenuItem.setMnemonic('S');
     saveMenuItem.setAccelerator(KeyStroke.getKeyStroke('S', MENU_MASK));
     saveAsMenuItem.setMnemonic('A');
+    printSubtreeMenuItem.setMnemonic('P');
+    printSubtreeMenuItem.setAccelerator(KeyStroke.getKeyStroke('P', MENU_MASK));
+    printArticleMenuItem.setAccelerator(KeyStroke.getKeyStroke('P', MENU_MASK | java.awt.Event.SHIFT_MASK));
     backupToMenuItem.setMnemonic('B');
     importMenu.setMnemonic('I');
     importHjtMenuItem.setMnemonic('f');
@@ -614,6 +649,9 @@ public class JreepadViewer extends JFrame
     viewTreeMenuItem.setAccelerator(KeyStroke.getKeyStroke('2', MENU_MASK));
     viewArticleMenuItem.setAccelerator(KeyStroke.getKeyStroke('3', MENU_MASK));
     viewToolbarMenuItem.setAccelerator(KeyStroke.getKeyStroke('4', MENU_MASK));
+    articleViewModeTextMenuItem.setAccelerator(KeyStroke.getKeyStroke('5', MENU_MASK));
+    articleViewModeHtmlMenuItem.setAccelerator(KeyStroke.getKeyStroke('6', MENU_MASK));
+    articleViewModeCsvMenuItem.setAccelerator(KeyStroke.getKeyStroke('7', MENU_MASK));
     viewToolbarMenuItem.setMnemonic('o');
     optionsMenu.setMnemonic('O');
     autoSaveMenuItem.setMnemonic('a');
@@ -723,25 +761,6 @@ public class JreepadViewer extends JFrame
                                            doTheSearch();}});
     vBox.add(hBox);
     //
-/* SIMPLIFYING THE SEARCH BOX - USE "OR" AND ABANDON THE LESS USEFUL "AND" OPTION
-    hBox = Box.createHorizontalBox();
-    articleSearchField = new JTextField("");
-    vBox.add(new JLabel("Search in article text for: "));
-    hBox.add(articleSearchField);
-    articleSearchField.addActionListener(new ActionListener(){ public void actionPerformed(ActionEvent e){
-                                           searchGoButton.doClick();}});
-    vBox.add(hBox);
-*/
-    //
-/* SIMPLIFYING THE SEARCH BOX - USE "OR" AND ABANDON THE LESS USEFUL "AND" OPTION
-    searchCombinatorSelector = new JComboBox(new String[]{"\"OR\" (Either one must be found)", "\"AND\" (Both must be found)"});
-    searchCombinatorSelector.setEditable(false);
-    hBox = Box.createHorizontalBox();
-    hBox.add(new JLabel("Combine searches using: "));
-    hBox.add(searchCombinatorSelector);
-    vBox.add(hBox);
-*/
-    //
     searchWhereSelector = new JComboBox(new String[]{"Selected node and its children", "Entire tree"});
     searchWhereSelector.setSelectedIndex(1);
     searchWhereSelector.setEditable(false);
@@ -758,7 +777,6 @@ public class JreepadViewer extends JFrame
     hBox.add(Box.createGlue());
     vBox.add(hBox);
     //
-//    searchMaxNumSpinner = new JSpinner(new SpinnerNumberModel(getPrefs().searchMaxNum,1,1000,1));
     searchMaxNumSpinner = new DSpinner(1,1000,getPrefs().searchMaxNum);
     searchMaxNumSpinner.addCaretListener(new CaretListener(){ public void caretUpdate(CaretEvent e){
                                            doTheSearch();}});
@@ -770,23 +788,6 @@ public class JreepadViewer extends JFrame
     hBox.add(searchMaxNumSpinner);
     hBox.add(Box.createGlue());
     vBox.add(hBox);
-    //
-/* SIMPLIFYING THE SEARCH BOX - USE "OR" AND ABANDON THE LESS USEFUL "AND" OPTION
-    hBox = Box.createHorizontalBox();
-    hBox.add(Box.createGlue());
-    hBox.add(searchGoButton = new JButton("Search"));
-    searchGoButton.setDefaultCapable(true);
-    searchGoButton.addActionListener(new ActionListener(){
-                               public void actionPerformed(ActionEvent e)
-                               {
-                                 doTheSearch();
-                               } });
-    hBox.add(searchCloseButton = new JButton("Close"));
-    searchCloseButton.addActionListener(new ActionListener(){
-                               public void actionPerformed(ActionEvent e){ searchDialog.setVisible(false); } });
-    hBox.add(Box.createGlue());
-    vBox.add(hBox);
-*/
     //
     // NOW FOR THE SEARCH RESULTS TABLE - COULD BE TRICKY!
     searchResultsTableModel = new AbstractTableModel()
@@ -907,7 +908,6 @@ public class JreepadViewer extends JFrame
     vBox.add(Box.createGlue());
     hBox = Box.createHorizontalBox();
     hBox.add(autoSaveCheckBox = new JCheckBox("Autosave every ", getPrefs().autoSave));
-///    hBox.add(autoSavePeriodSpinner = new JSpinner(new SpinnerNumberModel(getPrefs().autoSavePeriod,1,1000,1)));
     hBox.add(autoSavePeriodSpinner = new DSpinner(1, 1000, getPrefs().autoSavePeriod));
     hBox.add(new JLabel(" minutes"));
     vBox.add(hBox);
@@ -933,63 +933,6 @@ public class JreepadViewer extends JFrame
     autoSaveDialog.getContentPane().add(vBox);
     // Finished establishing the autosave dialogue box
 
-    // Establish the HTML export dialogue box
-/*    htmlExportDialog = new JDialog(theApp, "HTML export - options", true);
-    htmlExportDialog.setVisible(false);
-    vBox = Box.createVerticalBox();
-    hBox = Box.createHorizontalBox();
-    hBox.add(Box.createGlue());
-    hBox.add(new JLabel("Treat text in articles as:"));
-    htmlExportModeSelector = new JComboBox(JreepadNode.getHtmlExportArticleTypes());
-    htmlExportModeSelector.setSelectedIndex(getPrefs().htmlExportArticleType);
-    htmlExportModeSelector.addActionListener(new ActionListener(){
-                               public void actionPerformed(ActionEvent e){ 
-                       if(htmlExportModeSelector.getSelectedIndex()==2)
-                       {
-                         urlsToLinksCheckBox.setEnabled(false);
-                         urlsToLinksCheckBox.setSelected(false);
-                       }
-                       else
-                       {
-                         urlsToLinksCheckBox.setEnabled(true);
-                         urlsToLinksCheckBox.setSelected(getPrefs().htmlExportUrlsToLinks);
-                       }
-                               }});
-    hBox.add(htmlExportModeSelector);
-    hBox.add(Box.createGlue());
-    vBox.add(hBox);
-    vBox.add(urlsToLinksCheckBox = new JCheckBox("Convert URLs to links", getPrefs().htmlExportUrlsToLinks));
-    hBox = Box.createHorizontalBox();
-    hBox.add(Box.createGlue());
-    hBox.add(new JLabel("Which type of 'internal' link to detect:"));
-    htmlExportAnchorTypeSelector = new JComboBox(JreepadNode.getHtmlExportAnchorLinkTypes());
-    htmlExportAnchorTypeSelector.setSelectedIndex(getPrefs().htmlExportAnchorLinkType);
-    hBox.add(htmlExportAnchorTypeSelector);
-    hBox.add(Box.createGlue());
-    vBox.add(hBox);
-    hBox = Box.createHorizontalBox();
-    hBox.add(Box.createGlue());
-    hBox.add(htmlExportCancelButton = new JButton("Cancel"));
-    htmlExportCancelButton.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e){
-                                    htmlExportOkChecker = false;
-                                    htmlExportDialog.setVisible(false);
-                                   }});
-    hBox.add(htmlExportOkButton = new JButton("Export"));
-    htmlExportOkButton.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e){
-                                    htmlExportOkChecker = true;
-                                    getPrefs().htmlExportArticleType = htmlExportModeSelector.getSelectedIndex();
-                                    getPrefs().htmlExportAnchorLinkType = htmlExportAnchorTypeSelector.getSelectedIndex();
-                                    
-                                    // If exporting as HTML then we ignore this checkbox
-                                    if(htmlExportModeSelector.getSelectedIndex()!=2)
-                                      getPrefs().htmlExportUrlsToLinks = urlsToLinksCheckBox.isSelected();
-                                    htmlExportDialog.setVisible(false);
-                                   }});
-    hBox.add(Box.createGlue());
-    vBox.add(hBox);
-    htmlExportDialog.getContentPane().add(vBox);
-*/    // Finished establishing the HTML export dialogue box
-
     // Establish the prefs dialogue box
     prefsDialog = new JDialog(theApp, "Preferences", true);
     prefsDialog.setVisible(false);
@@ -997,6 +940,7 @@ public class JreepadViewer extends JFrame
     Box genPrefVBox = Box.createVerticalBox();
     genPrefVBox.add(loadLastFileOnOpenCheckBox = new JCheckBox("When Jreepad starts, automatically load the last-saved file", getPrefs().loadLastFileOnOpen));
     genPrefVBox.add(autoDateNodesCheckBox = new JCheckBox("Autodate nodes: whenever a new node is created, add the date into its article", getPrefs().autoDateInArticles));
+    genPrefVBox.add(autoDetectHtmlCheckBox = new JCheckBox("Detect HTML nodes and render them as formatted HTML", getPrefs().autoDetectHtmlArticles));
 
     hBox = Box.createHorizontalBox();
     hBox.add(Box.createGlue());
@@ -1077,7 +1021,7 @@ public class JreepadViewer extends JFrame
     Box htmlVBox = Box.createVerticalBox();
     hBox = Box.createHorizontalBox();
     hBox.add(Box.createGlue());
-    hBox.add(new JLabel("Treat text in articles as:"));
+    hBox.add(new JLabel("Treat text in plain-text articles as:"));
     htmlExportModeSelector = new JComboBox(JreepadNode.getHtmlExportArticleTypes());
     htmlExportModeSelector.setSelectedIndex(getPrefs().htmlExportArticleType);
     htmlExportModeSelector.addActionListener(new ActionListener(){
@@ -1107,7 +1051,7 @@ public class JreepadViewer extends JFrame
     htmlVBox.add(hBox);
     genPanel.add(htmlVBox);
     vBox.add(genPanel);
-
+    vBox.add(quoteCsvCheckBox = new JCheckBox("Add quote marks when converting tables to CSV", getPrefs().addQuotesToCsvOutput));
     
     hBox = Box.createHorizontalBox();
     hBox.add(prefsOkButton = new JButton("OK"));
@@ -1115,6 +1059,7 @@ public class JreepadViewer extends JFrame
     prefsOkButton.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e){
 									getPrefs().loadLastFileOnOpen = loadLastFileOnOpenCheckBox.isSelected();
 									getPrefs().autoDateInArticles = autoDateNodesCheckBox.isSelected();
+									getPrefs().autoDetectHtmlArticles = autoDetectHtmlCheckBox.isSelected();
 									webSearchMenuItem.setText(getPrefs().webSearchName = webSearchNameField.getText());
 									getPrefs().webSearchPrefix = webSearchPrefixField.getText();
 									getPrefs().webSearchPostfix = webSearchPostfixField.getText();
@@ -1128,6 +1073,7 @@ public class JreepadViewer extends JFrame
 //							        theJreepad.setEditorPaneKit();
                                     getPrefs().htmlExportArticleType = htmlExportModeSelector.getSelectedIndex();
                                     getPrefs().htmlExportAnchorLinkType = htmlExportAnchorTypeSelector.getSelectedIndex();
+                                    getPrefs().addQuotesToCsvOutput = quoteCsvCheckBox.isSelected();
                                     
                                     // If exporting as HTML then we ignore this checkbox
                                     if(htmlExportModeSelector.getSelectedIndex()!=2)
@@ -1171,7 +1117,7 @@ public class JreepadViewer extends JFrame
       {
         getPrefs().openLocation = firstTimeFile;
         content.remove(theJreepad);
-        theJreepad = new JreepadView(new JreepadNode(new InputStreamReader(new FileInputStream(getPrefs().openLocation), getPrefs().getEncoding())));
+        theJreepad = new JreepadView(new JreepadNode(new InputStreamReader(new FileInputStream(getPrefs().openLocation), getPrefs().getEncoding()), getPrefs().autoDetectHtmlArticles));
         getPrefs().saveLocation = getPrefs().exportLocation = getPrefs().importLocation = getPrefs().openLocation;
         content.add(theJreepad);
 	    getPrefs().saveLocation = getPrefs().openLocation;
@@ -1189,9 +1135,6 @@ public class JreepadViewer extends JFrame
     }
     else
       getPrefs().saveLocation = null;
-
-    // Make sure the temporary file doesn't exist?
-    tempToBrowserFile = new File(System.getProperty("user.home"), "TMPjreeprXOX.html");
 
     // Set close operation
     setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
@@ -1300,7 +1243,7 @@ public class JreepadViewer extends JFrame
         setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
         getPrefs().openLocation = f;
         content.remove(theJreepad);
-        theJreepad = new JreepadView(new JreepadNode(new InputStreamReader(new FileInputStream(getPrefs().openLocation), getPrefs().getEncoding())));
+        theJreepad = new JreepadView(new JreepadNode(new InputStreamReader(new FileInputStream(getPrefs().openLocation), getPrefs().getEncoding()), getPrefs().autoDetectHtmlArticles));
         getPrefs().saveLocation = getPrefs().openLocation;
         content.add(theJreepad);
         addToOpenRecentMenu(getPrefs().openLocation);
@@ -1354,6 +1297,7 @@ public class JreepadViewer extends JFrame
     try
     {
       fileChooser.setCurrentDirectory(getPrefs().saveLocation);
+      fileChooser.setSelectedFile(new File(theJreepad.getRootJreepadNode().getTitle() + ".hjt"));
       if(fileChooser.showSaveDialog(theApp) == JFileChooser.APPROVE_OPTION && checkOverwrite(fileChooser.getSelectedFile()))
       {
         setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
@@ -1478,7 +1422,7 @@ public class JreepadViewer extends JFrame
 		switch(importFormat)
 		{
 		  case FILE_FORMAT_HJT:
-			theJreepad.addChild(new JreepadNode(new InputStreamReader(new FileInputStream(getPrefs().importLocation), getPrefs().getEncoding())));
+			theJreepad.addChild(new JreepadNode(new InputStreamReader(new FileInputStream(getPrefs().importLocation), getPrefs().getEncoding()), getPrefs().autoDetectHtmlArticles));
 			break;
 		  case FILE_FORMAT_TEXT:
 		    theJreepad.addChildrenFromTextFiles(fileChooser.getSelectedFiles());
@@ -1509,7 +1453,25 @@ public class JreepadViewer extends JFrame
     try
     {
       fileChooser.setCurrentDirectory(getPrefs().exportLocation);
-      fileChooser.setSelectedFile(new File(theJreepad.getCurrentNode().getTitle()));
+      String suggestFilename = theJreepad.getCurrentNode().getTitle();
+      switch(exportFormat)
+      {
+		case FILE_FORMAT_HJT:
+		  suggestFilename += ".hjt";
+		  break;
+		case FILE_FORMAT_HTML:
+		  suggestFilename += ".html";
+		  break;
+		case FILE_FORMAT_XML:
+		  suggestFilename += ".xml";
+		  break;
+		case FILE_FORMAT_TEXT:
+		case FILE_FORMAT_TEXTASLIST:
+		case FILE_FORMAT_ARTICLESTOTEXT:
+		  suggestFilename += ".txt";
+		  break;
+      }
+      fileChooser.setSelectedFile(new File(suggestFilename));
       if(fileChooser.showSaveDialog(theApp) == JFileChooser.APPROVE_OPTION && checkOverwrite(fileChooser.getSelectedFile()))
       {
         setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
@@ -1571,23 +1533,30 @@ public class JreepadViewer extends JFrame
     {
         setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 
+        File systemTempFile = File.createTempFile("TMPjree", ".html");
+
 		String output = theJreepad.getCurrentNode().exportAsHtml(getPrefs().htmlExportArticleType,
 			                                                  getPrefs().htmlExportUrlsToLinks,
-			                                                  getPrefs().htmlExportAnchorLinkType);
+			                                                  getPrefs().htmlExportAnchorLinkType,
+			                                                  true);
 
-        FileOutputStream fO = new FileOutputStream(tempToBrowserFile);
+        FileOutputStream fO = new FileOutputStream(systemTempFile);
         DataOutputStream dO = new DataOutputStream(fO);
         dO.writeBytes(output);
         dO.close();
         fO.close();
         setCursor(Cursor.getDefaultCursor());
         
-        // Now launch the file in a browser... the only question is... how?
-        
-        
-        // Also remember to tidy up the file - delete it if it exists
-        
-        
+        // Now launch the file in a browser...
+		try
+		{
+          BrowserLauncher.openURL(systemTempFile.toURL().toString());
+		}
+		catch(IOException err)
+		{
+		  JOptionPane.showMessageDialog(this, "I/O error while opening URL:\n"+tempToBrowserFile.toURL()+"\n\nThe \"BrowserLauncher\" used to open a URL is an open-source Java library \nseparate from Jreepad itself - i.e. a separate Sourceforge project. \nIt may be a good idea to submit a bug report to\nhttp://sourceforge.net/projects/browserlauncher\n\nIf you do, please remember to supply information about the operating system\nyou are using - which type, and which version.", "Error" , JOptionPane.ERROR_MESSAGE);
+		}
+                
     }
     catch(IOException err)
     {
@@ -1595,6 +1564,44 @@ public class JreepadViewer extends JFrame
       JOptionPane.showMessageDialog(theApp, err, "File error during send-to-browser" , JOptionPane.ERROR_MESSAGE);
     }
   } // End of: toBrowserForPrintAction()
+
+  private void articleToBrowserForPrintAction()
+  {
+    try
+    {
+        setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+
+        File systemTempFile = File.createTempFile("TMPjree", ".html");
+
+		String output = theJreepad.getCurrentNode().exportSingleArticleAsHtml(getPrefs().htmlExportArticleType,
+			                                                  getPrefs().htmlExportUrlsToLinks,
+			                                                  getPrefs().htmlExportAnchorLinkType,
+			                                                  true);
+
+        FileOutputStream fO = new FileOutputStream(systemTempFile);
+        DataOutputStream dO = new DataOutputStream(fO);
+        dO.writeBytes(output);
+        dO.close();
+        fO.close();
+        setCursor(Cursor.getDefaultCursor());
+        
+        // Now launch the file in a browser...
+		try
+		{
+          BrowserLauncher.openURL(systemTempFile.toURL().toString());
+		}
+		catch(IOException err)
+		{
+		  JOptionPane.showMessageDialog(this, "I/O error while opening URL:\n"+tempToBrowserFile.toURL()+"\n\nThe \"BrowserLauncher\" used to open a URL is an open-source Java library \nseparate from Jreepad itself - i.e. a separate Sourceforge project. \nIt may be a good idea to submit a bug report to\nhttp://sourceforge.net/projects/browserlauncher\n\nIf you do, please remember to supply information about the operating system\nyou are using - which type, and which version.", "Error" , JOptionPane.ERROR_MESSAGE);
+		}
+                
+    }
+    catch(IOException err)
+    {
+      setCursor(Cursor.getDefaultCursor());
+      JOptionPane.showMessageDialog(theApp, err, "File error during send-to-browser" , JOptionPane.ERROR_MESSAGE);
+    }
+  } // End of: articleToBrowserForPrintAction()
 
 
   public void quitAction()
@@ -1619,10 +1626,6 @@ public class JreepadViewer extends JFrame
         if(!saveAction())
           return; // This cancels quit if the save action failed or was cancelled
     }
-
-    // Tidy up temporary file, if exists
-    if(tempToBrowserFile.isFile())
-      tempToBrowserFile.delete();
 
     // Save preferences - including window position and size, and open/closed state of the current tree's nodes
     getPrefs().treePathCollection = new TreePathCollection(theJreepad.getAllExpandedPaths());

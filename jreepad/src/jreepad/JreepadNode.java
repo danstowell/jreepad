@@ -37,6 +37,7 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
 
   public static final int ARTICLEMODE_ORDINARY = 1;
   public static final int ARTICLEMODE_HTML = 2;
+  public static final int ARTICLEMODE_CSV = 3;
   private int articleMode = ARTICLEMODE_ORDINARY;
 
   public JreepadNode()
@@ -59,11 +60,11 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
     ourSortComparator = new OurSortComparator();
     children = new Vector();
   }
-  public JreepadNode(InputStreamReader treeInputStream) throws IOException
+  public JreepadNode(InputStreamReader treeInputStream, boolean autoDetectHtmlArticles) throws IOException
   {
-    constructFromInputStream(treeInputStream);
+    constructFromInputStream(treeInputStream, autoDetectHtmlArticles);
   }
-  private void constructFromInputStream(InputStreamReader treeInputStream) throws IOException
+  private void constructFromInputStream(InputStreamReader treeInputStream, boolean autoDetectHtmlArticles) throws IOException
   {
     int lineNum = 2;
     int depthMarker;
@@ -121,7 +122,7 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
 
       // Turn it into a HTML-mode node if it matches "<html> ... </html>"
       String compareContent = babyNode.getContent().toLowerCase().trim();
-      int newArticleMode = (compareContent.startsWith("<html>") && compareContent.endsWith("</html>"))
+      int newArticleMode = (autoDetectHtmlArticles && compareContent.startsWith("<html>") && compareContent.endsWith("</html>"))
                       ? ARTICLEMODE_HTML
                       : ARTICLEMODE_ORDINARY;
 
@@ -173,12 +174,18 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
   public static final int EXPORT_HTML_ANCHORS_WIKI=1;
   public String exportAsHtml(int exportMode, boolean urlsToLinks, int anchorType)
   {
+    return exportAsHtml(exportMode, urlsToLinks, anchorType, false);
+  }
+  public String exportAsHtml(int exportMode, boolean urlsToLinks, int anchorType, boolean causeToPrint)
+  {
     StringBuffer ret = new StringBuffer();
     ret.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">\n<html xmlns=\"http://www.w3.org/1999/xhtml\" xml:lang=\"en\">\n<head>\n<title>");
     ret.append(htmlSpecialChars(getTitle()));
     ret.append("</title>\n<style type=\"text/css\">\n"
    	  + "dl {}\ndl dt { font-weight: bold; margin-top: 10px; font-size: 24pt; }\ndl dd {margin-left: 20px; padding-left: 0px;}\ndl dd dl dt {background: black; color: white; font-size: 12pt; }\ndl dd dl dd dl dt {background: white; color: black; }"
-	  + "\n</style>\n</head>\n\n<body>\n<!-- Exported from Jreepad -->\n<dl>");
+	  + "\n</style>\n</head>\n\n<body"
+	  + (causeToPrint? " onload='print();'" : "")
+	  + ">\n<!-- Exported from Jreepad -->\n<dl>");
     ret.append(exportAsHtml(exportMode, urlsToLinks, htmlSpecialChars(getTitle()), anchorType));
     ret.append("\n</dl>\n</body>\n</html>");
     return ret.toString();
@@ -196,21 +203,7 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
     ret.append("</dt>\n<dd>");
 
     // Write out the node's article content - using normal, preformatted, or HTML modes as appropriate
-    switch(exportMode)
-    {
-      case EXPORT_HTML_PREFORMATTED:
-        ret.append("<pre>");
-        ret.append(urlsToLinks ? urlsToHtmlLinksAndHtmlSpecialChars(getContent(), anchorType) : htmlSpecialChars(getContent()) );
-        ret.append("</pre>");
-        break;
-      case EXPORT_HTML_HTML:
-        ret.append(getContent());
-        break;
-      case EXPORT_HTML_NORMAL:
-      default:
-        ret.append(urlsToLinks ? urlsToHtmlLinksAndHtmlSpecialChars(getContent(), anchorType) : htmlSpecialChars(getContent()) );
-        break;
-    }
+    ret.append(articleToHtml(exportMode, urlsToLinks, anchorName, anchorType));
 
     if(children.size()>0)
       ret.append("\n<dl>");
@@ -225,6 +218,57 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
 
     return ret;
   }
+
+  public String exportSingleArticleAsHtml(int exportMode, boolean urlsToLinks, int anchorType, boolean causeToPrint)
+  {
+    StringBuffer ret = new StringBuffer();
+    ret.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">\n<html xmlns=\"http://www.w3.org/1999/xhtml\" xml:lang=\"en\">\n<head>\n<title>");
+    ret.append(htmlSpecialChars(getTitle()));
+    ret.append("</title>\n<style type=\"text/css\">\n"
+   	  + "dl {}\ndl dt { font-weight: bold; margin-top: 10px; font-size: 24pt; }\ndl dd {margin-left: 20px; padding-left: 0px;}\ndl dd dl dt {background: black; color: white; font-size: 12pt; }\ndl dd dl dd dl dt {background: white; color: black; }"
+	  + "\n</style>\n</head>\n\n<body"
+	  + (causeToPrint? " onload='print();'" : "")
+	  + ">\n<!-- Exported from Jreepad -->\n<dl>");
+    ret.append(articleToHtml(exportMode, urlsToLinks, htmlSpecialChars(getTitle()), anchorType));
+    ret.append("\n</dl>\n</body>\n</html>");
+    return ret.toString();
+  }
+  
+  public String articleToHtml(int exportMode, boolean urlsToLinks, String anchorName, int anchorType)
+  {
+    switch(articleMode)
+    {
+      case ARTICLEMODE_HTML:
+        return getContent();
+      case ARTICLEMODE_CSV:
+        String[][] csv = interpretContentAsCsv();
+        StringBuffer csvHtml = new StringBuffer("\n  <table border='1' cellspacing='0' cellpadding='2'>");
+        for(int i=0; i<csv.length; i++)
+        {
+          csvHtml.append("\n    <tr>");
+          for(int j=0; j<csv[0].length; j++)
+            csvHtml.append("\n      <td>" + htmlSpecialChars(csv[i][j]) + "</td>");
+          csvHtml.append("\n    </tr>");
+        }
+        csvHtml.append("\n  </table>");
+        return csvHtml.toString();
+      case ARTICLEMODE_ORDINARY:
+      default:
+		switch(exportMode)
+		{
+		  case EXPORT_HTML_PREFORMATTED:
+			return "<pre>" 
+			  + (urlsToLinks ? urlsToHtmlLinksAndHtmlSpecialChars(getContent(), anchorType) : htmlSpecialChars(getContent()) )
+			  + "</pre>";
+		  case EXPORT_HTML_HTML:
+			return getContent();
+		  case EXPORT_HTML_NORMAL:
+		  default:
+			return (urlsToLinks ? urlsToHtmlLinksAndHtmlSpecialChars(getContent(), anchorType) : htmlSpecialChars(getContent()) );
+		}
+    }
+  }
+  
   private String htmlSpecialChars(String in)
   {
     char[] c = in.toCharArray();
@@ -380,7 +424,7 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
 //  }
   private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException
   {
-    constructFromInputStream(new InputStreamReader(in));
+    constructFromInputStream(new InputStreamReader(in), false);
   }
   public String toTreepadString()
   {
@@ -726,6 +770,18 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
   {
     switch(newMode)
     {
+      case ARTICLEMODE_CSV:
+        String[][] csv = interpretContentAsCsv();
+  //      System.out.println("interpretContentAsCsv() returned csv[" + csv.length + "][" + csv[0].length + "]");
+  //      System.out.println();
+  //      for(int i=0; i<csv.length; i++)
+  //      {
+  //        for(int j=0; j<csv[0].length; j++)
+  //          System.out.print("\"" + csv[i][j] + "\"  ");
+  //        System.out.println();
+  //        System.out.println();
+  //      }
+  //      System.out.println();
       case ARTICLEMODE_ORDINARY:
       case ARTICLEMODE_HTML:
         articleMode = newMode;
@@ -740,6 +796,7 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
     return articleMode;
   }
 
+/*
   public void toggleArticleMode()
   {
   
@@ -754,6 +811,157 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
       default:
         return;
     }
+  }
+*/
+
+  static final int CSVPARSE_MODE_INQUOTES = 1;
+  static final int CSVPARSE_MODE_EXPECTINGDELIMITER = 2;
+  static final int CSVPARSE_MODE_EXPECTINGDATA = 3;
+  protected String[][] interpretContentAsCsv()
+  {
+    return interpretContentAsCsv(getContent());
+  }
+  protected static String[][] interpretContentAsCsv(String theContent)
+  {
+    int rows = 1;
+    int cols = 1;
+    theContent = theContent.trim();
+    char c;
+    int curCols = 1;
+    int parseMode = CSVPARSE_MODE_EXPECTINGDATA;
+    StringBuffer curData = new StringBuffer();
+    
+    // Go through once to determine the number of rows and columns
+    StringCharacterIterator iter = new StringCharacterIterator(theContent);
+
+    c = iter.current();
+    while(true)
+    {
+      if(c==iter.DONE)
+      {
+   ///     System.out.println("I've just parsed this data item: " + curData + " and I'm in mode " + parseMode);
+        cols = (curCols>cols) ? curCols : cols;
+        break;
+      }
+
+      if(parseMode==CSVPARSE_MODE_INQUOTES)
+      {
+        if(c=='"')
+        {
+          parseMode = CSVPARSE_MODE_EXPECTINGDELIMITER;
+        }
+        else
+        {
+          curData.append(c);
+        }
+      }
+      else if(parseMode==CSVPARSE_MODE_EXPECTINGDELIMITER || parseMode==CSVPARSE_MODE_EXPECTINGDATA)
+      {
+        if(c=='"')
+        {
+          parseMode = CSVPARSE_MODE_INQUOTES;
+        }
+        else if(c=='\n' || c==Character.LINE_SEPARATOR)
+        {
+          parseMode = CSVPARSE_MODE_EXPECTINGDATA;
+    ///      System.out.println("I've just parsed this data item: " + curData + " and I'm in mode " + parseMode);
+          curData = new StringBuffer();
+          cols = (curCols>cols) ? curCols : cols;
+          curCols = 1;
+          rows++;
+        }
+        else if(c==',')
+        {
+          parseMode = CSVPARSE_MODE_EXPECTINGDATA;
+          curCols++;
+     ///     System.out.println("I've just parsed this data item: " + curData + " and I'm in mode " + parseMode);
+          curData = new StringBuffer();
+        }
+        else
+        {
+          curData.append(c);
+        }
+      }
+
+      c = iter.next();
+    }
+
+
+
+    // Now go through and actually assign the content
+    String[][] csv = new String[rows][cols];
+    for(int i=0; i<csv.length; i++)
+      java.util.Arrays.fill(csv[i], "");
+    iter = new StringCharacterIterator(theContent);
+    parseMode = CSVPARSE_MODE_EXPECTINGDATA;
+    curData = new StringBuffer();
+    int col=0;
+    int row=0;
+
+    c = iter.current();
+    while(true)
+    {
+      if(c==iter.DONE)
+      {
+        csv[row][col] = curData.toString();
+        break;
+      }
+
+      if(parseMode==CSVPARSE_MODE_INQUOTES)
+      {
+        if(c=='"')
+        {
+          parseMode = CSVPARSE_MODE_EXPECTINGDELIMITER;
+        }
+        else
+        {
+          curData.append(c);
+        }
+      }
+      else if(parseMode==CSVPARSE_MODE_EXPECTINGDELIMITER || parseMode==CSVPARSE_MODE_EXPECTINGDATA)
+      {
+        if(c=='"')
+        {
+          parseMode = CSVPARSE_MODE_INQUOTES;
+        }
+        else if(c=='\n' || c==Character.LINE_SEPARATOR)
+        {
+          csv[row][col] = curData.toString();
+          parseMode = CSVPARSE_MODE_EXPECTINGDATA;
+          curData = new StringBuffer();
+          col=0;
+          row++;
+        }
+        else if(c==',')
+        {
+          csv[row][col] = curData.toString();
+          parseMode = CSVPARSE_MODE_EXPECTINGDATA;
+          col++;
+          curData = new StringBuffer();
+        }
+        else
+        {
+          curData.append(c);
+        }
+      }
+
+      c = iter.next();
+    }
+    return csv;
+  }
+
+  protected void setContentAsCsv(String[][] in)
+  {
+    StringBuffer o = new StringBuffer();
+    for(int i=0; i<in.length; i++)
+    {
+	  for(int j=0; j<in[0].length; j++)
+	  {
+	  o.append("\"" + in[i][j] + "\"");
+	  }
+	  o.append("\n");
+    }
+    setContent(o.toString());
   }
 
   public class JreepadNodeEnumeration implements Enumeration
