@@ -2,8 +2,9 @@ package jreepad;
 
 import java.util.*;
 import java.io.*;
+import javax.swing.tree.*;
 
-public class JreepadNode implements Serializable
+public class JreepadNode implements Serializable, TreeNode, MutableTreeNode
 {
   private Vector children;
   private String title;
@@ -13,7 +14,11 @@ public class JreepadNode implements Serializable
 
   public JreepadNode()
   {
-    this("Untitled node","", null);
+    this((JreepadNode)null);
+  }
+  public JreepadNode(JreepadNode parentNode)
+  {
+    this("Untitled node","", parentNode);
   }
   public JreepadNode(String title, String content, JreepadNode parentNode)
   {
@@ -102,10 +107,10 @@ public class JreepadNode implements Serializable
   }
   public String toFullString()
   {
-    String ret = "JreepadNode \""+getTitle()+"\": " + getNumberOfChildren() + " direct child nodes in subtree";
+    String ret = "JreepadNode \""+getTitle()+"\": " + getChildCount() + " direct child nodes in subtree";
     ret += "\r\nDirect children:";
     for(int i=0; i<children.size(); i++)
-      ret += "\r\n    " + getChild(i).getTitle();
+      ret += "\r\n    " + ((JreepadNode)getChildAt(i)).getTitle();
     return ret;
   }
 
@@ -125,8 +130,8 @@ public class JreepadNode implements Serializable
   {
     StringBuffer ret = new StringBuffer("dt=Text\r\n<node>\r\n");
     ret.append(getTitle() + "\r\n" + (currentDepth++) + "\r\n" + getContent() + "\r\n<end node> 5P9i0s8y19Z\r\n");
-    for(int i=0; i<getNumberOfChildren(); i++)
-      ret.append(getChild(i).toTreepadString(currentDepth));
+    for(int i=0; i<getChildCount(); i++)
+      ret.append(((JreepadNode)getChildAt(i)).toTreepadString(currentDepth));
     return ret.toString();
   }
 
@@ -137,18 +142,20 @@ public class JreepadNode implements Serializable
   }
   public JreepadNode removeChild(int child) // Can be used to delete, OR to 'get' one for moving
   {
+    if(child<0 || child > children.size()) return null;
+    
     JreepadNode ret = (JreepadNode)children.remove(child);
 //    childrenCount--;
     return ret;
   }
-  public JreepadNode getChild(int child)
+  public TreeNode getChildAt(int child)
   {
     if(child<0 || child>= children.size())
       return null;
     else
       return (JreepadNode)children.get(child);
   }
-  public int getNumberOfChildren()
+  public int getChildCount()
   {
     return children.size();
   }
@@ -181,6 +188,7 @@ public class JreepadNode implements Serializable
 
     children.add(child+1, children.remove(child));
   }
+/*
   public void moveChildUp(JreepadNode thisChild)
   {
     moveChildUp(children.indexOf(thisChild));
@@ -189,33 +197,108 @@ public class JreepadNode implements Serializable
   {
     moveChildDown(children.indexOf(thisChild));
   }
+*/
   public void moveUp()
   {
-    if(getParentNode()!=null)
-      getParentNode().moveChildUp(this);
+    if(getParentNode()==null) return;
+    int index = getIndex();
+    if(index<1) return;
+    
+    removeFromParent();
+    getParentNode().insert(this, index-1);
+    System.out.println("Moved from pos " + index + " to " + (index-1));
   }
   public void moveDown()
   {
-    if(getParentNode()!=null)
-      getParentNode().moveChildDown(this);
+    if(getParentNode()==null) return;
+    int index = getIndex();
+    if(index<0 || index >= getParentNode().getChildCount()-1) return;
+    
+    removeFromParent();
+    getParentNode().insert(this, index+1);
+    System.out.println("Moved from pos " + index + " to " + (index+1));
   }
+  public JreepadNode addChild()
+  {
+    JreepadNode theChild = new JreepadNode(this);
+    children.add(theChild);
+    System.out.println("I have added a child. Size of children=" + getChildCount());
+    return theChild;
+  }
+  
+  public int getIndex(TreeNode child)
+  {
+    for(int i=0; i<getChildCount(); i++)
+      if(((JreepadNode)child).equals(getChildAt(i)))
+        return i;
+    return -1;
+  }
+  public int getIndex()
+  {
+    if(getParent()==null)
+      return -1;
+    return getParent().getIndex(this);
+  }
+  
+  public boolean getAllowsChildren() { return true; } // Required by TreeNode interface
+  public boolean isLeaf()
+  {
+    return getChildCount()==0; // Is this the correct behaviour?
+  }
+  
+  public Enumeration children()
+  {
+    return new JreepadNodeEnumeration();
+  } // Required by TreeNode interface
 
   public JreepadNode getParentNode()
   {
     return parentNode;
   }
-
-/*
-  public JreepadNode[] search(String searchText, int maxResults, 
-                              boolean searchNodes, boolean searchArticles)
+  public TreeNode getParent()
   {
+    return parentNode;
   }
-*/
+
+  // MutableTreeNode functions
+  public void remove(int child)
+  {
+    removeChild(child);
+  }
+  public void remove(MutableTreeNode node)
+  {
+    removeChild(getIndex((JreepadNode)node));
+  }
+  public void removeFromParent()
+  {
+    if(parentNode != null)
+      parentNode.remove(this);
+  }
+  public void setParent(MutableTreeNode parent)
+  {
+    parentNode = (JreepadNode)parent; // Do we need to do anything more at this point?
+  }
+
+  public void setUserObject(Object object)
+  {
+    // ?
+  }
+  public void insert(MutableTreeNode child, int index)
+  {
+    children.insertElementAt((JreepadNode)child, index);
+  }
 
   public String getTitle() { return title; }
   public String getContent() { return content; }
   public void setTitle(String title) { this.title = title; }
   public void setContent(String content) { this.content = content; }
 
+
+  public class JreepadNodeEnumeration implements Enumeration
+  {
+    private int i=0;
+    public boolean hasMoreElements() { return i<getChildCount(); }
+    public Object nextElement()      { return getChildAt(i++);   }
+  } // This enumerator class is required by the TreeNode interface
 }
 

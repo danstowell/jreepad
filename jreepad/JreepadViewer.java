@@ -41,6 +41,11 @@ public class JreepadViewer extends JFrame
     JButton saveButton = new JButton("Save");
     toolBar.add(saveButton);
     //
+    JButton addButton = new JButton("Add");
+    toolBar.add(addButton);
+    JButton removeButton = new JButton("Remove");
+    toolBar.add(removeButton);
+    //
     JButton upButton = new JButton("Up");
     toolBar.add(upButton);
     JButton downButton = new JButton("Down");
@@ -61,9 +66,13 @@ public class JreepadViewer extends JFrame
     saveButton.addActionListener(new ActionListener(){
                                public void actionPerformed(ActionEvent e){ saveAction(); } });
     upButton.addActionListener(new ActionListener(){
-                               public void actionPerformed(ActionEvent e){ theJreepad.moveCurrentNodeUp();} });
+                               public void actionPerformed(ActionEvent e){ theJreepad.moveCurrentNodeUp(); repaint(); } });
     downButton.addActionListener(new ActionListener(){
-                               public void actionPerformed(ActionEvent e){ theJreepad.moveCurrentNodeDown();} });
+                               public void actionPerformed(ActionEvent e){ theJreepad.moveCurrentNodeDown(); repaint(); } });
+    addButton.addActionListener(new ActionListener(){
+                               public void actionPerformed(ActionEvent e){ theJreepad.addNode();} });
+    removeButton.addActionListener(new ActionListener(){
+                               public void actionPerformed(ActionEvent e){ theJreepad.removeNode();} });
 
     viewBothButton.addActionListener(new ActionListener(){
                                public void actionPerformed(ActionEvent e){ theJreepad.setViewBoth();} });

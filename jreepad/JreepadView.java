@@ -7,8 +7,6 @@ import java.awt.event.*;
 
 /*
 
-(((((Changing just for the sake of it)))))
-
 The original free Windows version is 380Kb
 
 Todo:
@@ -16,8 +14,7 @@ Todo:
 - Menus and the actions they entail
 - Toolbar actions
 - Search for text
-- Make certain that extra line breaks aren't being introduced/lost during the Save/Load processes
-- The article needs to resize when its container (its scrollpane) is resized
+- The article needs to resize properly, EVERY time its container (its scrollpane) is resized
 
 */
 
@@ -25,7 +22,8 @@ public class JreepadView extends Box
 {
   private JreepadNode root;
   private JreepadNode currentNode;
-  private DefaultMutableTreeNode topNode;
+  private TreeNode topNode;
+  private TreeModel treeModel;
   private JTree tree;
   private JScrollPane treeView;
   private JScrollPane articleView;
@@ -46,19 +44,18 @@ public class JreepadView extends Box
 
     this.root = root;
 
+/* DEPRECATED - HOPEFULLY!
     topNode = new DefaultMutableTreeNode(root);
 
     // Now set up all the JTree, DefaultTreeNode, stuff
     createNodes(topNode, root);
 
-    tree = new JTree(topNode)/* {
-                      protected void fireValueChanged(TreeSelectionEvent e)
-                      {
-                        System.out.println(( (JreepadNode)(((DefaultMutableTreeNode)(e.getPath().getLastPathComponent())).getUserObject())
-                        ).getTitle());
-                        super.fireValueChanged(e);
-                      }
-                             } */;
+    treeModel = new DefaultTreeModel(topNode);
+*/
+    treeModel = new JreepadTreeModel(root);
+    treeModel.addTreeModelListener(new JreepadTreeModelListener());
+
+    tree = new JTree(treeModel);
     tree.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
     tree.setEditable(true);
 
@@ -73,7 +70,7 @@ public class JreepadView extends Box
                    {
                      public void valueChanged(TreeSelectionEvent e)
                      {
-                        DefaultMutableTreeNode node = (DefaultMutableTreeNode)
+                        JreepadNode node = (JreepadNode)
                            tree.getLastSelectedPathComponent();
                         if (node == null) return;
 
@@ -126,10 +123,12 @@ public class JreepadView extends Box
        this.add(articleView); 
        setSize(getSize());  articleView.setSize(getSize()); validate(); repaint();
   }
+  /*
   private void setCurrentNode(DefaultMutableTreeNode node)
   {
     setCurrentNode((JreepadNode)(node.getUserObject()));
   }
+  */
   private void setCurrentNode(JreepadNode n)
   {
     if(currentNode != null)
@@ -158,16 +157,108 @@ public class JreepadView extends Box
   {
     currentNode.moveDown();
   }
+  
+  public JreepadNode addNode()
+  {
+    return currentNode.addChild();
+  }
+/*
+  public JreepadNode addObject(JreepadNode parent, Object child, boolean shouldBeVisible)
+  {
+    DefaultMutableTreeNode childNode = new DefaultMutableTreeNode(child);
+    treeModel.insertNodeInto(childNode, parent, parent.getChildCount());
+    // Make sure the user can view the lovely new node
+    if(shouldBeVisible)
+      tree.scrollPathToVisible(new TreePath(childNode.getPath()));
+    return childNode;
+  }
+*/
+  public JreepadNode removeNode()
+  {
+    JreepadNode parent = (JreepadNode)currentNode.getParent();
+    if(parent != null)
+    {
+      JreepadNode ret = parent.removeChild(parent.getIndex(currentNode));
+      currentNode = parent;
+      repaint();
+      return ret;
+    }
+    else
+      return null;
+  }
+
+/*
+DEPRECATED - HOPEFULLY! Should simply use JreepadNodes instead of mirroring them in DMTNs
 
   private void createNodes(DefaultMutableTreeNode parentNode, JreepadNode parent)
   {
     DefaultMutableTreeNode temp;
-    for(int i=0; i<parent.getNumberOfChildren(); i++)
+    for(int i=0; i<parent.getChildCount(); i++)
     {
-      temp = new DefaultMutableTreeNode(parent.getChild(i)); // Create a "leaf"
-      createNodes(temp, parent.getChild(i)); // Create any children the leaf requires
+      temp = new DefaultMutableTreeNode(parent.getChildAt(i)); // Create a "leaf"
+      createNodes(temp, (JreepadNode)parent.getChildAt(i)); // Create any children the leaf requires
       parentNode.add(temp); // Add the leaf on to the tree
     }
   }
+*/
 
+  class JreepadTreeModelListener implements TreeModelListener
+  {
+    public void treeNodesChanged(TreeModelEvent e)     { tree.repaint(); }
+    public void treeNodesInserted(TreeModelEvent e)    { tree.repaint(); }
+    public void treeNodesRemoved(TreeModelEvent e)     { tree.repaint(); }
+    public void treeStructureChanged(TreeModelEvent e) { tree.repaint(); }
+  } // End of: class JreepadTreeModelListener
+
+  public class JreepadTreeModel implements TreeModel
+  {
+    private JreepadNode root;
+    public JreepadTreeModel(JreepadNode root)
+    {
+      this.root = root;
+    }
+    public JreepadTreeModel()
+    {
+      this(new JreepadNode());
+    }
+    public Object getChild(Object parent, int index)
+    {
+      return ((JreepadNode)parent).getChildAt(index);
+    }
+    public int getChildCount(Object parent)
+    {
+      return ((JreepadNode)parent).getChildCount();
+    }
+    public int getIndexOfChild(Object parent, Object child)
+    {
+      return ((JreepadNode)parent).getIndex((JreepadNode)child);
+    }
+    public Object getRoot()
+    {
+      return root;
+    }
+    public boolean isLeaf(Object node)
+    {
+      return ((JreepadNode)node).isLeaf();
+    }
+    public void addTreeModelListener(TreeModelListener l)
+    {
+      // ?
+      System.out.println("Someone just tried to addTreeModelListener: "+l);
+    }
+    public void removeTreeModelListener(TreeModelListener l)
+    {
+      // ?
+    }
+    public void valueForPathChanged(TreePath path, Object newValue)
+    {
+      ((JreepadNode)path.getLastPathComponent()).setTitle((String)newValue);
+    }
+    
+    public void insertNodeInto(JreepadNode child, JreepadNode parent, int index)
+    {
+      // Does this function need to remove the child from its prior location?
+    //  parent.
+    }
+  } // End of: class JreepadTreeModel
 }
