@@ -48,7 +48,26 @@ import java.awt.event.*;
       ((JreepadNode)path.getLastPathComponent()).setTitle((String)newValue);
     }
     
+
+
+
+
+
+
+
+
+
     // Fire notifications - copied directly from DefaultTreeModel
+    /**
+     * Invoke this method if you've modified the TreeNodes upon which this
+     * model depends.  The model will notify all of its listeners that the
+     * model has changed below the node <code>node</code> (PENDING).
+     */
+    public void reload(TreeNode node) {
+        if(node != null) {
+            fireTreeStructureChanged(this, getPathToRoot(node), null, null);
+        }
+    }
     /**
       * Invoke this method after you've changed how node is to be
       * represented in the tree.
@@ -100,6 +119,30 @@ import java.awt.event.*;
         if(node != null && childIndices != null) {
             fireTreeNodesRemoved(this, getPathToRoot(node), childIndices, 
                                  removedChildren);
+        }
+    }
+    /**
+      * Invoke this method after you've changed how the children identified by
+      * childIndicies are to be represented in the tree.
+      */
+    public void nodesChanged(TreeNode node, int[] childIndices) {
+        if(node != null) {
+	    if (childIndices != null) {
+		int            cCount = childIndices.length;
+
+		if(cCount > 0) {
+		    Object[]       cChildren = new Object[cCount];
+
+		    for(int counter = 0; counter < cCount; counter++)
+			cChildren[counter] = node.getChildAt
+			    (childIndices[counter]);
+		    fireTreeNodesChanged(this, getPathToRoot(node),
+					 childIndices, cChildren);
+		}
+	    }
+	    else if (node == getRoot()) {
+		fireTreeNodesChanged(this, getPathToRoot(node), null, null);
+	    }
         }
     }
 
@@ -175,10 +218,64 @@ import java.awt.event.*;
             }          
         }
     }
+
+
+    /**
+     * Builds the parents of node up to and including the root node,
+     * where the original node is the last element in the returned array.
+     * The length of the returned array gives the node's depth in the
+     * tree.
+     * 
+     * @param aNode the TreeNode to get the path for
+     * @param an array of TreeNodes giving the path from the root to the
+     *        specified node. 
+     */
+    public TreeNode[] getPathToRoot(TreeNode aNode) {
+        return getPathToRoot(aNode, 0);
+    }
+
+    /**
+     * Builds the parents of node up to and including the root node,
+     * where the original node is the last element in the returned array.
+     * The length of the returned array gives the node's depth in the
+     * tree.
+     * 
+     * @param aNode  the TreeNode to get the path for
+     * @param depth  an int giving the number of steps already taken towards
+     *        the root (on recursive calls), used to size the returned array
+     * @return an array of TreeNodes giving the path from the root to the
+     *         specified node 
+     */
+    protected TreeNode[] getPathToRoot(TreeNode aNode, int depth) {
+        TreeNode[]              retNodes;
+	// This method recurses, traversing towards the root in order
+	// size the array. On the way back, it fills in the nodes,
+	// starting from the root and working back to the original node.
+
+        /* Check for null, in case someone passed in a null node, or
+           they passed in an element that isn't rooted at root. */
+        if(aNode == null) {
+            if(depth == 0)
+                return null;
+            else
+                retNodes = new TreeNode[depth];
+        }
+        else {
+            depth++;
+            if(aNode == root)
+                retNodes = new TreeNode[depth];
+            else
+                retNodes = getPathToRoot(aNode.getParent(), depth);
+            retNodes[retNodes.length - depth] = aNode;
+        }
+        return retNodes;
+    }
+
     
     public void insertNodeInto(JreepadNode child, JreepadNode parent, int index)
     {
       // Does this function need to remove the child from its prior location?
     //  parent.
     }
+
   } // End of: class JreepadTreeModel

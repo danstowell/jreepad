@@ -23,7 +23,7 @@ public class JreepadView extends Box
   private JreepadNode root;
   private JreepadNode currentNode;
   private TreeNode topNode;
-  private TreeModel treeModel;
+  private JreepadTreeModel treeModel;
   private JTree tree;
   private JScrollPane treeView;
   private JScrollPane articleView;
@@ -152,10 +152,12 @@ public class JreepadView extends Box
   public void moveCurrentNodeUp()
   {
     currentNode.moveUp();
+    treeModel.reload(currentNode.getParent());
   }
   public void moveCurrentNodeDown()
   {
     currentNode.moveDown();
+    treeModel.reload(currentNode.getParent());
   }
   
   public JreepadNode addNode()
