@@ -1,3 +1,22 @@
+/*
+           Jreepad - personal information manager.
+           Copyright (C) 2004 Dan Stowell
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+The full license can be read online here:
+
+           http://www.gnu.org/copyleft/gpl.html
+*/
+
 package jreepad;
 
 import javax.swing.*;
@@ -261,6 +280,15 @@ public class JreepadView extends Box
   public JreepadNode getCurrentNode()
   {
     return currentNode;
+  }
+
+  public String getTreepadNodeUrl()
+  {
+    StringBuffer ret = new StringBuffer("\"node:/");
+    Object[] p = tree.getLeadSelectionPath().getPath();
+    for(int i=0; i<p.length; i++)
+      ret.append("/" + ((JreepadNode)p[i]).getTitle());
+    return ret.toString() + "\"";
   }
 
   public void moveNode(JreepadNode node, JreepadNode newParent)
@@ -678,6 +706,41 @@ public class JreepadView extends Box
   // End of: stuff concerned with undo
 
   // Stuff concerned with linking
+  public void webSearchTextSelectedInArticle()
+  {
+    String url = editorPane.getSelectedText();
+    if(url == null)
+    {
+      try
+      {
+      String text = editorPane.getText();
+      int startpos = editorPane.getCaretPosition();
+      int endpos = startpos;
+      if(text != null)
+      {
+        // Select the character before/after the current position, and grow it until we hit whitespace...
+        while(startpos>0 && !Character.isWhitespace(editorPane.getText(startpos-1,1).charAt(0)))
+          startpos--;
+        while(endpos<(text.length()-1) && !Character.isWhitespace(editorPane.getText(endpos,1).charAt(0)))
+          endpos++;
+        if(endpos>startpos)
+        {
+          editorPane.setSelectionStart(startpos);
+          editorPane.setSelectionEnd(endpos);
+          url = editorPane.getSelectedText();
+        }
+      }
+      }
+      catch(BadLocationException err)
+      {
+      }
+    }
+    webSearchText(url);
+  }
+  public void webSearchText(String text)
+  {
+    openURL("http://" + getPrefs().webSearchPrefix + text + getPrefs().webSearchPostfix);
+  }
   public void openURLSelectedInArticle()
   {
     String url = editorPane.getSelectedText();
@@ -731,7 +794,10 @@ public class JreepadView extends Box
     }
     if(isPureWord(url))
     {
-      followWikiLink(url);
+      if(prefs.defaultSearchMode == 0)
+        webSearchText(url);
+      else
+        followWikiLink(url);
       return;
     }
     

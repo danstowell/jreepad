@@ -1,3 +1,22 @@
+/*
+           Jreepad - personal information manager.
+           Copyright (C) 2004 Dan Stowell
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+The full license can be read online here:
+
+           http://www.gnu.org/copyleft/gpl.html
+*/
+
 package jreepad;
 
 import javax.swing.*;
@@ -41,6 +60,11 @@ public class JreepadViewer extends JFrame
   private JDialog prefsDialog;
   private JCheckBox loadLastFileOnOpenCheckBox;
   private JCheckBox autoDateNodesCheckBox;
+  private Box webSearchPrefsBox;
+    private JComboBox defaultSearchModeSelector;
+    private JTextField webSearchNameField;
+    private JTextField webSearchPrefixField;
+    private JTextField webSearchPostfixField;
   private JButton prefsOkButton;
   private JButton prefsCancelButton;
   
@@ -57,6 +81,10 @@ public class JreepadViewer extends JFrame
   private JTable searchResultsTable;
   private JScrollPane searchResultsTableScrollPane;
   private AbstractTableModel searchResultsTableModel;
+
+  private JDialog nodeUrlDisplayDialog;
+  private JTextField nodeUrlDisplayField;
+  private JButton nodeUrlDisplayOkButton;
   
   private JMenuBar menuBar;
   private JMenu fileMenu;
@@ -90,7 +118,9 @@ public class JreepadViewer extends JFrame
   private JMenuItem sortRecursiveMenuItem;
   private JMenu searchMenu;
   private JMenuItem searchMenuItem;
+  private JMenuItem webSearchMenuItem;
   private JMenuItem launchUrlMenuItem;
+  private JMenuItem thisNodesUrlMenuItem;
   private JMenu viewMenu;
   private JMenuItem viewBothMenuItem;
   private JMenuItem viewTreeMenuItem;
@@ -104,6 +134,7 @@ public class JreepadViewer extends JFrame
   private JMenuItem linksHelpMenuItem;
   private JMenuItem dragDropHelpMenuItem;
   private JMenuItem aboutMenuItem;
+  private JMenuItem licenseMenuItem;
   
   public JreepadViewer()
   {
@@ -121,7 +152,10 @@ public class JreepadViewer extends JFrame
         prefsLoader.close();
       }
       else
+      {
+        showLicense(); // A very crude way of showing the license on first visit
         setPrefs(new JreepadPrefs());
+      }
     }
     catch(Exception err)
     {
@@ -244,9 +278,12 @@ public class JreepadViewer extends JFrame
     searchMenuItem = new JMenuItem("Search");
     searchMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { openSearchDialog(); }});
     searchMenu.add(searchMenuItem);
-    launchUrlMenuItem = new JMenuItem("Follow link in article");
+    launchUrlMenuItem = new JMenuItem("Follow highlighted link");
     launchUrlMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { theJreepad.openURLSelectedInArticle(); }});
     searchMenu.add(launchUrlMenuItem);
+    webSearchMenuItem = new JMenuItem(getPrefs().webSearchName);
+    webSearchMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { theJreepad.webSearchTextSelectedInArticle(); }});
+    searchMenu.add(webSearchMenuItem);
     //
     viewBothMenuItem = new JMenuItem("Both tree and article");
     viewBothMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { setViewMode(JreepadPrefs.VIEW_BOTH); }});
@@ -261,6 +298,10 @@ public class JreepadViewer extends JFrame
     viewToolbarMenuItem = new JCheckBoxMenuItem("Toolbar", true);
     viewToolbarMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { setViewToolbar(viewToolbarMenuItem.isSelected()); }});
     viewMenu.add(viewToolbarMenuItem);
+    viewMenu.add(new JSeparator());
+    thisNodesUrlMenuItem = new JMenuItem("\"node://\" address for current node");
+    thisNodesUrlMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { getTreepadNodeUrl(); }});
+    viewMenu.add(thisNodesUrlMenuItem);
     //
     autoSaveMenuItem = new JMenuItem("Autosave...");
     autoSaveMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { showAutoSaveDialog(); }});
@@ -436,6 +477,12 @@ public class JreepadViewer extends JFrame
             }});
     helpMenu.add(new JSeparator());
     helpMenu.add(aboutMenuItem);
+    licenseMenuItem = new JMenuItem("License");
+    licenseMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e)
+            {
+              showLicense();
+            }});
+    helpMenu.add(licenseMenuItem);
     //
     menuBar.add(fileMenu);
     menuBar.add(editMenu);
@@ -474,7 +521,9 @@ public class JreepadViewer extends JFrame
     deleteMenuItem.setMnemonic('k');
     searchMenu.setMnemonic('t');
     searchMenuItem.setMnemonic('s');
+    webSearchMenuItem.setMnemonic('g');
     launchUrlMenuItem.setMnemonic('l');
+    thisNodesUrlMenuItem.setMnemonic('n');
     viewMenu.setMnemonic('V');
     viewBothMenuItem.setMnemonic('b');
     viewTreeMenuItem.setMnemonic('t');
@@ -486,7 +535,9 @@ public class JreepadViewer extends JFrame
     helpMenu.setMnemonic('H');
     keyboardHelpMenuItem.setMnemonic('k');
     dragDropHelpMenuItem.setMnemonic('d');
+    linksHelpMenuItem.setMnemonic('l');
     aboutMenuItem.setMnemonic('a');
+    licenseMenuItem.setMnemonic('i');
     // Finished creating the menu bar
     
     // Add the toolbar buttons
@@ -771,14 +822,50 @@ public class JreepadViewer extends JFrame
     prefsDialog = new JDialog(theApp, "Preferences", true);
     prefsDialog.setVisible(false);
     vBox = Box.createVerticalBox();
-    vBox.add(loadLastFileOnOpenCheckBox = new JCheckBox("When Jreepad starts, automatically load the last-saved file", getPrefs().loadLastFileOnOpen));
-    vBox.add(autoDateNodesCheckBox = new JCheckBox("Autodate nodes: whenever a new node is created, add the date into its article", getPrefs().autoDateInArticles));
+    Box genPrefVBox = Box.createVerticalBox();
+    genPrefVBox.add(loadLastFileOnOpenCheckBox = new JCheckBox("When Jreepad starts, automatically load the last-saved file", getPrefs().loadLastFileOnOpen));
+    genPrefVBox.add(autoDateNodesCheckBox = new JCheckBox("Autodate nodes: whenever a new node is created, add the date into its article", getPrefs().autoDateInArticles));
+    JPanel genPanel = new JPanel();
+    genPanel.add(genPrefVBox);
+    genPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), "General"));
+    vBox.add(genPanel);
+
+    genPanel = new JPanel();
+    hBox = Box.createHorizontalBox();
+    hBox.add(new JLabel("Default action to take with ordinary words/phrases:"));
+    hBox.add(defaultSearchModeSelector = new JComboBox(new String[]{"Web search","Search for node title"}));
+    defaultSearchModeSelector.setSelectedIndex(getPrefs().defaultSearchMode);
+    genPanel.add(hBox);
+    genPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), "\"Follow selected link\" action"));
+    vBox.add(genPanel);
+
+    webSearchPrefsBox = Box.createVerticalBox();
+    hBox = Box.createHorizontalBox();
+    hBox.add(new JLabel("Web search is labelled \""));
+    hBox.add(webSearchNameField = new JTextField(getPrefs().webSearchName));
+    hBox.add(new JLabel("\" and calls the following URL:"));
+    webSearchPrefsBox.add(hBox);
+    hBox = Box.createHorizontalBox();
+    hBox.add(new JLabel("http://"));
+    hBox.add(webSearchPrefixField = new JTextField(getPrefs().webSearchPrefix));
+    hBox.add(new JLabel("[SELECTED TEXT]"));
+    hBox.add(webSearchPostfixField = new JTextField(getPrefs().webSearchPostfix));
+    webSearchPrefsBox.add(hBox);
+    JPanel webSearchPanel = new JPanel();
+    webSearchPanel.add(webSearchPrefsBox);
+    webSearchPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), "Web search"));
+    vBox.add(webSearchPanel);
+    
     hBox = Box.createHorizontalBox();
     hBox.add(prefsOkButton = new JButton("OK"));
     hBox.add(prefsCancelButton = new JButton("Cancel"));
     prefsOkButton.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e){
 									getPrefs().loadLastFileOnOpen = loadLastFileOnOpenCheckBox.isSelected();
 									getPrefs().autoDateInArticles = autoDateNodesCheckBox.isSelected();
+									webSearchMenuItem.setText(getPrefs().webSearchName = webSearchNameField.getText());
+									getPrefs().webSearchPrefix = webSearchPrefixField.getText();
+									getPrefs().webSearchPostfix = webSearchPostfixField.getText();
+									getPrefs().defaultSearchMode = defaultSearchModeSelector.getSelectedIndex();
 									prefsDialog.hide();
                                    }});
     prefsCancelButton.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e){prefsDialog.hide();}});
@@ -786,6 +873,19 @@ public class JreepadViewer extends JFrame
     prefsDialog.getContentPane().add(vBox);
     // Finished establishing the prefs dialogue box
 
+    // Establish the nodeUrlDisplay dialogue box
+    nodeUrlDisplayDialog = new JDialog(theApp, "Node URL", true);
+    nodeUrlDisplayDialog.setVisible(false);
+    vBox = Box.createVerticalBox();
+    vBox.add(new JLabel("Current node's address:"));
+    vBox.add(nodeUrlDisplayField = new JTextField("node://its/a/secret"));
+    vBox.add(new JLabel("(You can copy-and-paste this into an article)"));
+    vBox.add(nodeUrlDisplayOkButton = new JButton("OK"));
+    nodeUrlDisplayOkButton.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e){
+									nodeUrlDisplayDialog.hide();
+                                   }});
+    nodeUrlDisplayDialog.getContentPane().add(vBox);
+    // Finished: Establish the nodeUrlDisplay dialogue box
     
     content.setLayout(new BoxLayout(content, BoxLayout.Y_AXIS));
     content.add(toolBar);
@@ -840,7 +940,9 @@ public class JreepadViewer extends JFrame
     autoSaveDialog.setBounds((int)(wndSize.width*0.5f),(int)(wndSize.height*0.3f),
               (int)(wndSize.width*0.3f),(int)(wndSize.height*0.15f));
     prefsDialog.setBounds((int)(wndSize.width*0.3f),(int)(wndSize.height*0.2f),
-              (int)(wndSize.width*0.6f),(int)(wndSize.height*0.2f));
+              (int)(wndSize.width*0.6f),(int)(wndSize.height*0.4f));
+    nodeUrlDisplayDialog.setBounds((int)(wndSize.width*0.1f),(int)(wndSize.height*0.4f),
+              (int)(wndSize.width*0.8f),(int)(wndSize.height*0.2f));
     setVisible(true);
   }
   
@@ -1230,6 +1332,13 @@ public class JreepadViewer extends JFrame
     updateWindowTitle();
   }
 
+  private void getTreepadNodeUrl()
+  {
+//    String ret = theJreepad.getTreepadNodeUrl();
+    nodeUrlDisplayField.setText(theJreepad.getTreepadNodeUrl());
+	nodeUrlDisplayDialog.show();
+  }
+
   private boolean checkOverwrite(File theFile)
   {
     // If file doesn't already exist then fine
@@ -1240,4 +1349,28 @@ public class JreepadViewer extends JFrame
                 JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION); 
   }
 
+  public void showLicense()
+  {
+              JOptionPane.showMessageDialog(theApp, 
+"           Jreepad - personal information manager.\n" +
+"           Copyright (C) 2004 Dan Stowell\n" +
+"\n" +
+"This program is free software; you can redistribute it and/or\n" +
+"modify it under the terms of the GNU General Public License\n" +
+"as published by the Free Software Foundation; either version 2\n" +
+"of the License, or (at your option) any later version.\n" +
+"\n" +
+"This program is distributed in the hope that it will be useful,\n" +
+"but WITHOUT ANY WARRANTY; without even the implied warranty of\n" +
+"MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n" +
+"GNU General Public License for more details.\n" +
+"\n" +
+"The full license can be read online here:\n" +
+"\n" +
+"           http://www.gnu.org/copyleft/gpl.html\n" +
+             "\n"
+              ,
+              "Licence", 
+              JOptionPane.INFORMATION_MESSAGE); 
+  }
 }

@@ -1,3 +1,22 @@
+/*
+           Jreepad - personal information manager.
+           Copyright (C) 2004 Dan Stowell
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+The full license can be read online here:
+
+           http://www.gnu.org/copyleft/gpl.html
+*/
+
 package jreepad;
 
 import java.util.*;
@@ -47,21 +66,38 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
 
     Stack nodeStack = new Stack();
     nodeStack.push(this);
+    
+    int hjtFileFormat = -1;
 
     String dtLine, nodeLine, titleLine, depthLine;
     StringBuffer currentContent;
     String currentLine = bReader.readLine(); // Read the first line, check for treepadness
-    if(! (currentLine.toLowerCase().startsWith("<treepad") && currentLine.endsWith(">")) )
+    if((currentLine.toLowerCase().startsWith("<treepad") && currentLine.endsWith(">")) )
+    {
+      hjtFileFormat = 1;
+    }
+    else if((currentLine.toLowerCase().startsWith("<hj-treepad") && currentLine.endsWith(">")) )
+    {
+      hjtFileFormat = 2;
+    }
+    else
     {
       throw new IOException("\"<Treepad>\" tag not found at beginning of file!");
     }
+    
+    dtLine = "dt=text";
 
-    while((dtLine = bReader.readLine())!=null && (nodeLine = bReader.readLine())!=null && 
+    while(       (hjtFileFormat == 2 ||  (dtLine = bReader.readLine())!=null)
+         && (nodeLine = bReader.readLine())!=null && 
           (titleLine = bReader.readLine())!=null && (depthLine = bReader.readLine())!=null)
     {
-      // Read "dt=text"    [or error]
-      if(! (dtLine.toLowerCase().startsWith("dt=text")))
-        throw new IOException("Unrecognised node format at line " + lineNum + ": " + dtLine);
+      // Read "dt=text"    [or error] - NB THE OLDER FORMAT DOESN'T INCLUDE THIS LINE SO WE SKIP IT
+      if(dtLine.equals("") && nodeLine.startsWith("<bmarks>"))
+        throw new IOException("This is not a Treepad-Lite-compatible file!\nIt seems to be made in a further version of Treepad.");
+
+      if(hjtFileFormat != 2)
+        if(! (dtLine.toLowerCase().startsWith("dt=text")))
+          throw new IOException("Unrecognised node dt format at line " + lineNum + ": " + dtLine);
       // Read "<node>"     [or error]
       if(! (nodeLine.toLowerCase().startsWith("<node>")))
         throw new IOException("Unrecognised node format at line " + (lineNum+1) + ": " + nodeLine);
@@ -131,7 +167,9 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
     {
       ret.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">\n<html xmlns=\"http://www.w3.org/1999/xhtml\" xml:lang=\"en\">\n<head>\n<title>");
       ret.append(htmlSpecialChars(getTitle()));
-      ret.append("</title>\n<style type=\"text/css\">\ndl {}\ndt { font-weight: bold; margin-top: 10px; }\ndd {}\n</style>\n</head>\n\n<body>\n<!-- Exported from Jreepad -->\n<dl>");
+      ret.append("</title>\n<style type=\"text/css\">\n"
+        + "dl {}\ndl dt { font-weight: bold; margin-top: 10px; font-size: 24pt; }\ndl dd {margin-left: 20px; padding-left: 0px;}\ndl dd dl dt {background: black; color: white; font-size: 12pt; }\ndl dd dl dd dl dt {background: white; color: black; }"
+        + "\n</style>\n</head>\n\n<body>\n<!-- Exported from Jreepad -->\n<dl>");
     }
     ret.append("\n<dt>");
     ret.append(htmlSpecialChars(getTitle()));

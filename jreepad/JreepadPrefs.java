@@ -1,3 +1,22 @@
+/*
+           Jreepad - personal information manager.
+           Copyright (C) 2004 Dan Stowell
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+The full license can be read online here:
+
+           http://www.gnu.org/copyleft/gpl.html
+*/
+
 package jreepad;
 
 import javax.swing.*;
@@ -36,6 +55,12 @@ public class JreepadPrefs implements Serializable
 
   boolean loadLastFileOnOpen;
   
+  String webSearchName;
+  String webSearchPrefix;
+  String webSearchPostfix;
+  
+  int defaultSearchMode;
+  
   JreepadPrefs()
   {
     openLocation = new File(System.getProperty("user.dir"));
@@ -52,6 +77,12 @@ public class JreepadPrefs implements Serializable
     autoDateInArticles = false;
     
     loadLastFileOnOpen = true;
+
+    webSearchName = "Google search for highlighted text";
+    webSearchPrefix = "www.google.co.uk/search?q=";
+    webSearchPostfix = "&hl=en";
+    
+    defaultSearchMode = 0;
   }
   
   // We override the serialization routines so that different versions of our class can read 
@@ -77,6 +108,12 @@ public class JreepadPrefs implements Serializable
     out.writeBoolean(autoDateInArticles);
     
     out.writeBoolean(loadLastFileOnOpen);
+
+    out.writeObject(webSearchName);
+    out.writeObject(webSearchPrefix);
+    out.writeObject(webSearchPostfix);
+
+    out.writeInt(defaultSearchMode);
   }
   private void readObject(java.io.ObjectInputStream in)
      throws IOException, ClassNotFoundException
@@ -99,5 +136,11 @@ public class JreepadPrefs implements Serializable
     autoDateInArticles = in.readBoolean();
     
     loadLastFileOnOpen = in.readBoolean();
+
+    webSearchName = (String)in.readObject();
+    webSearchPrefix = (String)in.readObject();
+    webSearchPostfix = (String)in.readObject();
+
+    defaultSearchMode = in.readInt();
   } 
 }
