@@ -85,7 +85,7 @@ public class JreepadPrefs implements Serializable
   public static final int LINEBREAK_WIN=0;
   public static final int LINEBREAK_MAC=1;
   public static final int LINEBREAK_UNIX=2;
-  public int linebreakType = LINEBREAK_WIN;
+  int linebreakType = LINEBREAK_WIN;
   public String linebreak()
   {
     switch(linebreakType)
@@ -96,6 +96,8 @@ public class JreepadPrefs implements Serializable
     }
     return "\r\n";
   }
+  
+  TreePathCollection treePathCollection;
   
   JreepadPrefs(Dimension wndSize)
   {
@@ -151,6 +153,7 @@ public class JreepadPrefs implements Serializable
     windowTop = windowHeight/3;
     windowLeft = windowWidth/3;    
     
+    treePathCollection = new TreePathCollection(new javax.swing.tree.TreePath[0]);
   }
   
   // We override the serialization routines so that different versions of our class can read 
@@ -203,6 +206,8 @@ public class JreepadPrefs implements Serializable
     out.writeInt(windowHeight);
 
     out.writeInt(linebreakType);
+    
+    out.writeObject(treePathCollection);
   }
   private void readObject(java.io.ObjectInputStream in)
      throws IOException, ClassNotFoundException
@@ -254,6 +259,8 @@ public class JreepadPrefs implements Serializable
     windowHeight = in.readInt();
 
     linebreakType = in.readInt();
+    
+    treePathCollection = (TreePathCollection)in.readObject();
    }
    catch(EOFException e)
    {

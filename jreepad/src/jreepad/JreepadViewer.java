@@ -1054,6 +1054,11 @@ public class JreepadViewer extends JFrame
     macOSXRegistration();
 
     setVisible(true);
+        // If loading the last-saved file, expand the nodes we last had open
+        if(fileNameToLoad == "" && getPrefs().loadLastFileOnOpen && getPrefs().saveLocation != null)
+        {
+          theJreepad.expandPaths(getPrefs().treePathCollection.paths);
+        }
   }
   
   public static void main(String[] args)
@@ -1424,7 +1429,8 @@ public class JreepadViewer extends JFrame
     if(tempToBrowserFile.isFile())
       tempToBrowserFile.delete();
 
-    // Save preferences
+    // Save preferences - including window position and size, and open/closed state of the current tree's nodes
+    getPrefs().treePathCollection = new TreePathCollection(theJreepad.getAllExpandedPaths());
     getPrefs().windowLeft = getX();
     getPrefs().windowTop = getY();
     getPrefs().windowWidth = getWidth();

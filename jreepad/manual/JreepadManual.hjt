@@ -28,6 +28,7 @@ _______________________________
 
 
 
+
 <end node> 5P9i0s8y19Z
 dt=Text
 <node>
@@ -61,6 +62,10 @@ Open up this node to see a set of nodes
 containing information about using
 the main features of Jreepad....
 
+(How to "open" the node? The easiest 
+way is to double-click on the title,
+over on the left side of the screen -
+"Using Jreepad")
 <end node> 5P9i0s8y19Z
 dt=Text
 <node>
@@ -204,7 +209,31 @@ dt=Text
 <node>
 Article
 2
+The article is on the right of the screen.
+You can type whatever you like in it...!
 
+You can use the usual cut-and-paste 
+options that you use in other 
+applications: select some text 
+and press
+- [Apple+C] to copy the text
+- [Apple+V] to paste the text
+- [Apple+X] to cut the text
+(N.B. These are of course the shortcuts
+for Mac users! Instead of the Apple key,
+use whatever you normally use on your
+own system....)
+
+Jreepad also has built-in web-search:
+so you can select some text in the 
+article and then choose "Google search"
+from the "Actions" menu to launch a 
+search in your web browser.
+
+(By the way: You can import text files 
+into Jreepad - when you do this, the 
+content of a file becomes the "article".
+Very handy!)
 <end node> 5P9i0s8y19Z
 dt=Text
 <node>
@@ -331,11 +360,13 @@ dt=Text
 <node>
 Treepad internal hyperlinks - node://
 3
-Treepad Lite uses a URI-like format for links 
-to a specific node within the current node. 
-Try this one, for example - select the whole 
-link and choose the menu option "Actions > 
-Follow highlighted link".
+Treepad Lite uses a URI-like format for 
+links to a specific node within the 
+current file. 
+
+Try this one, for example - select the 
+whole link and choose the menu option 
+"Actions > Follow highlighted link".
 
 "node://Jreepad manual/Using Jreepad/File import and export"
 
@@ -344,28 +375,31 @@ dt=Text
 <node>
 WikiLikeBehaviour
 3
-If you've used a wiki before you'll know what 
-this is about - but if not, fear not! The idea 
-behind a Wiki is simply to make it easy to 
-create an interconnected web of articles, just 
-as easily as typing text.
+If you've used a wiki before you'll know 
+what this is about - but if not, fear not! 
+The idea behind a Wiki is simply to 
+make it easy to create an interconnected 
+web of articles, just as easily as 
+typing text.
 
-Jreepad adapts some of the ideas from wiki. 
-The key ingredient in a wiki is that if you 
-type a WikiWord, which is any word which 
-begins with a capital letter and has other 
-capital letter(s) somewhere in the middle, the 
-wiki converts this into a link to an article of 
-that name. If the article exists, you can jump 
-straight to it. If the article doesn't exist, it 
-gets created and you can start to type text 
-into it.
+Jreepad adapts some of the ideas from 
+wiki. The key ingredient in a wiki is 
+that if you type a WikiWord, which is 
+any word which begins with a capital 
+letter and has other capital letter(s) 
+somewhere in the middle, the wiki 
+converts this into a link to an article 
+of that name. If the article exists, you 
+can jump straight to it. If the article 
+doesn't exist, it gets created and you 
+can start to type text into it.
 
-You can also force a chunk of text to behave 
-like a WikiWord by wrapping it in 
-[[double square brackets]].
+You can also force a chunk of text to 
+behave like a WikiWord by wrapping 
+it in [[double square brackets]].
 
-Try selecting these wiki-links and chosing 
+Try selecting these wiki-links and 
+choosing 
 "Actions > Follow highlighted link":
 
   DanStowell
@@ -511,7 +545,58 @@ dt=Text
 <node>
 View options
 2
+Open up this node to see what the
+"View" menu lets you do...!
+<end node> 5P9i0s8y19Z
+dt=Text
+<node>
+View the tree, the article, or both?
+3
+The first three options on the "View" menu
+are about whether you want to see the tree,
+the article, or both at the same time.
 
+I normally always view both at the same 
+time, but sometimes I switch into 
+viewing just the article, if there's a large 
+body of text that I need to type/edit in a
+single node.
+
+N.B. Look on the menu to see the 
+keyboard shortcuts for these three options
+- very handy shortcuts!
+<end node> 5P9i0s8y19Z
+dt=Text
+<node>
+View the toolbar?
+3
+You can turn the toolbar on and off using
+the "View > Toolbar" option.
+
+I normally leave the toolbar 
+on all the time, as it doesn't do much 
+harm!
+
+<end node> 5P9i0s8y19Z
+dt=Text
+<node>
+View "node://" address
+3
+Treepad uses links which begin with 
+"node://" to crosslink within a file.
+If you want to use this method too, 
+you can simply choose the 
+'View > "node://" address' menu option 
+to see what a link to the current node
+would look like.
+
+(By the way, I prefer to use Jreepad's
+WikiLikeBehaviour, since this provides 
+slightly more stable and convenient 
+crosslinking. To see how it works, 
+highlight the phrase WikiLikeBehaviour
+and then choose 
+"Actions > Follow highlighted link"!)
 <end node> 5P9i0s8y19Z
 dt=Text
 <node>

@@ -605,6 +605,32 @@ public class JreepadView extends Box
   }
 
 
+  public TreePath[] getAllExpandedPaths()
+  {
+    Enumeration getPaths = tree.getExpandedDescendants(new TreePath(root));
+    TreePath thisKid;
+    Vector allPaths = new Vector();
+    while(getPaths.hasMoreElements())
+    {
+      thisKid = (TreePath)getPaths.nextElement();
+      allPaths.add(thisKid);
+    }
+    TreePath[] ret = new TreePath[allPaths.size()];
+    for(int i=0; i<ret.length; i++)
+      ret[i] = (TreePath)allPaths.get(i);
+    return ret;
+  }
+
+  // THIS FUNCTION SEEMS TO HAVE NO EFFECT, ON MY MACHINE AT LEAST! WHAT'S GOING ON?
+  public void expandPaths(TreePath[] paths)
+  {
+    for(int i=0; i<paths.length; i++)
+    {
+      tree.expandPath(paths[i]);
+    }
+  }
+
+
   // Functions and inner class for searching nodes
   private JreepadSearchResult[] searchResults;
   private Vector searchResultsVec;
