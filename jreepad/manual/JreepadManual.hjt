@@ -48,7 +48,7 @@ Using Jreepad
 1
 Open up this node to see a set of nodes containing information about using the main features of Jreepad....
 
-(How to "open" the node? The easiest way is to double-click on the title, over on the left side of the screen - "Using Jreepad"
+(How to "open" the node? The easiest way is to double-click on the title, over on the left side of the screen - "Using Jreepad".)
 <end node> 5P9i0s8y19Z
 dt=Text
 <node>
@@ -68,10 +68,11 @@ dt=Text
 <node>
 Tree
 2
-The tree is the left part of the screen. If it's empty you can load a file into it, or you can add a node into the empty tree (see "How to add node" below).
+The tree is the left part of the screen. If it's empty you can load a file into it, or you can add a node into the empty tree (see "Adding/deleting nodes" below).
 
 You can select one of the "nodes" in the tree just by clicking on it.
-You can also use your cursor-keys to navigate your way around the tree - try it
+
+You can also use your cursor-keys to navigate your way around the tree - try it now!
 <end node> 5P9i0s8y19Z
 dt=Text
 <node>
@@ -80,7 +81,9 @@ Opening/closing subtrees
 If you're using the mouse, you can double-click on any node to 
 open/close its subtree. (Of course, if the node doesn't have a subtree nothing will happen!) Similarly, you can use the little icon to the left of the node's title, which you can use to open/close a subtree with a single click.
 
-If you're using the keyboard, you can use the left/right cursor keys to respectively close/open the selected node. N.B.: This only works if the "tree" view is the one you're using at the time. If you're editing in the article view, the cursor keys will move you around in the article
+If you're using the keyboard, you can use the left/right cursor keys to respectively close/open the selected node. N.B.: This only works if the "tree" view is the one you're using at the time. If you're editing in the article view, the cursor keys will move you around in the article.
+
+
 <end node> 5P9i0s8y19Z
 dt=Text
 <node>
@@ -93,6 +96,8 @@ When you have a node selected (such as this one titled "Adding/deleting nodes"),
 - As a child of the selected node
 
 The first three buttons on the toolbar give you these three possibilities. (They're in the Edit menu too....)
+
+(The fourth button is obviously used to delete the selected node.)
 <end node> 5P9i0s8y19Z
 dt=Text
 <node>
@@ -109,13 +114,15 @@ You also have four buttons for moving nodes around, on the toolbar:
 
 (They're also in the Edit menu!)
 
-"Up" and "Down" can move a node up and down relative to its siblings. "In" will promote the node so that it becomes a sibling of the node that was previously its parent. "Out" will demote the node so that it becomes a child of the sibling just above it (if there is one)
+"Up" and "Down" can move a node up and down relative to its siblings. "Out" will promote the node so that it becomes a sibling of the node that was previously its parent. "In" will demote the node so that it becomes a child of the sibling just above it (if there is one).
+
+
 <end node> 5P9i0s8y19Z
 dt=Text
 <node>
 Sorting the nodes in a tree
 4
-If you look at the "Edit" menu you'll see there are two options for sorting nodes:
+If you look at the "Action" menu you'll see there are two options for sorting nodes:
 
 - Sort children (one level)
 - Sort children (all levels)
@@ -357,7 +364,7 @@ dt=Text
 <node>
 Character encodings
 2
-For maximum compatibility with Treepad Lite, we set the default text encoding to ISO-8859-1 (this is a standard text encoding used by Windows).
+For maximum compatibility with Treepad Lite, we set the default text encoding to ISO-8859-1 (this is a standard text encoding used by Windows). ISO-8859-15 is apparently slightly better so that's another option, but not default.
 
 If you want to preserve accented characters and other special characters, you might prefer to use Unicode (UTF-8 or UTF-16).
 
