@@ -16,6 +16,8 @@ public class JreepadViewer extends JFrame
   private JreepadView theJreepad;
   private Container content;
   
+  private boolean warnAboutUnsaved = false;
+  
   private File openLocation = new File("/Users/dan/javaTestArea/Jreepad/");
   private File saveLocation;
   private File importLocation;
@@ -140,7 +142,7 @@ public class JreepadViewer extends JFrame
       exportMenu.add(exportTextMenuItem);
     fileMenu.add(new JSeparator());
     quitMenuItem = new JMenuItem("Quit");
-    quitMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { System.exit(0); }});
+    quitMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { quitAction(); }});
     fileMenu.add(quitMenuItem);
     //
     addAboveMenuItem = new JMenuItem("Add sibling above");
@@ -385,21 +387,21 @@ public class JreepadViewer extends JFrame
                                public void actionPerformed(ActionEvent e){ saveAction(); } });
    */
     upButton.addActionListener(new ActionListener(){
-                               public void actionPerformed(ActionEvent e){ theJreepad.moveCurrentNodeUp(); repaint();  theJreepad.returnFocusToTree();} });
+                               public void actionPerformed(ActionEvent e){ theJreepad.moveCurrentNodeUp(); repaint();  theJreepad.returnFocusToTree(); warnAboutUnsaved = true;} });
     downButton.addActionListener(new ActionListener(){
-                               public void actionPerformed(ActionEvent e){ theJreepad.moveCurrentNodeDown(); repaint();  theJreepad.returnFocusToTree();} });
+                               public void actionPerformed(ActionEvent e){ theJreepad.moveCurrentNodeDown(); repaint();  theJreepad.returnFocusToTree(); warnAboutUnsaved = true;} });
     indentButton.addActionListener(new ActionListener(){
-                               public void actionPerformed(ActionEvent e){ theJreepad.indentCurrentNode(); repaint();  theJreepad.returnFocusToTree();} });
+                               public void actionPerformed(ActionEvent e){ theJreepad.indentCurrentNode(); repaint();  theJreepad.returnFocusToTree(); warnAboutUnsaved = true;} });
     outdentButton.addActionListener(new ActionListener(){
-                               public void actionPerformed(ActionEvent e){ theJreepad.outdentCurrentNode(); repaint(); theJreepad.returnFocusToTree(); } });
+                               public void actionPerformed(ActionEvent e){ theJreepad.outdentCurrentNode(); repaint(); theJreepad.returnFocusToTree(); warnAboutUnsaved = true; } });
     addAboveButton.addActionListener(new ActionListener(){
-                               public void actionPerformed(ActionEvent e){ theJreepad.addNodeAbove(); repaint(); /* theJreepad.returnFocusToTree(); */} });
+                               public void actionPerformed(ActionEvent e){ theJreepad.addNodeAbove(); repaint(); /* theJreepad.returnFocusToTree(); */ warnAboutUnsaved = true;} });
     addBelowButton.addActionListener(new ActionListener(){
-                               public void actionPerformed(ActionEvent e){ theJreepad.addNodeBelow(); repaint(); /* theJreepad.returnFocusToTree(); */} });
+                               public void actionPerformed(ActionEvent e){ theJreepad.addNodeBelow(); repaint(); /* theJreepad.returnFocusToTree(); */ warnAboutUnsaved = true;} });
     addButton.addActionListener(new ActionListener(){
-                               public void actionPerformed(ActionEvent e){ theJreepad.addNode(); repaint(); /* theJreepad.returnFocusToTree(); */} });
+                               public void actionPerformed(ActionEvent e){ theJreepad.addNode(); repaint(); /* theJreepad.returnFocusToTree(); */ warnAboutUnsaved = true;} });
     removeButton.addActionListener(new ActionListener(){
-                               public void actionPerformed(ActionEvent e){ theJreepad.removeNode(); repaint(); theJreepad.returnFocusToTree(); } });
+                               public void actionPerformed(ActionEvent e){ theJreepad.removeNode(); repaint(); theJreepad.returnFocusToTree(); warnAboutUnsaved = true; } });
 
     // Establish the search dialogue box - so that it can be called whenever wanted
     searchDialog = new JDialog(theApp, "Search Jreepad", false);
@@ -548,6 +550,7 @@ public class JreepadViewer extends JFrame
         saveLocation = exportLocation = importLocation = openLocation;
         content.add(theJreepad);
         setTitleBasedOnFilename(openLocation.getName());
+        warnAboutUnsaved = false;
       }
       catch(IOException err)
       {
@@ -559,8 +562,12 @@ public class JreepadViewer extends JFrame
       }
     }
 
+
+    // Set close operation
+    setDefaultCloseOperation(DO_NOTHING_ON_CLOSE); // THIS NEEDS CHANGING! INSTEAD OF EXIT, WE NEED TO INVOKE "quitAction"!
+    addWindowListener(new WindowAdapter() { public void windowClosing(WindowEvent e){ quitAction(); }});
+
     // Finally, make the window visible and well-sized
-    setDefaultCloseOperation(EXIT_ON_CLOSE);
     setTitleBasedOnFilename("");
     Toolkit theToolkit = getToolkit();
     Dimension wndSize = theToolkit.getScreenSize();
@@ -596,6 +603,7 @@ public class JreepadViewer extends JFrame
         setTitleBasedOnFilename(openLocation.getName());
         validate();
         repaint();
+        warnAboutUnsaved = false;
       }
     }
     catch(IOException err)
@@ -604,12 +612,11 @@ public class JreepadViewer extends JFrame
     }
   } // End of: openAction()
   
-  private void saveAction()
+  private boolean saveAction()
   {
     if(saveLocation==null)
     {
-      saveAsAction();
-      return;
+      return saveAsAction();
     }
     try
     {
@@ -619,13 +626,16 @@ public class JreepadViewer extends JFrame
       dO.writeBytes(writeMe);
       dO.close();
       fO.close();
+      warnAboutUnsaved = false;
+      return true;
     }
     catch(IOException err)
     {
       JOptionPane.showMessageDialog(theApp, err, "File error during Save" , JOptionPane.ERROR_MESSAGE);
     }
+    return false;
   }
-  private void saveAsAction()
+  private boolean saveAsAction()
   {
     try
     {
@@ -640,12 +650,17 @@ public class JreepadViewer extends JFrame
         dO.close();
         fO.close();
         setTitleBasedOnFilename(saveLocation.getName());
+        warnAboutUnsaved = false;
+        return true;
       }
+      else
+        return false;
     }
     catch(IOException err)
     {
       JOptionPane.showMessageDialog(theApp, err, "File error during Save As" , JOptionPane.ERROR_MESSAGE);
     }
+    return false;
   } // End of: saveAction()
 
   private void openSearchDialog()
@@ -711,7 +726,7 @@ public class JreepadViewer extends JFrame
 			JOptionPane.showMessageDialog(theApp, "Unknown which format to import - coding error! Oops!", "Error" , JOptionPane.ERROR_MESSAGE);
 			return;
 		}
-
+	    warnAboutUnsaved = true;
       }
       fileChooser.setMultiSelectionEnabled(false);
     }
@@ -764,5 +779,21 @@ public class JreepadViewer extends JFrame
     }
   } // End of: exportAction()
 
+
+  public void quitAction()
+  {
+    // We need to check about warning-if-unsaved!
+    if(warnAboutUnsaved)
+    {
+	  int answer = JOptionPane.showConfirmDialog(theApp, "Save current file before quitting?", 
+	                   "Save before quit?" , JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE);
+      if(answer == JOptionPane.CANCEL_OPTION)
+        return;
+      else if(answer == JOptionPane.YES_OPTION)
+        if(!saveAction())
+          return; // This cancels quit if the save action failed or was cancelled
+    }
+    System.exit(0);
+  }
 
 }

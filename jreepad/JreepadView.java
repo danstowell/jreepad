@@ -7,6 +7,7 @@ import java.awt.event.*;
 import java.util.Enumeration;
 import java.util.Vector;
 import java.io.*;
+import java.awt.print.*;
 
 /*
 
@@ -512,6 +513,31 @@ public class JreepadView extends Box
     treeModel.reload(currentNode);
     tree.expandPath(tree.getSelectionPath());
   }
+
+  public String getSelectedTextInArticle()
+  {
+    return editorPane.getSelectedText();
+  }
+
+  // Stuff concerned with printing
+  public void printCurrentArticle()
+  {
+    PrinterJob job = PrinterJob.getPrinterJob();
+    if(job.printDialog())
+    {
+      PageFormat pageFormat = job.validatePage(job.defaultPage());
+      job.setJobName(currentNode.getTitle());
+      try
+      {
+        job.print();
+      }
+      catch(PrinterException err)
+      {
+        System.out.println(err);
+      }
+    }
+  }
+  // End of: stuff concerned with printing
 
   class JreepadTreeModelListener implements TreeModelListener
   {
