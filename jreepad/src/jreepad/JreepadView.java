@@ -386,15 +386,15 @@ public class JreepadView extends Box
 
     // Now make a note of the expanded/collapsed state of the subtree of the moving node
     boolean thisOnesExpanded = tree.isExpanded(tree.getSelectionPath());
-    Enumeration enum;
+    Enumeration enumer;
     Vector expanded;
     if(thisOnesExpanded)
     {
-      enum = tree.getExpandedDescendants(tree.getSelectionPath());
+      enumer = tree.getExpandedDescendants(tree.getSelectionPath());
       expanded = new Vector();
-      while(enum.hasMoreElements())
+      while(enumer.hasMoreElements())
       {
-        expanded.add((TreePath)enum.nextElement());
+        expanded.add((TreePath)enumer.nextElement());
 //        System.out.println(expanded.lastElement());
       }
     }
