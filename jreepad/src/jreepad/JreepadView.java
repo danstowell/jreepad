@@ -1012,23 +1012,45 @@ System.out.println(err);
     }
     
     // It's probably a web-link, so let's do something to it and then try and launch it
-    char[] curl = url.toCharArray();
-    StringBuffer surl = new StringBuffer();
-//    if(url.indexOf(":") == -1)
-//      surl.append("http://");
-    for(int i=0; i<curl.length; i++)
-      if(curl[i]==' ')
-        surl.append("%20");
-      else
-        surl.append(curl[i]);
-    try
+    
+/*
+
+//  NOTE:
+//  I haven't been able to get this file:// method to work, on Windows 2000 or on Mac OSX.
+//  So I'm disactivating it for now.
+
+    // Firstly we use Kami's method for attempting to open file:// links
+    if(url.startsWith("file://"))
     {
-      BrowserLauncher.openURL(surl.toString());
+      url =  getPrefs().openLocation.getParentFile().getPath() + System.getProperty("file.separator")+  url.substring(7);
+      try
+      {
+        BrowserLauncher.openURL(url.toString());
+      }
+      catch(IOException err)
+      {
+        JOptionPane.showMessageDialog(this, "I/O error while opening URL:\n"+url+"\n\nThe \"BrowserLauncher\" used to open a URL is an open-source Java library \nseparate from Jreepad itself - i.e. a separate Sourceforge project. \nIt may be a good idea to submit a bug report to\nhttp://sourceforge.net/projects/browserlauncher\n\nIf you do, please remember to supply information about the operating system\nyou are using - which type, and which version.", "Error" , JOptionPane.ERROR_MESSAGE);
+      }
     }
-    catch(IOException err)
+    else
     {
-	  JOptionPane.showMessageDialog(this, "I/O error while opening URL:\n"+surl+"\n\nThe \"BrowserLauncher\" used to open a URL is an open-source Java library \nseparate from Jreepad itself - i.e. a separate Sourceforge project. \nIt may be a good idea to submit a bug report to\nhttp://sourceforge.net/projects/browserlauncher\n\nIf you do, please remember to supply information about the operating system\nyou are using - which type, and which version.", "Error" , JOptionPane.ERROR_MESSAGE);
-    }
+*/
+		char[] curl = url.toCharArray();
+		StringBuffer surl = new StringBuffer();
+		for(int i=0; i<curl.length; i++)
+		  if(curl[i]==' ')
+			surl.append("%20");
+		  else
+			surl.append(curl[i]);
+		try
+		{
+		  BrowserLauncher.openURL(surl.toString());
+		}
+		catch(IOException err)
+		{
+		  JOptionPane.showMessageDialog(this, "I/O error while opening URL:\n"+surl+"\n\nThe \"BrowserLauncher\" used to open a URL is an open-source Java library \nseparate from Jreepad itself - i.e. a separate Sourceforge project. \nIt may be a good idea to submit a bug report to\nhttp://sourceforge.net/projects/browserlauncher\n\nIf you do, please remember to supply information about the operating system\nyou are using - which type, and which version.", "Error" , JOptionPane.ERROR_MESSAGE);
+		}
+//    }
   }
 
   public boolean followTreepadInternalLink(String url)

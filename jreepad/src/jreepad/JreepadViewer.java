@@ -181,6 +181,12 @@ public class JreepadViewer extends JFrame
   public JreepadViewer(String fileNameToLoad)
   {
     theApp = this;
+
+// THIS DOESN'T SEEM TO HAVE ANY EFFECT, ON MAC OSX - I'd be interested to know if it does its job on other OSs
+    ClassLoader loader = this.getClass().getClassLoader(); // Used for loading icon
+    java.net.URL iconUrl = loader.getResource("images/jreepadlogo-01-iconsize.gif");
+    setIconImage(new ImageIcon(iconUrl).getImage());
+
     // Check if a preferences file exists - and if so, load it
     try
     {
@@ -675,6 +681,7 @@ public class JreepadViewer extends JFrame
                                }
                                } });
     toolBar.add(viewSelector);
+    toolBar.add(Box.createGlue());
     
     // Add the actions to the toolbar buttons
    /* THESE BUTTONS HAVE BEEN REMOVED. But leave the code here, since they may later be replaced with iconic buttons.
@@ -1164,6 +1171,14 @@ public class JreepadViewer extends JFrame
               getPrefs().windowWidth, getPrefs().windowHeight);
     nodeUrlDisplayDialog.setBounds((int)(wndSize.width*0.1f),(int)(getPrefs().windowHeight*0.7f),
               (int)(getPrefs().windowWidth*1.3f), getPrefs().windowHeight/3);
+
+    // pack() actually deprecates some of the functionality of the setBounds() calls just above
+    //  - but hopefully gives a better mixture of sizes set programmatically and by the OS
+    searchDialog.pack();
+    autoSaveDialog.pack();
+    htmlExportDialog.pack();
+    prefsDialog.pack();
+    nodeUrlDisplayDialog.pack();
 
     theApps.add(theApp);
     macOSXRegistration();
