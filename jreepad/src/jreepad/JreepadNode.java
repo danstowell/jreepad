@@ -67,6 +67,251 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
   private void constructFromInputStream(InputStreamReader treeInputStream, boolean autoDetectHtmlArticles) throws IOException
   {
     int lineNum = 2;
+    BufferedReader bReader = new BufferedReader(treeInputStream);
+    children = new Vector();
+
+    Stack nodeStack = new Stack();
+    nodeStack.push(this);
+    
+    String currentLine = bReader.readLine(); // Read the first line, check for treepadness
+
+    if(currentLine.startsWith("<?xml version=\"1.0\""))
+    {
+      // Try and find out what character encoding to use
+      int encPos = currentLine.indexOf("encoding=");
+      String xmlEncoding;
+      if(encPos==-1)
+        xmlEncoding = ""; // getPrefs().getEncoding();
+      else
+      {
+        xmlEncoding = currentLine.substring(encPos+10);
+        encPos = xmlEncoding.indexOf("\"");
+        if(encPos==-1)
+          encPos = xmlEncoding.indexOf("'");
+        if(encPos==-1)
+          xmlEncoding = ""; // getPrefs().getEncoding();
+        else
+          xmlEncoding = xmlEncoding.substring(0, encPos);
+        System.out.println("Start of XML loading: decided on the following character encoding: " + xmlEncoding);
+        System.out.println("  ...but unfortunately can't do anything about that. Using encoding " + treeInputStream.getEncoding());
+        constructFromXmlInputStream(bReader);
+      }
+    }
+    else if((currentLine.toLowerCase().startsWith("<treepad") && currentLine.endsWith(">")) )
+    {
+      constructFromHjtInputStream(treeInputStream, autoDetectHtmlArticles, 
+            1, bReader, lineNum, nodeStack, children);
+    }
+    else if((currentLine.toLowerCase().startsWith("<hj-treepad") && currentLine.endsWith(">")) )
+      constructFromHjtInputStream(treeInputStream, autoDetectHtmlArticles, 
+            2, bReader, lineNum, nodeStack, children);
+    else
+    {
+      System.out.println("First line of file does not indicate a recognised format:\n" + currentLine + "\n");
+      throw new IOException("First line of file does not indicate a recognised format:\n\n" + currentLine);
+    }
+
+
+
+  }
+
+  private void constructFromXmlInputStream(BufferedReader bReader) throws IOException
+  {
+    String currentLine;
+    String currentXmlContent = "";
+    int nodeTagOffset = 0;
+
+    // Spool until we're at the very first node
+    while((currentLine = bReader.readLine())!=null && (nodeTagOffset = currentXmlContent.indexOf("<node"))==-1
+               && currentXmlContent.indexOf('>', nodeTagOffset)==-1)
+      currentXmlContent += (currentLine + "\n");
+
+    if(currentLine != null)
+      currentXmlContent += (currentLine + "\n");
+
+    //System.out.println("XMLparse: I've spooled to the first node and content is now: " + currentXmlContent);
+
+    // So currentXmlContent now contains all of the opening tag, including its attributes etc
+    // Strip off anything BEFORE the node opening
+    currentXmlContent = currentXmlContent.substring(nodeTagOffset);
+
+    //System.out.println("XMLparse: I've stripped anything before the first node and content is now: " + currentXmlContent);
+
+    recursiveCreateFromXmlStream(bReader, currentXmlContent, 0);
+  }
+
+  // This function should return any XML string content that remains unprocessed
+  private String recursiveCreateFromXmlStream(BufferedReader bReader, String currentXmlContent, int depth) throws IOException
+  {
+  
+    // System.out.println("XMLparse recursive: depth "+depth);
+  
+    // String currentXmlContent should BEGIN with the <node> tag. This is assumed, and if not true may cause problems!
+    String currentLine;
+    int titleOffset, typeOffset, startTagOffset, endTagOffset;
+    String title, typeString, content;
+    JreepadNode babyNode;
+    children = new Vector();
+    this.content = "";
+
+    // Extract the attributes
+    titleOffset = currentXmlContent.indexOf("title=");
+    typeOffset = currentXmlContent.indexOf("type=");
+    if(titleOffset!=-1)
+      title = currentXmlContent.substring(titleOffset+7, currentXmlContent.indexOf('"', titleOffset+7));
+    else
+      title = "<Untitled node>";
+    if(typeOffset!=-1)
+      typeString = currentXmlContent.substring(typeOffset+6, currentXmlContent.indexOf('"', typeOffset+6));
+    else
+      typeString = "text/plain";
+
+    if(typeString.equals("text/csv"))
+      this.articleMode = ARTICLEMODE_CSV;
+    else if(typeString.equals("text/html"))
+      this.articleMode = ARTICLEMODE_HTML;
+    else
+      this.articleMode = ARTICLEMODE_ORDINARY;
+
+    this.title = xmlUnescapeChars(title);
+
+    // OK, so we've interpreted the attributes etc. Now we need to trim the opening tag away
+    currentXmlContent = currentXmlContent.substring(currentXmlContent.indexOf('>')+1);
+
+    //System.out.println("XMLparse: I've stripped off the <node> tag and content is now: " + currentXmlContent);
+
+    boolean readingContent = true; // Once the baby nodes come in, we're not interested in adding any more to the content
+    while((currentLine = bReader.readLine())!=null)
+    {
+      //System.out.println("XMLparserecursive: Here's a line: " + currentLine);
+      currentLine += "\n"; // We want to keep the newlines, but the BufferedReader doesn't give us them
+
+	  // We're reading CONTENT into the current node.
+      currentXmlContent += currentLine;
+      
+    //  System.out.println("\n\nThe content that I'm currently trying to process is:\n"+currentXmlContent);
+	  
+	  // Look out for <node which tells us we're starting a child
+	  startTagOffset = currentXmlContent.indexOf("<node");
+	  // Look out for </node> which tells us we're finishing this node and returning to the parent
+	  endTagOffset = currentXmlContent.indexOf("</node>");
+
+      while(!(startTagOffset==-1 || endTagOffset==-1))
+      {
+        if(startTagOffset==-1 || endTagOffset<startTagOffset)
+        {
+          // Process the nearest end tag
+          if(readingContent)
+		    this.content += xmlUnescapeChars(currentXmlContent.substring(0, endTagOffset));
+		  String returnFromBaby = currentXmlContent.substring(endTagOffset+7);
+		  //System.out.println("\n\nBaby intends to return:"+returnFromBaby);
+		  return returnFromBaby;
+        }
+        else
+        {
+          if(readingContent)
+		    this.content += xmlUnescapeChars(currentXmlContent.substring(0, startTagOffset));
+		  
+		  // Having found a child node, we want to STOP adding anything to the current node's content (e.g. newlines...)
+		  readingContent = false;
+
+          // Process the nearest start tag
+		  babyNode = new JreepadNode(this);
+		  //System.out.println("\n\nJust before passing to baby: content is:\n"+currentXmlContent);
+		  currentXmlContent = babyNode.recursiveCreateFromXmlStream(bReader, 
+				   currentXmlContent.substring(startTagOffset), depth+1);
+		  //System.out.println("\n\nJust after passing to baby: content is:\n"+currentXmlContent);
+		  children.add(babyNode);
+        }
+      
+		startTagOffset = currentXmlContent.indexOf("<node");
+		endTagOffset = currentXmlContent.indexOf("</node>");
+      }
+
+    } // End while
+
+
+    // Just make sure we haven't wasted any content...
+    endTagOffset = currentXmlContent.indexOf('<');
+    if(readingContent && (endTagOffset != -1))
+      this.content += xmlUnescapeChars(currentXmlContent.substring(0, endTagOffset));
+//    System.out.println("THE MAIN WHILE LOOP HAS ENDED. SPARE CONTENT:\n" + currentXmlContent);
+    return "";
+  }
+
+
+  private void constructFromHjtInputStream(InputStreamReader treeInputStream, boolean autoDetectHtmlArticles, 
+            int hjtFileFormat, BufferedReader bReader, int lineNum, Stack nodeStack,
+            Vector children
+            ) throws IOException
+  {
+    int depthMarker;
+    JreepadNode babyNode;
+    String dtLine, nodeLine, titleLine, depthLine;
+    StringBuffer currentContent;
+    String currentLine; // = bReader.readLine(); // Read the first line, check for treepadness
+    dtLine = "dt=text";
+
+    while(       (hjtFileFormat == 2 ||  (dtLine = bReader.readLine())!=null)
+         && (nodeLine = bReader.readLine())!=null && 
+          (titleLine = bReader.readLine())!=null && (depthLine = bReader.readLine())!=null)
+    {
+      // Read "dt=text"    [or error] - NB THE OLDER FORMAT DOESN'T INCLUDE THIS LINE SO WE SKIP IT
+      if(dtLine.equals("") && nodeLine.startsWith("<bmarks>"))
+        throw new IOException("This is not a Treepad-Lite-compatible file!\n\nFiles created in more advanced versions of Treepad\ncontain features that are not available in Jreepad.");
+
+      if(hjtFileFormat != 2)
+        if(! (dtLine.toLowerCase().startsWith("dt=text")))
+          throw new IOException("Unrecognised node dt format at line " + lineNum + ": " + dtLine);
+      // Read "<node>"     [or error]
+      if(! (nodeLine.toLowerCase().startsWith("<node>")))
+        throw new IOException("Unrecognised node format at line " + (lineNum+1) + ": " + nodeLine);
+
+      lineNum += 4;
+
+      // Read THE CONTENT! [loop until we find "<end node> 5P9i0s8y19Z"]
+      currentContent = new StringBuffer();
+      while((currentLine = bReader.readLine())!=null && !currentLine.equals("<end node> 5P9i0s8y19Z"))
+      {
+        currentContent.append(currentLine + "\n");
+        lineNum++;
+      }
+
+      // Now, having established the content and the title and the depth, we'll create the child
+      babyNode = new JreepadNode(titleLine, currentContent.substring(0, Math.max(currentContent.length()-1,0)),
+                             (JreepadNode)(nodeStack.peek()));
+//      babyNode = new JreepadNode(titleLine, currentContent.substring(0, Math.max(currentContent.length()-2,0)),
+//                             (JreepadNode)(nodeStack.peek()));
+
+      // Turn it into a HTML-mode node if it matches "<html> ... </html>"
+      String compareContent = babyNode.getContent().toLowerCase().trim();
+      int newArticleMode = (autoDetectHtmlArticles && compareContent.startsWith("<html>") && compareContent.endsWith("</html>"))
+                      ? ARTICLEMODE_HTML
+                      : ARTICLEMODE_ORDINARY;
+
+      if(depthLine.equals("0"))
+      {
+        this.title = titleLine;
+        this.content = currentContent.substring(0, Math.max(currentContent.length()-1,0));
+        this.articleMode = newArticleMode;
+      }
+      else
+      {
+        babyNode.setArticleMode(newArticleMode);
+        depthMarker = Integer.parseInt(depthLine);
+        while(nodeStack.size()>depthMarker)
+          nodeStack.pop();
+
+        ((JreepadNode)(nodeStack.peek())).addChild(babyNode);
+        nodeStack.push(babyNode);
+      }
+    }
+
+  } // End of constructor from HJT FileInputStream
+
+  private void OLDVERSIONconstructFromInputStream(InputStreamReader treeInputStream, boolean autoDetectHtmlArticles) throws IOException
+  {
+    int lineNum = 2;
     int depthMarker;
     BufferedReader bReader = new BufferedReader(treeInputStream);
     JreepadNode babyNode;
@@ -433,7 +678,10 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
   public String toTreepadString(int currentDepth)
   {
     StringBuffer ret = new StringBuffer("dt=Text\n<node>\n");
-    ret.append(getTitle() + "\n" + (currentDepth++) + "\n" + getContent() + "\n<end node> 5P9i0s8y19Z\n");
+    ret.append(getTitle() + "\n" + (currentDepth++) + "\n" + getContent() 
+                     + "\n"
+//                     + (currentDepth==1?"ROOTNODEMANIA":"\n") // Not sure why I need to be slightly unusual with the root node...
+                     + "<end node> 5P9i0s8y19Z\n");
     for(int i=0; i<getChildCount(); i++)
       ret.append(((JreepadNode)getChildAt(i)).toTreepadString(currentDepth));
 //    System.out.println("\n\n____________________NODE AT DEPTH " + currentDepth + "_________________________\n" + ret);
@@ -962,6 +1210,112 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
 	  o.append("\n");
     }
     setContent(o.toString());
+  }
+
+  public String toXml(String encoding)
+  {
+    String ret = "<?xml version=\"1.0\" encoding=\"" + encoding + "\"?>\n";
+    ret += toXmlNoHeader(encoding, 0, true);
+    return stripControlChars(ret);
+  }
+  
+  public String toXmlNoHeader(String encoding, int depth, boolean incChildren)
+  {
+    StringBuffer ret = new StringBuffer("<node ");
+    if(depth==0)
+      ret.append("xmlns=\"http://jreepad.sourceforge.net/formats\"  ");
+    ret.append("title=\"" + xmlEscapeChars(title) + "\" type=\"");
+
+    switch(getArticleMode())
+    {
+      case ARTICLEMODE_HTML:
+        ret.append("text/html");
+        break;
+      case ARTICLEMODE_CSV:
+        ret.append("text/csv");
+        break;
+      default:
+        ret.append("text/plain");
+        break;
+    }
+    ret.append("\">");
+    ret.append(xmlEscapeChars(getContent()));
+    if(incChildren)
+    {
+      Enumeration kids = children();
+      while(kids.hasMoreElements())
+        ret.append(  ((JreepadNode)kids.nextElement()).toXmlNoHeader(encoding, depth+1, incChildren));
+    }
+    ret.append("</node>\n");
+    return ret.toString();
+  }
+
+  private String stripControlChars(String in)
+  {
+    // Don't output control characters... well duh! I have no idea why my XML was coming out with control characters in the first place...
+    char[] c = in.toCharArray();
+    StringBuffer ret = new StringBuffer();
+    for(int i=0; i<c.length; i++)
+      if((c[i]=='\n') || (c[i]=='\t') || (Character.getType(c[i]) != Character.CONTROL))
+        ret.append(c[i]);
+    return ret.toString();
+  }
+
+  private String xmlEscapeChars(String in)
+  {
+    char[] c = in.toCharArray();
+    StringBuffer ret = new StringBuffer();
+    for(int i=0; i<c.length; i++)
+      if(c[i]=='<')       ret.append("&lt;");
+      else if(c[i]=='>')  ret.append("&gt;");
+      else if(c[i]=='&')  ret.append("&amp;");
+      else if(c[i]=='"') ret.append("&quot;");
+      else                ret.append(c[i]);
+    return ret.toString();
+  }
+
+  private String xmlUnescapeChars(String in)
+  {
+    char[] c = in.toCharArray();
+    StringBuffer ret = new StringBuffer();
+    StringBuffer entity = new StringBuffer();
+    String ent;
+
+    int i,j;
+    OuterLoop:
+    for(i=0; i<c.length; i++)
+      if(c[i]=='&')
+      {
+        entity = new StringBuffer();
+        for(j=0; j<8; j++) // Add things into the entity buffer until we hit a semicolon
+        {
+          i++;
+          if(i == c.length)
+          {
+            ret.append('&' + entity.toString());
+            continue OuterLoop;
+          }
+          else if(c[i]!=';')
+            entity.append(c[i]);
+          else
+            break; // Reached end of the entity (or end of the whole string!)
+        }
+        ent = entity.toString();
+        if(ent.equals("lt"))
+          ret.append("<");
+        else if(ent.equals("gt"))
+          ret.append(">");
+        else if(ent.equals("amp"))
+          ret.append("&");
+        else if(ent.equals("quot"))
+          ret.append("\"");
+        else
+          ret.append('&' + ent + ';');
+      }
+      else
+        ret.append(c[i]);
+
+    return ret.toString();
   }
 
   public class JreepadNodeEnumeration implements Enumeration

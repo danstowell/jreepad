@@ -248,6 +248,7 @@ public class find
     }
     
     // Output the results
+    JreepadNode resultsParent;
     switch(outputFormat)
     {
       case OUTPUT_TEXT:
@@ -259,12 +260,16 @@ public class find
           System.out.println(formatResultBrieferText(res[i]));
         break;
       case OUTPUT_XML:
-        System.out.println("<?xml version=\"1.0\" standalone=\"yes\"?>\n<jreepad>\n");
+        resultsParent = new JreepadNode("Search results","",null);
         for(int i=0; i<res.length; i++)
-          System.out.println(formatResultXml(res[i]));
-        System.out.println("\n</jreepad>");
+          resultsParent.addChild(res[i].getNode());
+        System.out.println(resultsParent.toXml("ISO-8859-1")); // FIXME: What should the encoding be, if anything?
         break;
       case OUTPUT_HJT:
+        resultsParent = new JreepadNode("Search results","",null);
+        for(int i=0; i<res.length; i++)
+          resultsParent.addChild(res[i].getNode());
+        System.out.println(resultsParent.toTreepadString());
         break;
       case OUTPUT_TITLES:
         for(int i=0; i<res.length; i++)
@@ -287,7 +292,9 @@ public class find
   private static String formatResultXml(JreepadSearcher.JreepadSearchResult res)
   {
     JreepadNode n = res.getNode();
-    return "<node title=\"" + n.getTitle() + "\">" + n.getContent() + "</node>";
+    //FIXME: What the heck should the encoding be? Does it matter?
+    return n.toXmlNoHeader("ISO-8859-1", 1, false);
+//    return "<node title=\"" + n.getTitle() + "\">" + n.getContent() + "</node>";
   }
 
   private static void printUsage()

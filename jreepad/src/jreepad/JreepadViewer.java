@@ -35,7 +35,6 @@ import java.lang.reflect.*;
 
 public class JreepadViewer extends JFrame
 {
-  private /* static */ JreepadViewer theApp;
   private static Vector theApps = new Vector(1,1);
   private Box toolBar;
   private JreepadView theJreepad;
@@ -74,6 +73,7 @@ public class JreepadViewer extends JFrame
   private JCheckBox autoDateNodesCheckBox;
   private JCheckBox autoDetectHtmlCheckBox;
   private JComboBox fileEncodingSelector;
+  private JComboBox fileFormatSelector;
 //  private Box fontsPrefsBox;
 //    private JComboBox treeFontFamilySelector;
 //    private JComboBox treeFontSizeSelector;
@@ -189,9 +189,8 @@ public class JreepadViewer extends JFrame
   }
   public JreepadViewer(String fileNameToLoad)
   {
-    theApp = this;
-
 // THIS DOESN'T SEEM TO HAVE ANY EFFECT, ON MAC OSX - I'd be interested to know if it does its job on other OSs
+// Apparently it does work on Windows. So I'll leave it in place!
     ClassLoader loader = this.getClass().getClassLoader(); // Used for loading icon
     java.net.URL iconUrl = loader.getResource("images/jreepadlogo-01-iconsize.gif");
     setIconImage(new ImageIcon(iconUrl).getImage());
@@ -221,7 +220,118 @@ public class JreepadViewer extends JFrame
 
     theJreepad = new JreepadView();
 
+    establishMenus();
+    establishToolbar();
+    establishSearchDialogue();
+    establishPrefsDialogue();
+    establishAutosaveDialogue();
+    establishNodeUrlDisplayDialogue();
     
+    // Establish the autosave thread
+    autoSaveThread = new Thread("Autosave thread")
+    					{
+    					  public void run()
+    					  {
+    					    while(getPrefs().autoSave)
+    					    {
+    					      try
+    					      {
+    					        // Sleep for a bit...
+    					        sleep(60000L * getPrefs().autoSavePeriod);
+    					        yield();
+    					        // ...then if the saveLocation != null, trigger saveAction()
+    					        if(getPrefs().autoSave && getPrefs().saveLocation != null)
+    					          saveAction();
+    					        else
+								  updateWindowTitle();
+    					      }
+    					      catch(InterruptedException e){}
+    					    }
+    					  }
+    					};
+    autoSaveThread.setPriority(Thread.MIN_PRIORITY);
+    if(getPrefs().autoSave)
+      autoSaveThread.start();
+    // Finished establishing the autosave thread
+    
+    content.setLayout(new BoxLayout(content, BoxLayout.Y_AXIS));
+    content.add(new ColouredStrip(new Color(0.09f, 0.4f, 0.12f)));
+    content.add(toolBar);
+    content.add(theJreepad);
+
+    // Load the file - if it has been specified, and if it can be found, and if it's a valid HJT file
+    File firstTimeFile = null;
+    if(fileNameToLoad != "")
+      firstTimeFile = new File(fileNameToLoad);
+    else if(getPrefs().loadLastFileOnOpen && getPrefs().saveLocation != null)
+      firstTimeFile = getPrefs().saveLocation;
+
+    if(firstTimeFile != null && firstTimeFile.isFile())
+    {
+      try
+      {
+        getPrefs().openLocation = firstTimeFile;
+        content.remove(theJreepad);
+        theJreepad = new JreepadView(new JreepadNode(new InputStreamReader(new FileInputStream(getPrefs().openLocation), getPrefs().getEncoding()), getPrefs().autoDetectHtmlArticles));
+        getPrefs().saveLocation = getPrefs().exportLocation = getPrefs().importLocation = getPrefs().openLocation;
+        content.add(theJreepad);
+	    getPrefs().saveLocation = getPrefs().openLocation;
+        setTitleBasedOnFilename(getPrefs().openLocation.getName());
+        setWarnAboutUnsaved(false);
+      }
+      catch(IOException err)
+      {
+        JOptionPane.showMessageDialog(this, err, "Sorry - failed to load requested file." , JOptionPane.ERROR_MESSAGE);
+        content.remove(theJreepad);
+        theJreepad = new JreepadView(new JreepadNode());
+        content.add(theJreepad);
+        setTitleBasedOnFilename("");
+      }
+    }
+    else
+      getPrefs().saveLocation = null;
+
+    // Set close operation
+    setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
+    addWindowListener(new WindowAdapter() { public void windowClosing(WindowEvent e){ quitAction(); }});
+
+    setTitleBasedOnFilename("");
+
+    // Finally, make the window visible and well-sized
+    Toolkit theToolkit = getToolkit();
+    Dimension wndSize = theToolkit.getScreenSize();
+    setBounds(getPrefs().windowLeft,getPrefs().windowTop,
+              getPrefs().windowWidth, getPrefs().windowHeight);
+    searchDialog.setBounds(getPrefs().windowWidth/2,getPrefs().windowHeight/6,
+              (int)(getPrefs().windowWidth*0.7f),(int)(getPrefs().windowHeight*0.9f));
+    autoSaveDialog.setBounds((int)(wndSize.width*0.5f),getPrefs().windowHeight/2,
+              getPrefs().windowWidth/2, getPrefs().windowHeight/4);
+    prefsDialog.setBounds(getPrefs().windowWidth/2,getPrefs().windowHeight/3,
+              getPrefs().windowWidth, getPrefs().windowHeight);
+    nodeUrlDisplayDialog.setBounds((int)(wndSize.width*0.1f),(int)(getPrefs().windowHeight*0.7f),
+              (int)(getPrefs().windowWidth*1.3f), getPrefs().windowHeight/3);
+
+    // pack() actually deprecates some of the functionality of the setBounds() calls just above
+    //  - but hopefully gives a better mixture of sizes set programmatically and by the OS
+    searchDialog.pack();
+    autoSaveDialog.pack();
+    prefsDialog.pack();
+    nodeUrlDisplayDialog.pack();
+
+    theApps.add(this);
+    macOSXRegistration();
+
+    setVisible(true);
+        // If loading the last-saved file, expand the nodes we last had open
+        if(fileNameToLoad == "" && getPrefs().loadLastFileOnOpen && getPrefs().saveLocation != null && getPrefs().treePathCollection.paths != null)
+        {
+          theJreepad.expandPaths(getPrefs().treePathCollection.paths);
+        }
+  }
+  
+  // Used by the constructor
+  public void establishMenus()
+  {
     // Create the menu bar
     menuBar = new JMenuBar();
     //
@@ -277,7 +387,7 @@ public class JreepadViewer extends JFrame
       //
       exportMenu = new JMenu("Export selected...");
       fileMenu.add(exportMenu);
-      exportHjtMenuItem = new JMenuItem("...subtree to Treepad file");
+      exportHjtMenuItem = new JMenuItem("...subtree to Treepad HJT file");
       exportHjtMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {exportAction(FILE_FORMAT_HJT);}});
       exportMenu.add(exportHjtMenuItem);
       exportHtmlMenuItem = new JMenuItem("...subtree to HTML");
@@ -287,7 +397,7 @@ public class JreepadViewer extends JFrame
      //DELETE             		    if(htmlExportOkChecker)
                   		      exportAction(FILE_FORMAT_HTML);}});
       exportMenu.add(exportHtmlMenuItem);
-      exportSimpleXmlMenuItem = new JMenuItem("...subtree to simple XML");
+      exportSimpleXmlMenuItem = new JMenuItem("...subtree to XML");
       exportSimpleXmlMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {exportAction(FILE_FORMAT_XML);}});
       exportMenu.add(exportSimpleXmlMenuItem);
       exportListMenuItem = new JMenuItem("...subtree to text list (node titles only)");
@@ -428,131 +538,17 @@ public class JreepadViewer extends JFrame
     //
     keyboardHelpMenuItem = new JMenuItem("Keyboard shortcuts");
     keyboardHelpMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e)
-    		{
-              JOptionPane.showMessageDialog(theApp, 
-              "\nNAVIGATING AROUND THE TREE:" +
-              "\nUse the arrow (cursor) keys to navigate around the tree." +
-              "\nUp/down will move you up/down the visible nodes." +
-              "\nLeft/right will expand/collapse nodes." +
-              "\n" +
-              "\nADDING/DELETING NODES:" +
-              "\n[Alt+A] Add sibling node above current node" +
-              "\n[Alt+B] Add sibling node below current node" +
-              "\n[Alt+C] Add child node to current node" +
-              "\n[Alt+K] Delete current node" +
-              "\n" +
-              "\nMOVING NODES:" +
-              "\n[Alt+U] Move node up" +
-              "\n[Alt+D] Move node down" +
-              "\n[Alt+I] Indent node" +
-              "\n[Alt+O] Outdent node" +
-              "\n" +
-              "\nCOPYING AND PASTING:" +
-              "\n[Ctrl+X] Cut selected text" +
-              "\n[Ctrl+C] Copy selected text" +
-              "\n[Ctrl+V] Paste selected text" +
-              "\n - The copy/paste functions are included automatically" +
-              "\n    by the Mac OSX runtime. I can't guarantee they exist" +
-              "\n    for you if you're using a different operating system!" +
-/*
-              "\n" +
-              "\n" +
-              "\n" +
-              "\n" +
-              "\n" +
-              "\n" +
-              "\n" +
-              "\n[] " +
-              "\n" +
-*/
-              ""
-              ,
-              "Jreepad keyboard shortcuts", 
-              JOptionPane.INFORMATION_MESSAGE); 
+    		{ keyboardHelp();
     		}});
     helpMenu.add(keyboardHelpMenuItem);
     linksHelpMenuItem = new JMenuItem("Help with links");
     linksHelpMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e)
-    		{
-              JOptionPane.showMessageDialog(theApp, 
-              "\nSelect any piece of text in an article," +
-              "\nthen choose \"Actions > Follow link in article\"." +
-              "\n" +
-              "\nTYPES OF LINK:" +
-              "\n" +
-              "\n\"Normal\" link - We've tested these types of link:" +
-              "\n      Web:   e.g. http://jreepad.sourceforge.net" +
-              "\n      Email: e.g. mailto:billg@microsoft.com" +
-              "\n      FTP:   e.g. ftp://ftp.compaq.com/pub/" +
-              "\n      File:  (can't get these to work, on OSX at least)" +
-              "\n" +
-              "\nWiki link - If the selected text is a WikiWord (i.e. if " +
-              "\n            it LooksLikeThis with no spaces and some capital " + 
-              "\n            letters somewhere in the middle) OR begins " +
-              "\n            with \"[[\" and ends with \"]]\" then " +
-              "\n            Jreepad will search for a node of the same " +
-              "\n            title, and jump directly to it. If one " +
-              "\n            isn't found then it'll create one " +
-              "\n            for you. Try it!" +
-              "\n" + 
-              "\nTreepad link - Treepad Lite uses links which begin " +
-              "\n            with \"node://\", and specify the exact path" +
-              "\n            to a different node within the same file."+
-              "\n              e.g. \"node://TreePad manual/Using Treepad\"" +
-              "\n" +
-              "\n" +
-              "\n" +
-              "\n" +
-/*
-              "\n" +
-              "\n" +
-              "\n" +
-              "\n" +
-              "\n" +
-              "\n" +
-              "\n" +
-              "\n[] " +
-              "\n" +
-*/
-              ""
-              ,
-              "Links in Jreepad", 
-              JOptionPane.INFORMATION_MESSAGE); 
+    		{ linksHelp();
     		}});
     helpMenu.add(linksHelpMenuItem);
     dragDropHelpMenuItem = new JMenuItem("Help with drag-and-drop");
     dragDropHelpMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e)
-    		{
-              JOptionPane.showMessageDialog(theApp, 
-              "\nDRAG-AND-DROP:" +
-              "\n" +
-              "\nOne of the easiest ways to manage the structure" +
-              "\nof your Treepad file is to drag the nodes around" +
-              "\nusing the mouse." +
-              "\n" +
-              "\nClick on a node's title, and, keeping the mouse" +
-              "\nbutton held down, move the mouse to where you" +
-              "\nwant the node to be moved to. Then release the" +
-              "\nmouse button, and the node will be moved to its" +
-              "\nnew position in the tree." +
-              "\n" +
-              "\n" +
-              "\n" +
-/*
-              "\n" +
-              "\n" +
-              "\n" +
-              "\n" +
-              "\n" +
-              "\n" +
-              "\n" +
-              "\n[] " +
-              "\n" +
-*/
-              ""
-              ,
-              "Drag-and-drop", 
-              JOptionPane.INFORMATION_MESSAGE); 
+    		{ dragDropHelp();
     		}});
     helpMenu.add(dragDropHelpMenuItem);
     helpMenu.add(new JSeparator());
@@ -662,7 +658,11 @@ public class JreepadViewer extends JFrame
     linksHelpMenuItem.setMnemonic('l');
     licenseMenuItem.setMnemonic('i');
     // Finished creating the menu bar
-    
+  }
+
+  // Used by the constructor
+  public void establishToolbar()
+  {
     // Add the toolbar buttons
     toolBar = Box.createHorizontalBox();
    /* THESE BUTTONS HAVE BEEN REMOVED. But leave the code here, since they may later be replaced with iconic buttons.
@@ -745,9 +745,12 @@ public class JreepadViewer extends JFrame
                                public void actionPerformed(ActionEvent e){ theJreepad.addNode(); repaint(); /* theJreepad.returnFocusToTree(); */ setWarnAboutUnsaved(true);updateWindowTitle();} });
     removeButton.addActionListener(new ActionListener(){
                                public void actionPerformed(ActionEvent e){ deleteNodeAction(); } });
-
+  }
+  
+  private void establishSearchDialogue()
+  {
     // Establish the search dialogue box - so that it can be called whenever wanted
-    searchDialog = new JDialog(theApp, "Search Jreepad", false);
+    searchDialog = new JDialog(this, "Search Jreepad", false);
     searchDialog.setVisible(false);
     Box vBox = Box.createVerticalBox();
     //
@@ -841,100 +844,36 @@ public class JreepadViewer extends JFrame
     vBox.add(searchResultsTableScrollPane);
     //
     // Add mouse listener
-    MouseListener sml = new MouseAdapter()
-    {
-      public void mouseClicked(MouseEvent e)
-      {
-        JreepadSearcher.JreepadSearchResult[] results = theJreepad.getSearchResults();
-        int selectedRow = searchResultsTable.getSelectedRow();
-        if(results==null || results.length==0 || selectedRow==-1)
-          return;
-        
-        if(e.getClickCount()>1)
-        {
-          // Select the node in the tree, and move focus to the tree
-          theJreepad.getTree().setSelectionPath(results[selectedRow].getTreePath());
-          theJreepad.getTree().scrollPathToVisible(results[selectedRow].getTreePath());
-          searchDialog.setVisible(false);
-          theApp.toFront();
-          theJreepad.returnFocusToTree();
-        }
-      }
-    };
+    MouseListener sml = new MouseAdapter(){public void mouseClicked(MouseEvent e){mouseClickedOnSearchResultsTable(e);}};
     searchResultsTable.addMouseListener(sml); 
     //
     searchDialog.getContentPane().add(vBox);
     // Finished establishing the search dialogue box
-
-    
-    // Establish the autosave thread
-    autoSaveThread = new Thread("Autosave thread")
-    					{
-    					  public void run()
-    					  {
-    					    while(getPrefs().autoSave)
-    					    {
-    					      try
-    					      {
-    					        // Sleep for a bit...
-    					        sleep(60000L * getPrefs().autoSavePeriod);
-    					        yield();
-    					        // ...then if the saveLocation != null, trigger saveAction()
-    					        if(getPrefs().autoSave && getPrefs().saveLocation != null)
-    					        {
-    					          saveAction();
-    					 //         System.out.println("Autosave performed a save action.");
-    					        }
-    					        else
-    					 //         System.out.println("Autosave decided not to save.");
-								updateWindowTitle();
-    					      }
-    					      catch(InterruptedException e)
-    					      {
-    					      }
-    					    }
-    					  }
-    					};
-    autoSaveThread.setPriority(Thread.MIN_PRIORITY);
-    if(getPrefs().autoSave)
-      autoSaveThread.start();
-    // Finished establishing the autosave thread
-
-
-    // Establish the autosave dialogue box
-    autoSaveDialog = new JDialog(theApp, "Autosave", true);
-    autoSaveDialog.setVisible(false);
-    vBox = Box.createVerticalBox();
-    vBox.add(Box.createGlue());
-    hBox = Box.createHorizontalBox();
-    hBox.add(autoSaveCheckBox = new JCheckBox("Autosave every ", getPrefs().autoSave));
-    hBox.add(autoSavePeriodSpinner = new DSpinner(1, 1000, getPrefs().autoSavePeriod));
-    hBox.add(new JLabel(" minutes"));
-    vBox.add(hBox);
-    vBox.add(Box.createGlue());
-    hBox = Box.createHorizontalBox();
-    hBox.add(autoSaveOkButton = new JButton("OK"));
-    hBox.add(autoSaveCancelButton = new JButton("Cancel"));
-    autoSaveOkButton.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e){
-//									getPrefs().autoSavePeriod = ((Integer)(autoSavePeriodSpinner.getValue())).intValue();
-									getPrefs().autoSavePeriod = autoSavePeriodSpinner.getValue();
-									getPrefs().autoSave = autoSaveCheckBox.isSelected();
-                                    autoSaveDialog.setVisible(false);
-									if(getPrefs().autoSave && !(autoSaveThread.isAlive()))
-									{
-	  JOptionPane.showMessageDialog(theApp, "Autosave turned on. It will stay on until you deactivate it (even if you quit and re-start Jreepad).", "Autosave is ON" , JOptionPane.INFORMATION_MESSAGE);
-	  								  autoSaveThread.start();
-									}
-									updateWindowTitle();
-                                   }});
-    autoSaveCancelButton.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e){autoSaveDialog.setVisible(false);}});
-    vBox.add(Box.createGlue());
-    vBox.add(hBox);
-    autoSaveDialog.getContentPane().add(vBox);
-    // Finished establishing the autosave dialogue box
-
+  }
+  
+  private void mouseClickedOnSearchResultsTable(MouseEvent e)
+  {
+	 JreepadSearcher.JreepadSearchResult[] results = theJreepad.getSearchResults();
+	 int selectedRow = searchResultsTable.getSelectedRow();
+	 if(results==null || results.length==0 || selectedRow==-1)
+	   return;
+	 
+	 if(e.getClickCount()>1)
+	 {
+	   // Select the node in the tree, and move focus to the tree
+	   theJreepad.getTree().setSelectionPath(results[selectedRow].getTreePath());
+	   theJreepad.getTree().scrollPathToVisible(results[selectedRow].getTreePath());
+	   searchDialog.setVisible(false);
+	   this.toFront();
+	   theJreepad.returnFocusToTree();
+	 }
+  }
+  
+  private void establishPrefsDialogue()
+  {
+    Box hBox, vBox;
     // Establish the prefs dialogue box
-    prefsDialog = new JDialog(theApp, "Preferences", true);
+    prefsDialog = new JDialog(this, "Preferences", true);
     prefsDialog.setVisible(false);
     vBox = Box.createVerticalBox();
     Box genPrefVBox = Box.createVerticalBox();
@@ -949,6 +888,14 @@ public class JreepadViewer extends JFrame
     hBox.add(Box.createGlue());
     genPrefVBox.add(hBox);
     fileEncodingSelector.setSelectedIndex(getPrefs().fileEncoding);
+
+    hBox = Box.createHorizontalBox();
+    hBox.add(Box.createGlue());
+    hBox.add(new JLabel("Save files as:"));
+    hBox.add(fileFormatSelector = new JComboBox(getPrefs().mainFileTypes));
+    hBox.add(Box.createGlue());
+    genPrefVBox.add(hBox);
+    fileFormatSelector.setSelectedIndex(getPrefs().mainFileType);
 
     JPanel genPanel = new JPanel();
     genPanel.add(genPrefVBox);
@@ -1065,6 +1012,7 @@ public class JreepadViewer extends JFrame
 									getPrefs().webSearchPostfix = webSearchPostfixField.getText();
 									getPrefs().defaultSearchMode = defaultSearchModeSelector.getSelectedIndex();
 									getPrefs().fileEncoding = fileEncodingSelector.getSelectedIndex();
+									getPrefs().mainFileType = fileFormatSelector.getSelectedIndex();
 //									getPrefs().characterWrapWidth = ((Integer)(wrapWidthSpinner.getValue())).intValue();
 									getPrefs().characterWrapWidth = wrapWidthSpinner.getValue();
                                     characterWrapArticleMenuItem.setText("Hard-wrap current article to " + getPrefs().characterWrapWidth + " columns");
@@ -1084,9 +1032,54 @@ public class JreepadViewer extends JFrame
     vBox.add(hBox);
     prefsDialog.getContentPane().add(vBox);
     // Finished establishing the prefs dialogue box
+  }
 
+  public void establishAutosaveDialogue()
+  {
+    Box vBox, hBox;
+    // Establish the autosave dialogue box
+    autoSaveDialog = new JDialog(this, "Autosave", true);
+    autoSaveDialog.setVisible(false);
+    vBox = Box.createVerticalBox();
+    vBox.add(Box.createGlue());
+    hBox = Box.createHorizontalBox();
+    hBox.add(autoSaveCheckBox = new JCheckBox("Autosave every ", getPrefs().autoSave));
+    hBox.add(autoSavePeriodSpinner = new DSpinner(1, 1000, getPrefs().autoSavePeriod));
+    hBox.add(new JLabel(" minutes"));
+    vBox.add(hBox);
+    vBox.add(Box.createGlue());
+    hBox = Box.createHorizontalBox();
+    hBox.add(autoSaveOkButton = new JButton("OK"));
+    hBox.add(autoSaveCancelButton = new JButton("Cancel"));
+    autoSaveOkButton.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e){
+//									getPrefs().autoSavePeriod = ((Integer)(autoSavePeriodSpinner.getValue())).intValue();
+									getPrefs().autoSavePeriod = autoSavePeriodSpinner.getValue();
+									getPrefs().autoSave = autoSaveCheckBox.isSelected();
+                                    autoSaveDialog.setVisible(false);
+									if(getPrefs().autoSave && !(autoSaveThread.isAlive()))
+									{
+									  autoSaveWarningMessage();
+	  								  autoSaveThread.start();
+									}
+									updateWindowTitle();
+                                   }});
+    autoSaveCancelButton.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e){autoSaveDialog.setVisible(false);}});
+    vBox.add(Box.createGlue());
+    vBox.add(hBox);
+    autoSaveDialog.getContentPane().add(vBox);
+    // Finished establishing the autosave dialogue box
+  }
+  
+  public void autoSaveWarningMessage()
+  {
+	  JOptionPane.showMessageDialog(this, "Autosave turned on. It will stay on until you deactivate it (even if you quit and re-start Jreepad).", "Autosave is ON" , JOptionPane.INFORMATION_MESSAGE);
+  }
+  
+  public void establishNodeUrlDisplayDialogue()
+  {
+    Box vBox;
     // Establish the nodeUrlDisplay dialogue box
-    nodeUrlDisplayDialog = new JDialog(theApp, "Node URL", true);
+    nodeUrlDisplayDialog = new JDialog(this, "Node URL", true);
     nodeUrlDisplayDialog.setVisible(false);
     vBox = Box.createVerticalBox();
     vBox.add(new JLabel("Current node's address:"));
@@ -1098,83 +1091,6 @@ public class JreepadViewer extends JFrame
                                    }});
     nodeUrlDisplayDialog.getContentPane().add(vBox);
     // Finished: Establish the nodeUrlDisplay dialogue box
-    
-    content.setLayout(new BoxLayout(content, BoxLayout.Y_AXIS));
-    content.add(new ColouredStrip(new Color(0.09f, 0.4f, 0.12f)));
-    content.add(toolBar);
-    content.add(theJreepad);
-
-    // Load the file - if it has been specified, and if it can be found, and if it's a valid HJT file
-    File firstTimeFile = null;
-    if(fileNameToLoad != "")
-      firstTimeFile = new File(fileNameToLoad);
-    else if(getPrefs().loadLastFileOnOpen && getPrefs().saveLocation != null)
-      firstTimeFile = getPrefs().saveLocation;
-
-    if(firstTimeFile != null && firstTimeFile.isFile())
-    {
-      try
-      {
-        getPrefs().openLocation = firstTimeFile;
-        content.remove(theJreepad);
-        theJreepad = new JreepadView(new JreepadNode(new InputStreamReader(new FileInputStream(getPrefs().openLocation), getPrefs().getEncoding()), getPrefs().autoDetectHtmlArticles));
-        getPrefs().saveLocation = getPrefs().exportLocation = getPrefs().importLocation = getPrefs().openLocation;
-        content.add(theJreepad);
-	    getPrefs().saveLocation = getPrefs().openLocation;
-        setTitleBasedOnFilename(getPrefs().openLocation.getName());
-        setWarnAboutUnsaved(false);
-      }
-      catch(IOException err)
-      {
-        JOptionPane.showMessageDialog(theApp, err, "Sorry - failed to load requested file." , JOptionPane.ERROR_MESSAGE);
-        content.remove(theJreepad);
-        theJreepad = new JreepadView(new JreepadNode());
-        content.add(theJreepad);
-        setTitleBasedOnFilename("");
-      }
-    }
-    else
-      getPrefs().saveLocation = null;
-
-    // Set close operation
-    setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
-    addWindowListener(new WindowAdapter() { public void windowClosing(WindowEvent e){ quitAction(); }});
-
-    setTitleBasedOnFilename("");
-
-    // Finally, make the window visible and well-sized
-    Toolkit theToolkit = getToolkit();
-    Dimension wndSize = theToolkit.getScreenSize();
-    setBounds(getPrefs().windowLeft,getPrefs().windowTop,
-              getPrefs().windowWidth, getPrefs().windowHeight);
-    searchDialog.setBounds(getPrefs().windowWidth/2,getPrefs().windowHeight/6,
-              (int)(getPrefs().windowWidth*0.7f),(int)(getPrefs().windowHeight*0.9f));
-    autoSaveDialog.setBounds((int)(wndSize.width*0.5f),getPrefs().windowHeight/2,
-              getPrefs().windowWidth/2, getPrefs().windowHeight/4);
-//DELETE    htmlExportDialog.setBounds(getPrefs().windowLeft+getPrefs().windowWidth/4,getPrefs().windowTop+getPrefs().windowHeight/3,
-//DELETE              (int)(getPrefs().windowWidth*0.8f), getPrefs().windowHeight/3);
-    prefsDialog.setBounds(getPrefs().windowWidth/2,getPrefs().windowHeight/3,
-              getPrefs().windowWidth, getPrefs().windowHeight);
-    nodeUrlDisplayDialog.setBounds((int)(wndSize.width*0.1f),(int)(getPrefs().windowHeight*0.7f),
-              (int)(getPrefs().windowWidth*1.3f), getPrefs().windowHeight/3);
-
-    // pack() actually deprecates some of the functionality of the setBounds() calls just above
-    //  - but hopefully gives a better mixture of sizes set programmatically and by the OS
-    searchDialog.pack();
-    autoSaveDialog.pack();
-//DELETE    htmlExportDialog.pack();
-    prefsDialog.pack();
-    nodeUrlDisplayDialog.pack();
-
-    theApps.add(theApp);
-    macOSXRegistration();
-
-    setVisible(true);
-        // If loading the last-saved file, expand the nodes we last had open
-        if(fileNameToLoad == "" && getPrefs().loadLastFileOnOpen && getPrefs().saveLocation != null && getPrefs().treePathCollection.paths != null)
-        {
-          theJreepad.expandPaths(getPrefs().treePathCollection.paths);
-        }
   }
   
   public static void main(String[] args)
@@ -1198,7 +1114,7 @@ public class JreepadViewer extends JFrame
   {
     if(warnAboutUnsaved())
     {
-	  int answer = JOptionPane.showConfirmDialog(theApp, "Save current file before starting a new one?", 
+	  int answer = JOptionPane.showConfirmDialog(this, "Save current file before starting a new one?", 
 	                   "Save?" , JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE);
       if(answer == JOptionPane.CANCEL_OPTION)
         return;
@@ -1221,7 +1137,7 @@ public class JreepadViewer extends JFrame
   {
     if(warnAboutUnsaved())
     {
-	  int answer = JOptionPane.showConfirmDialog(theApp, "Save current file before opening a new one?", 
+	  int answer = JOptionPane.showConfirmDialog(this, "Save current file before opening a new one?", 
 	                   "Save?" , JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE);
       if(answer == JOptionPane.CANCEL_OPTION)
         return;
@@ -1231,7 +1147,7 @@ public class JreepadViewer extends JFrame
     }
 
     fileChooser.setCurrentDirectory(getPrefs().openLocation);
-    if(fileChooser.showOpenDialog(theApp) == JFileChooser.APPROVE_OPTION)
+    if(fileChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION)
     {
       openHjtFile(fileChooser.getSelectedFile());
     }
@@ -1257,7 +1173,7 @@ public class JreepadViewer extends JFrame
       catch(IOException err)
       {
         setCursor(Cursor.getDefaultCursor());
-        JOptionPane.showMessageDialog(theApp, err, "File input error" , JOptionPane.ERROR_MESSAGE);
+        JOptionPane.showMessageDialog(this, err, "File input error" , JOptionPane.ERROR_MESSAGE);
       }
   } // End of: openHjtFile()
   
@@ -1271,7 +1187,14 @@ public class JreepadViewer extends JFrame
     try
     {
       setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-      String writeMe = theJreepad.getRootJreepadNode().toTreepadString();
+
+	  // Get the output to be written - as HJT or as XML
+	  String writeMe;
+	  if(getPrefs().mainFileType==JreepadPrefs.FILETYPE_XML)
+		writeMe = theJreepad.getRootJreepadNode().toXml(getPrefs().getEncoding());
+	  else
+		writeMe = theJreepad.getRootJreepadNode().toTreepadString();
+
       FileOutputStream fO = new FileOutputStream(getPrefs().saveLocation);
       DataOutputStream dO = new DataOutputStream(fO);
       BufferedWriter bO = new BufferedWriter(new OutputStreamWriter(dO, getPrefs().getEncoding()));
@@ -1288,7 +1211,7 @@ public class JreepadViewer extends JFrame
     catch(IOException err)
     {
       setCursor(Cursor.getDefaultCursor());
-      JOptionPane.showMessageDialog(theApp, err, "File error during Save" , JOptionPane.ERROR_MESSAGE);
+      JOptionPane.showMessageDialog(this, err, "File error during Save" , JOptionPane.ERROR_MESSAGE);
     }
     return false;
   }
@@ -1297,12 +1220,20 @@ public class JreepadViewer extends JFrame
     try
     {
       fileChooser.setCurrentDirectory(getPrefs().saveLocation);
-      fileChooser.setSelectedFile(new File(theJreepad.getRootJreepadNode().getTitle() + ".hjt"));
-      if(fileChooser.showSaveDialog(theApp) == JFileChooser.APPROVE_OPTION && checkOverwrite(fileChooser.getSelectedFile()))
+      fileChooser.setSelectedFile(new File(theJreepad.getRootJreepadNode().getTitle() + 
+                   (getPrefs().mainFileType==JreepadPrefs.FILETYPE_XML?".jree":".hjt")       ));
+      if(fileChooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION && checkOverwrite(fileChooser.getSelectedFile()))
       {
         setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
         getPrefs().saveLocation = fileChooser.getSelectedFile();
-        String writeMe = theJreepad.getRootJreepadNode().toTreepadString();
+        
+        // Get the output to be written - as HJT or as XML
+        String writeMe;
+        if(getPrefs().mainFileType==JreepadPrefs.FILETYPE_XML)
+          writeMe = theJreepad.getRootJreepadNode().toXml(getPrefs().getEncoding());
+        else
+          writeMe = theJreepad.getRootJreepadNode().toTreepadString();
+        
         FileOutputStream fO = new FileOutputStream(getPrefs().saveLocation);
         DataOutputStream dO = new DataOutputStream(fO);
         BufferedWriter bO = new BufferedWriter(new OutputStreamWriter(dO, getPrefs().getEncoding()));
@@ -1322,7 +1253,7 @@ public class JreepadViewer extends JFrame
     catch(IOException err)
     {
       setCursor(Cursor.getDefaultCursor());
-      JOptionPane.showMessageDialog(theApp, err, "File error during Save As" , JOptionPane.ERROR_MESSAGE);
+      JOptionPane.showMessageDialog(this, err, "File error during Save As" , JOptionPane.ERROR_MESSAGE);
     }
     return false;
   } // End of: saveAsAction()
@@ -1332,7 +1263,7 @@ public class JreepadViewer extends JFrame
     try
     {
       fileChooser.setCurrentDirectory(getPrefs().backupLocation);
-      if(fileChooser.showSaveDialog(theApp) == JFileChooser.APPROVE_OPTION && checkOverwrite(fileChooser.getSelectedFile()))
+      if(fileChooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION && checkOverwrite(fileChooser.getSelectedFile()))
       {
         setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
         getPrefs().backupLocation = fileChooser.getSelectedFile();
@@ -1351,7 +1282,7 @@ public class JreepadViewer extends JFrame
     catch(IOException err)
     {
       setCursor(Cursor.getDefaultCursor());
-      JOptionPane.showMessageDialog(theApp, err, "File error during Backup" , JOptionPane.ERROR_MESSAGE);
+      JOptionPane.showMessageDialog(this, err, "File error during Backup" , JOptionPane.ERROR_MESSAGE);
     }
     return false;
   } // End of: backupToAction()
@@ -1414,7 +1345,7 @@ public class JreepadViewer extends JFrame
       fileChooser.setCurrentDirectory(getPrefs().importLocation);
       fileChooser.setSelectedFile(new File(theJreepad.getCurrentNode().getTitle()));
 
-      if(fileChooser.showOpenDialog(theApp) == JFileChooser.APPROVE_OPTION)
+      if(fileChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION)
       {
         setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
         getPrefs().importLocation = fileChooser.getSelectedFile();
@@ -1432,7 +1363,7 @@ public class JreepadViewer extends JFrame
 			break;
 		  default:
             setCursor(Cursor.getDefaultCursor());
-			JOptionPane.showMessageDialog(theApp, "Unknown which format to import - coding error! Oops!", "Error" , JOptionPane.ERROR_MESSAGE);
+			JOptionPane.showMessageDialog(this, "Unknown which format to import - coding error! Oops!", "Error" , JOptionPane.ERROR_MESSAGE);
 			return;
 		}
 	    setWarnAboutUnsaved(true);
@@ -1444,7 +1375,7 @@ public class JreepadViewer extends JFrame
     catch(IOException err)
     {
       setCursor(Cursor.getDefaultCursor());
-      JOptionPane.showMessageDialog(theApp, err, "File error during Import" , JOptionPane.ERROR_MESSAGE);
+      JOptionPane.showMessageDialog(this, err, "File error during Import" , JOptionPane.ERROR_MESSAGE);
     }
   } // End of: importAction()
 
@@ -1472,7 +1403,7 @@ public class JreepadViewer extends JFrame
 		  break;
       }
       fileChooser.setSelectedFile(new File(suggestFilename));
-      if(fileChooser.showSaveDialog(theApp) == JFileChooser.APPROVE_OPTION && checkOverwrite(fileChooser.getSelectedFile()))
+      if(fileChooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION && checkOverwrite(fileChooser.getSelectedFile()))
       {
         setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
         getPrefs().exportLocation = fileChooser.getSelectedFile();
@@ -1489,7 +1420,8 @@ public class JreepadViewer extends JFrame
 			                                                  getPrefs().htmlExportAnchorLinkType);
 			break;
 		  case FILE_FORMAT_XML:
-			output = theJreepad.getCurrentNode().exportAsSimpleXml();
+//			output = theJreepad.getCurrentNode().exportAsSimpleXml();
+			output = theJreepad.getCurrentNode().toXml(getPrefs().getEncoding());
 			break;
 		  case FILE_FORMAT_TEXT:
 			output = theJreepad.getCurrentNode().getContent();
@@ -1498,14 +1430,14 @@ public class JreepadViewer extends JFrame
 			output = theJreepad.getCurrentNode().exportTitlesAsList();
 			break;
 		  case FILE_FORMAT_ARTICLESTOTEXT:
-            int answer = JOptionPane.showConfirmDialog(theApp, "Include articles' titles in output?", 
+            int answer = JOptionPane.showConfirmDialog(this, "Include articles' titles in output?", 
 	                   "Include titles?" , JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
 		    boolean titlesToo = (answer == JOptionPane.YES_OPTION);
 			output = theJreepad.getCurrentNode().exportArticlesToText(titlesToo);
 			break;
 		  default:
             setCursor(Cursor.getDefaultCursor());
-			JOptionPane.showMessageDialog(theApp, "Unknown which format to export - coding error! Oops!", "Error" , JOptionPane.ERROR_MESSAGE);
+			JOptionPane.showMessageDialog(this, "Unknown which format to export - coding error! Oops!", "Error" , JOptionPane.ERROR_MESSAGE);
 			return;
 		}
 
@@ -1523,7 +1455,7 @@ public class JreepadViewer extends JFrame
     catch(IOException err)
     {
       setCursor(Cursor.getDefaultCursor());
-      JOptionPane.showMessageDialog(theApp, err, "File error during Export" , JOptionPane.ERROR_MESSAGE);
+      JOptionPane.showMessageDialog(this, err, "File error during Export" , JOptionPane.ERROR_MESSAGE);
     }
   } // End of: exportAction()
 
@@ -1561,7 +1493,7 @@ public class JreepadViewer extends JFrame
     catch(IOException err)
     {
       setCursor(Cursor.getDefaultCursor());
-      JOptionPane.showMessageDialog(theApp, err, "File error during send-to-browser" , JOptionPane.ERROR_MESSAGE);
+      JOptionPane.showMessageDialog(this, err, "File error during send-to-browser" , JOptionPane.ERROR_MESSAGE);
     }
   } // End of: toBrowserForPrintAction()
 
@@ -1599,7 +1531,7 @@ public class JreepadViewer extends JFrame
     catch(IOException err)
     {
       setCursor(Cursor.getDefaultCursor());
-      JOptionPane.showMessageDialog(theApp, err, "File error during send-to-browser" , JOptionPane.ERROR_MESSAGE);
+      JOptionPane.showMessageDialog(this, err, "File error during send-to-browser" , JOptionPane.ERROR_MESSAGE);
     }
   } // End of: articleToBrowserForPrintAction()
 
@@ -1618,7 +1550,7 @@ public class JreepadViewer extends JFrame
 
     if(warnAboutUnsaved())
     {
-	  int answer = JOptionPane.showConfirmDialog(theApp, "Save current file before quitting?", 
+	  int answer = JOptionPane.showConfirmDialog(this, "Save current file before quitting?", 
 	                   "Save before quit?" , JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE);
       if(answer == JOptionPane.CANCEL_OPTION)
         return;
@@ -1679,13 +1611,13 @@ public class JreepadViewer extends JFrame
     if(theJreepad.canWeUndo())
       theJreepad.undoAction();
     else
-	  JOptionPane.showMessageDialog(theApp, "Nothing to undo!", "No change" , JOptionPane.INFORMATION_MESSAGE);
+	  JOptionPane.showMessageDialog(this, "Nothing to undo!", "No change" , JOptionPane.INFORMATION_MESSAGE);
     updateWindowTitle();
   }
   
   private void aboutAction()
   {
-              JOptionPane.showMessageDialog(theApp, 
+              JOptionPane.showMessageDialog(this, 
               "Jreepad is an open-source Java program\n" +
               "designed to provide the functionality\n" +
               "(including file interoperability) of\n" +
@@ -1726,7 +1658,7 @@ public class JreepadViewer extends JFrame
 
   private void deleteNodeAction()
   {
-    if(JOptionPane.showConfirmDialog(theApp, "Delete node:\n"+theJreepad.getCurrentNode().getTitle(), "Confirm delete", 
+    if(JOptionPane.showConfirmDialog(this, "Delete node:\n"+theJreepad.getCurrentNode().getTitle(), "Confirm delete", 
                JOptionPane.YES_NO_OPTION) != JOptionPane.YES_OPTION) return; 
     theJreepad.removeNode();
     theJreepad.returnFocusToTree();
@@ -1746,14 +1678,14 @@ public class JreepadViewer extends JFrame
     // If file doesn't already exist then fine
     if(!theFile.isFile()) return true;
     // Else we need to confirm
-    return (JOptionPane.showConfirmDialog(theApp, "The file "+theFile.getName()+" already exists.\nAre you sure you want to overwrite it?", 
+    return (JOptionPane.showConfirmDialog(this, "The file "+theFile.getName()+" already exists.\nAre you sure you want to overwrite it?", 
                 "Overwrite file?", 
                 JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION); 
   }
 
   public void showLicense()
   {
-              JOptionPane.showMessageDialog(theApp, 
+              JOptionPane.showMessageDialog(this, 
 "           Jreepad - personal information manager.\n" +
 "           Copyright \u00A9 2004 Dan Stowell\n" +
 "\n" +
@@ -1791,7 +1723,7 @@ public class JreepadViewer extends JFrame
   }
   public void stripAllTags()
   {
-    if(JOptionPane.showConfirmDialog(theApp, "Stripping tags will remove all the article content which\nis wrapped in HTML-style <angle brackets> from\nthe current article. Are you sure this is what you want?", 
+    if(JOptionPane.showConfirmDialog(this, "Stripping tags will remove all the article content which\nis wrapped in HTML-style <angle brackets> from\nthe current article. Are you sure this is what you want?", 
                 "Strip all tags?", 
                 JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION)
       theJreepad.stripAllTags();
@@ -1985,6 +1917,132 @@ public class JreepadViewer extends JFrame
 	 searchCaseCheckBox.isSelected(), 
 	 getPrefs().searchMaxNum
 	 );
+  }
+  
+  public void keyboardHelp()
+  {
+              JOptionPane.showMessageDialog(this, 
+              "\nNAVIGATING AROUND THE TREE:" +
+              "\nUse the arrow (cursor) keys to navigate around the tree." +
+              "\nUp/down will move you up/down the visible nodes." +
+              "\nLeft/right will expand/collapse nodes." +
+              "\n" +
+              "\nADDING/DELETING NODES:" +
+              "\n[Alt+A] Add sibling node above current node" +
+              "\n[Alt+B] Add sibling node below current node" +
+              "\n[Alt+C] Add child node to current node" +
+              "\n[Alt+K] Delete current node" +
+              "\n" +
+              "\nMOVING NODES:" +
+              "\n[Alt+U] Move node up" +
+              "\n[Alt+D] Move node down" +
+              "\n[Alt+I] Indent node" +
+              "\n[Alt+O] Outdent node" +
+              "\n" +
+              "\nCOPYING AND PASTING:" +
+              "\n[Ctrl+X] Cut selected text" +
+              "\n[Ctrl+C] Copy selected text" +
+              "\n[Ctrl+V] Paste selected text" +
+              "\n - The copy/paste functions are included automatically" +
+              "\n    by the Mac OSX runtime. I can't guarantee they exist" +
+              "\n    for you if you're using a different operating system!" +
+/*
+              "\n" +
+              "\n" +
+              "\n" +
+              "\n" +
+              "\n" +
+              "\n" +
+              "\n" +
+              "\n[] " +
+              "\n" +
+*/
+              ""
+              ,
+              "Jreepad keyboard shortcuts", 
+              JOptionPane.INFORMATION_MESSAGE); 
+  }
+  
+  public void linksHelp()
+  {
+              JOptionPane.showMessageDialog(this, 
+              "\nSelect any piece of text in an article," +
+              "\nthen choose \"Actions > Follow link in article\"." +
+              "\n" +
+              "\nTYPES OF LINK:" +
+              "\n" +
+              "\n\"Normal\" link - We've tested these types of link:" +
+              "\n      Web:   e.g. http://jreepad.sourceforge.net" +
+              "\n      Email: e.g. mailto:billg@microsoft.com" +
+              "\n      FTP:   e.g. ftp://ftp.compaq.com/pub/" +
+              "\n      File:  (can't get these to work, on OSX at least)" +
+              "\n" +
+              "\nWiki link - If the selected text is a WikiWord (i.e. if " +
+              "\n            it LooksLikeThis with no spaces and some capital " + 
+              "\n            letters somewhere in the middle) OR begins " +
+              "\n            with \"[[\" and ends with \"]]\" then " +
+              "\n            Jreepad will search for a node of the same " +
+              "\n            title, and jump directly to it. If one " +
+              "\n            isn't found then it'll create one " +
+              "\n            for you. Try it!" +
+              "\n" + 
+              "\nTreepad link - Treepad Lite uses links which begin " +
+              "\n            with \"node://\", and specify the exact path" +
+              "\n            to a different node within the same file."+
+              "\n              e.g. \"node://TreePad manual/Using Treepad\"" +
+              "\n" +
+              "\n" +
+              "\n" +
+              "\n" +
+/*
+              "\n" +
+              "\n" +
+              "\n" +
+              "\n" +
+              "\n" +
+              "\n" +
+              "\n" +
+              "\n[] " +
+              "\n" +
+*/
+              ""
+              ,
+              "Links in Jreepad", 
+              JOptionPane.INFORMATION_MESSAGE); 
+  }
+  
+  public void dragDropHelp()
+  {
+              JOptionPane.showMessageDialog(this, 
+              "\nDRAG-AND-DROP:" +
+              "\n" +
+              "\nOne of the easiest ways to manage the structure" +
+              "\nof your Treepad file is to drag the nodes around" +
+              "\nusing the mouse." +
+              "\n" +
+              "\nClick on a node's title, and, keeping the mouse" +
+              "\nbutton held down, move the mouse to where you" +
+              "\nwant the node to be moved to. Then release the" +
+              "\nmouse button, and the node will be moved to its" +
+              "\nnew position in the tree." +
+              "\n" +
+              "\n" +
+              "\n" +
+/*
+              "\n" +
+              "\n" +
+              "\n" +
+              "\n" +
+              "\n" +
+              "\n" +
+              "\n" +
+              "\n[] " +
+              "\n" +
+*/
+              ""
+              ,
+              "Drag-and-drop", 
+              JOptionPane.INFORMATION_MESSAGE); 
   }
 
 

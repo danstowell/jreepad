@@ -116,6 +116,11 @@ public class JreepadPrefs implements Serializable
   
   boolean addQuotesToCsvOutput;
   
+  static final int FILETYPE_XML = 0;
+  static final int FILETYPE_HJT = 1;
+  int mainFileType;
+  public static final String[] mainFileTypes = {"Jreepad XML","Treepad HJT"};
+  
   JreepadPrefs(Dimension wndSize)
   {
     openLocation = new File(System.getProperty("user.home"));
@@ -141,7 +146,7 @@ public class JreepadPrefs implements Serializable
     
     wikiBehaviourActive = true;
     
-    fileEncoding = 0;
+    fileEncoding = 2; // Default to UTF-8
     
     openRecentList = new Vector();
     openRecentListLength = 10;
@@ -181,6 +186,8 @@ public class JreepadPrefs implements Serializable
     autoDetectHtmlArticles = true;
     
     addQuotesToCsvOutput = false;
+    
+    mainFileType = FILETYPE_HJT;
   }
   
   // We override the serialization routines so that different versions of our class can read 
@@ -245,6 +252,8 @@ public class JreepadPrefs implements Serializable
     out.writeBoolean(autoDetectHtmlArticles);
     
     out.writeBoolean(addQuotesToCsvOutput);
+    
+    out.writeInt(mainFileType);
   }
   private void readObject(java.io.ObjectInputStream in)
      throws IOException, ClassNotFoundException
@@ -308,6 +317,8 @@ public class JreepadPrefs implements Serializable
     autoDetectHtmlArticles = in.readBoolean();
     
     addQuotesToCsvOutput = in.readBoolean();
+    
+    mainFileType = in.readInt();
    }
    catch(IOException e)
    {
