@@ -15,6 +15,8 @@ public class JreepadViewer extends JFrame
   private Box toolBar;
   private JreepadView theJreepad;
   private Container content;
+  private JreepadPrefs prefs;
+  private static final File prefsFile = new File(".jreepref");
   
   private boolean warnAboutUnsaved = false;
   
@@ -82,6 +84,27 @@ public class JreepadViewer extends JFrame
   }
   public JreepadViewer(String fileNameToLoad)
   {
+    // Check if a preferences file exists - and if so, load it
+    System.out.println("Initialising preferences...");
+    prefs = new JreepadPrefs();
+    try
+    {
+      if(prefsFile.exists() && prefsFile.isFile())
+      {
+        System.out.println("Loading preferences file...");
+        ObjectInputStream prefsLoader = new ObjectInputStream(new FileInputStream(prefsFile));
+        prefs = (JreepadPrefs)prefsLoader.readObject();
+        prefsLoader.close();
+      }
+      else
+        System.out.println("No preferences file found - using defaults.");
+    }
+    catch(Exception err)
+    {
+      System.out.println("ERROR READING PREFERENCES FILE: " + err);
+      prefs = new JreepadPrefs();
+    }
+    
     fileChooser = new JFileChooser();
     content = getContentPane();
 
@@ -105,7 +128,7 @@ public class JreepadViewer extends JFrame
     helpMenu = new JMenu("Help");
     //
     newMenuItem = new JMenuItem("New");
-    newMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {content.remove(theJreepad); theJreepad = new JreepadView(); content.add(theJreepad); repaint();}});
+    newMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { newAction();}});
     fileMenu.add(newMenuItem);
     openMenuItem = new JMenuItem("Open");
     openMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {openAction();}});
@@ -588,8 +611,35 @@ public class JreepadViewer extends JFrame
       System.err.println("Only one (optional) argument can be passed - the name of the HJT file to load.");
   }
   
+  private void newAction()
+  {
+    if(warnAboutUnsaved)
+    {
+	  int answer = JOptionPane.showConfirmDialog(theApp, "Save current file before starting a new one?", 
+	                   "Save?" , JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE);
+      if(answer == JOptionPane.CANCEL_OPTION)
+        return;
+      else if(answer == JOptionPane.YES_OPTION)
+        if(!saveAction())
+          return; // This cancels quit if the save action failed or was cancelled
+    }
+    content.remove(theJreepad); theJreepad = new JreepadView(); content.add(theJreepad); repaint();
+    warnAboutUnsaved = false;
+  }
+  
   private void openAction()
   {
+    if(warnAboutUnsaved)
+    {
+	  int answer = JOptionPane.showConfirmDialog(theApp, "Save current file before opening a new one?", 
+	                   "Save?" , JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE);
+      if(answer == JOptionPane.CANCEL_OPTION)
+        return;
+      else if(answer == JOptionPane.YES_OPTION)
+        if(!saveAction())
+          return; // This cancels quit if the save action failed or was cancelled
+    }
+
     try
     {
       fileChooser.setCurrentDirectory(openLocation);
@@ -793,7 +843,21 @@ public class JreepadViewer extends JFrame
         if(!saveAction())
           return; // This cancels quit if the save action failed or was cancelled
     }
+    savePreferencesFile();
     System.exit(0);
+  }
+  
+  private void savePreferencesFile()
+  {
+    try
+    {
+      ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(prefsFile));
+      out.writeObject(prefs);
+      out.close();
+    }
+    catch(IOException err)
+    {
+    }
   }
 
 }
