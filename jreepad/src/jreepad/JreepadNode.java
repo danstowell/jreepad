@@ -22,6 +22,7 @@ package jreepad;
 import java.util.*;
 import java.io.*;
 import javax.swing.tree.*;
+import java.text.*;
 
 public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Comparable
 {
@@ -515,6 +516,45 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
       if(((JreepadNode)getChildAt(i)).getTitle().equals(title))
         return (JreepadNode)getChildAt(i);
     return null;
+  }
+
+  public synchronized void wrapContentToCharWidth(int charWidth)
+  {
+    if(charWidth < 2)
+      return;
+    
+    StringBuffer ret = new StringBuffer();
+    StringCharacterIterator iter = new StringCharacterIterator(content);
+    int charsOnThisLine = 0;
+    for(char c = iter.first(); c != CharacterIterator.DONE; c = iter.next())
+    {
+      if(c=='\n')
+        charsOnThisLine = 0;
+      else if(++charsOnThisLine >= charWidth)
+      {
+        ret.append('\n');
+        charsOnThisLine=0;
+      }
+      ret.append(c);
+    } 
+    content = ret.toString();
+  }
+  
+  public synchronized void stripAllTags()
+  {
+    StringBuffer ret = new StringBuffer();
+    StringCharacterIterator iter = new StringCharacterIterator(content);
+    boolean on = true;
+    for(char c = iter.first(); c != CharacterIterator.DONE; c = iter.next())
+    {
+      if((!on) && c=='>')
+        on = true;
+      else if(on && c=='<')
+        on = false;
+      else if(on)
+        ret.append(c);
+    } 
+    content = ret.toString();
   }
 
   public String getTitle() { return title; }

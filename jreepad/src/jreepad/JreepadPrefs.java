@@ -76,6 +76,8 @@ public class JreepadPrefs implements Serializable
   Font treeFont;
   Font articleFont;
   
+  int characterWrapWidth;
+  
   JreepadPrefs()
   {
     openLocation = new File(System.getProperty("user.home"));
@@ -108,6 +110,8 @@ public class JreepadPrefs implements Serializable
     
     treeFont = (new JTree()).getFont();
     articleFont = (new JEditorPane()).getFont();
+    
+    characterWrapWidth = 80;
   }
   
   // We override the serialization routines so that different versions of our class can read 
@@ -149,6 +153,8 @@ public class JreepadPrefs implements Serializable
 
     out.writeObject(treeFont);
     out.writeObject(articleFont);
+    
+    out.writeInt(characterWrapWidth);
   }
   private void readObject(java.io.ObjectInputStream in)
      throws IOException, ClassNotFoundException
@@ -189,6 +195,8 @@ public class JreepadPrefs implements Serializable
 
     treeFont = (Font)in.readObject();
     articleFont = (Font)in.readObject();
+    
+    characterWrapWidth = in.readInt();
    }
    catch(EOFException e)
    {

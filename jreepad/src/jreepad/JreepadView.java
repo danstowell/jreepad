@@ -31,15 +31,6 @@ import java.util.Vector;
 import java.io.*;
 import java.awt.print.*;
 
-/*
-
-The original free Windows version is 380Kb
-
-Todo:
-- The article needs to resize properly, EVERY time its container (its scrollpane) is resized
-
-*/
-
 public class JreepadView extends Box
 {
 
@@ -143,14 +134,6 @@ public class JreepadView extends Box
 
     this.root = root;
 
-/* DEPRECATED - HOPEFULLY!
-    topNode = new DefaultMutableTreeNode(root);
-
-    // Now set up all the JTree, DefaultTreeNode, stuff
-    createNodes(topNode, root);
-
-    treeModel = new DefaultTreeModel(topNode);
-*/
     treeModel = new JreepadTreeModel(root);
     treeModel.addTreeModelListener(new JreepadTreeModelListener());
 
@@ -159,7 +142,6 @@ public class JreepadView extends Box
     tree.setExpandsSelectedPaths(true);
     tree.setInvokesStopCellEditing(true);
     tree.setEditable(true);
-//    setTreeFont(getPrefs().treeFont);
     
     tree.setModel(treeModel);
 
@@ -782,6 +764,7 @@ public class JreepadView extends Box
     tree.setSelectionPath(oldSelectedPath); // I hope this ends up firing the setCurrentNode() function...
 
     editorPane.setText(currentNode.getContent());
+    repaint();
   }
   public boolean canWeUndo()
   {
@@ -1094,6 +1077,21 @@ System.out.println(err);
 //  {
 //    editorPane.setFont(f);
 //  }
+
+  public void wrapContentToCharWidth(int charWidth)
+  {
+    storeForUndo();
+    currentNode.wrapContentToCharWidth(charWidth);
+    editorPane.setText(currentNode.getContent());
+    setWarnAboutUnsaved(true);
+  }
+  public void stripAllTags()
+  {
+    storeForUndo();
+    currentNode.stripAllTags();
+    editorPane.setText(currentNode.getContent());
+    setWarnAboutUnsaved(true);
+  }
 
 
   class JreepadTreeModelListener implements TreeModelListener

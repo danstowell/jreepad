@@ -63,6 +63,7 @@ public class JreepadViewer extends JFrame
 //    private JComboBox treeFontSizeSelector;
 //    private JComboBox articleFontFamilySelector;
 //    private JComboBox articleFontSizeSelector;
+  private JSpinner wrapWidthSpinner;
   private Box webSearchPrefsBox;
     private JComboBox defaultSearchModeSelector;
     private JTextField webSearchNameField;
@@ -125,6 +126,8 @@ public class JreepadViewer extends JFrame
   private JMenuItem webSearchMenuItem;
   private JMenuItem launchUrlMenuItem;
   private JMenuItem thisNodesUrlMenuItem;
+  private JMenuItem characterWrapArticleMenuItem;
+  private JMenuItem stripTagsMenuItem;
   private JMenu viewMenu;
   private JMenuItem viewBothMenuItem;
   private JMenuItem viewTreeMenuItem;
@@ -292,6 +295,13 @@ public class JreepadViewer extends JFrame
     webSearchMenuItem = new JMenuItem(getPrefs().webSearchName);
     webSearchMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { theJreepad.webSearchTextSelectedInArticle(); }});
     searchMenu.add(webSearchMenuItem);
+    searchMenu.add(new JSeparator());
+    characterWrapArticleMenuItem = new JMenuItem("Wrap article to " + getPrefs().characterWrapWidth + " columns");
+    characterWrapArticleMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { wrapContentToCharWidth(); }});
+    searchMenu.add(characterWrapArticleMenuItem);
+    stripTagsMenuItem = new JMenuItem("Strip <tags> from article");
+    stripTagsMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { stripAllTags(); }});
+    searchMenu.add(stripTagsMenuItem);
     //
     viewBothMenuItem = new JMenuItem("Both tree and article");
     viewBothMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { setViewMode(JreepadPrefs.VIEW_BOTH); }});
@@ -877,6 +887,14 @@ public class JreepadViewer extends JFrame
     genPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), "\"Follow selected link\" action"));
     vBox.add(genPanel);
 
+    genPanel = new JPanel();
+    hBox = Box.createHorizontalBox();
+    hBox.add(new JLabel("Column width to use for wrapping:"));
+    hBox.add(wrapWidthSpinner = new JSpinner(new SpinnerNumberModel(getPrefs().characterWrapWidth,1,1000,1)));
+    genPanel.add(hBox);
+    genPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), "\"Wrap article to n columns\" action"));
+    vBox.add(genPanel);
+
 //    fontsPrefsBox = Box.createHorizontalBox();
 //    fontsPrefsBox.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), "Font (for article)"));
 //    Box tempVBox = Box.createHorizontalBox();
@@ -922,6 +940,8 @@ public class JreepadViewer extends JFrame
 									getPrefs().webSearchPostfix = webSearchPostfixField.getText();
 									getPrefs().defaultSearchMode = defaultSearchModeSelector.getSelectedIndex();
 									getPrefs().fileEncoding = fileEncodingSelector.getSelectedIndex();
+									getPrefs().characterWrapWidth = ((Integer)(wrapWidthSpinner.getValue())).intValue();
+                                    characterWrapArticleMenuItem.setText("Wrap article to " + getPrefs().characterWrapWidth + " columns");
 							//		setFontsFromPrefsBox();
 									prefsDialog.hide();
                                    }});
@@ -1457,6 +1477,18 @@ public class JreepadViewer extends JFrame
   private void setWarnAboutUnsaved(boolean yo)
   {
     theJreepad.setWarnAboutUnsaved(yo);
+  }
+
+  public void wrapContentToCharWidth()
+  {
+    theJreepad.wrapContentToCharWidth(getPrefs().characterWrapWidth);
+  }
+  public void stripAllTags()
+  {
+    if(JOptionPane.showConfirmDialog(theApp, "Stripping tags will remove all the article content which\nis wrapped in HTML-style <angle brackets> from\nthe current article. Are you sure this is what you want?", 
+                "Strip all tags?", 
+                JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION)
+      theJreepad.stripAllTags();
   }
 
 
