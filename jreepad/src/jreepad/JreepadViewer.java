@@ -29,6 +29,10 @@ import java.awt.event.*;
 import java.io.*;
 import java.util.*;
 
+// For reflection and Mac OSX specific things
+import com.apple.eawt.*;
+import java.lang.reflect.*;
+
 public class JreepadViewer extends JFrame
 {
   private static JreepadViewer theApp;
@@ -145,6 +149,12 @@ public class JreepadViewer extends JFrame
   private JMenuItem aboutMenuItem;
   private JMenuItem licenseMenuItem;
   
+  // Check whether we are on Mac OS X.  This is crucial to loading and using the OSXAdapter class.
+  public static boolean MAC_OS_X = (System.getProperty("os.name").toLowerCase().startsWith("mac os x"));
+  
+  // Ask AWT which menu modifier we should be using.
+  final static int MENU_MASK = Toolkit.getDefaultToolkit().getMenuShortcutKeyMask(); 
+
   public JreepadViewer()
   {
     this("");
@@ -245,9 +255,14 @@ public class JreepadViewer extends JFrame
       exportTextMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {exportAction(FILE_FORMAT_TEXT);}});
       exportMenu.add(exportTextMenuItem);
     fileMenu.add(new JSeparator());
-    quitMenuItem = new JMenuItem("Quit");
-    quitMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { quitAction(); }});
-    fileMenu.add(quitMenuItem);
+    if(!MAC_OS_X)
+    {
+      quitMenuItem = new JMenuItem("Quit");
+      quitMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { quitAction(); }});
+      fileMenu.add(quitMenuItem);
+      quitMenuItem.setMnemonic('Q');
+      quitMenuItem.setAccelerator(KeyStroke.getKeyStroke('Q', MENU_MASK));
+    }
     //
     undoMenuItem = new JMenuItem("Undo");
     undoMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { undoAction();}});
@@ -357,7 +372,6 @@ public class JreepadViewer extends JFrame
               "\n[Alt+O] Outdent node" +
               "\n" +
               "\nCOPYING AND PASTING:" +
-              "\n[Ctrl+A] Select all" +
               "\n[Ctrl+X] Cut selected text" +
               "\n[Ctrl+C] Copy selected text" +
               "\n[Ctrl+V] Paste selected text" +
@@ -465,45 +479,17 @@ public class JreepadViewer extends JFrame
               JOptionPane.INFORMATION_MESSAGE); 
     		}});
     helpMenu.add(dragDropHelpMenuItem);
-    aboutMenuItem = new JMenuItem("About Jreepad");
-    aboutMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e)
-            {
-/*
-              HTMLDocument aboutDoc = new HTMLDocument();
-              
-              try
-              {
-                aboutDoc.insertString(0,"<h1>Well</h1><p>hello there</p>", new SimpleAttributeSet());
-              }
-              catch(BadLocationException ee)
-              {
-                System.out.println(ee);
-              }
-              
-              JTextPane aboutPane = new JTextPane(aboutDoc);
-              aboutPane.setContentType("text/html");
-*/
-              
-              JOptionPane.showMessageDialog(theApp, 
-//				aboutPane,
-              "Jreepad is an open-source Java program\n" +
-              "designed to provide the functionality\n" +
-              "(including file interoperability) of\n" +
-              "a Windows program called \"Treepad Lite\",\n" +
-              "part of the \"Treepad\" suite of software \n" +
-              "written by Henk Hagedoorn.\n" +
-              "\n" +
-              "\nJreepad project website:" +
-              "\n  http://jreepad.sourceforge.net" +
-              "\n" +
-              "\nTreepad website:" +
-              "\n  http://www.treepad.com"
-              ,
-              "About Jreepad", 
-              JOptionPane.INFORMATION_MESSAGE); 
-            }});
     helpMenu.add(new JSeparator());
-    helpMenu.add(aboutMenuItem);
+    if(!MAC_OS_X)
+    {
+      aboutMenuItem = new JMenuItem("About Jreepad");
+      aboutMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e)
+            {
+              aboutAction();
+            }});
+      aboutMenuItem.setMnemonic('a');
+      helpMenu.add(aboutMenuItem);
+    }
     licenseMenuItem = new JMenuItem("License");
     licenseMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e)
             {
@@ -522,12 +508,12 @@ public class JreepadViewer extends JFrame
     // Now the mnemonics...
     fileMenu.setMnemonic('F');
     newMenuItem.setMnemonic('N');
-    newMenuItem.setAccelerator(KeyStroke.getKeyStroke('N', Event.META_MASK));
+    newMenuItem.setAccelerator(KeyStroke.getKeyStroke('N', MENU_MASK));
     openMenuItem.setMnemonic('O');
-    openMenuItem.setAccelerator(KeyStroke.getKeyStroke('O', Event.META_MASK));
+    openMenuItem.setAccelerator(KeyStroke.getKeyStroke('O', MENU_MASK));
     openRecentMenu.setMnemonic('R');
     saveMenuItem.setMnemonic('S');
-    saveMenuItem.setAccelerator(KeyStroke.getKeyStroke('S', Event.META_MASK));
+    saveMenuItem.setAccelerator(KeyStroke.getKeyStroke('S', MENU_MASK));
     saveAsMenuItem.setMnemonic('A');
     backupToMenuItem.setMnemonic('B');
     importMenu.setMnemonic('I');
@@ -539,49 +525,47 @@ public class JreepadViewer extends JFrame
     exportHtmlMenuItem.setMnemonic('h');
     exportSimpleXmlMenuItem.setMnemonic('x');
     exportTextMenuItem.setMnemonic('t');
-    quitMenuItem.setMnemonic('Q');
-    quitMenuItem.setAccelerator(KeyStroke.getKeyStroke('Q', Event.META_MASK));
     editMenu.setMnemonic('E');
     undoMenuItem.setMnemonic('u');
-    undoMenuItem.setAccelerator(KeyStroke.getKeyStroke('Z', Event.META_MASK));
+    undoMenuItem.setAccelerator(KeyStroke.getKeyStroke('Z', MENU_MASK));
     addAboveMenuItem.setMnemonic('a');
-    addAboveMenuItem.setAccelerator(KeyStroke.getKeyStroke('A', Event.META_MASK));
+    addAboveMenuItem.setAccelerator(KeyStroke.getKeyStroke('A', MENU_MASK));
     addBelowMenuItem.setMnemonic('b');
-    addBelowMenuItem.setAccelerator(KeyStroke.getKeyStroke('B', Event.META_MASK));
+    addBelowMenuItem.setAccelerator(KeyStroke.getKeyStroke('B', MENU_MASK));
     addChildMenuItem.setMnemonic('c');
-    addChildMenuItem.setAccelerator(KeyStroke.getKeyStroke('\\', Event.META_MASK));
+    addChildMenuItem.setAccelerator(KeyStroke.getKeyStroke('\\', MENU_MASK));
     upMenuItem.setMnemonic('u');
-    upMenuItem.setAccelerator(KeyStroke.getKeyStroke('U', Event.META_MASK));
+    upMenuItem.setAccelerator(KeyStroke.getKeyStroke('U', MENU_MASK));
     downMenuItem.setMnemonic('d');
-    downMenuItem.setAccelerator(KeyStroke.getKeyStroke('D', Event.META_MASK));
+    downMenuItem.setAccelerator(KeyStroke.getKeyStroke('D', MENU_MASK));
     indentMenuItem.setMnemonic('i');
-    indentMenuItem.setAccelerator(KeyStroke.getKeyStroke(']', Event.META_MASK));
+    indentMenuItem.setAccelerator(KeyStroke.getKeyStroke(']', MENU_MASK));
     outdentMenuItem.setMnemonic('o');
-    outdentMenuItem.setAccelerator(KeyStroke.getKeyStroke('[', Event.META_MASK));
+    outdentMenuItem.setAccelerator(KeyStroke.getKeyStroke('[', MENU_MASK));
     deleteMenuItem.setMnemonic('k');
-    deleteMenuItem.setAccelerator(KeyStroke.getKeyStroke('K', Event.META_MASK));
+    deleteMenuItem.setAccelerator(KeyStroke.getKeyStroke('K', MENU_MASK));
     searchMenu.setMnemonic('t');
     searchMenuItem.setMnemonic('s');
-    searchMenuItem.setAccelerator(KeyStroke.getKeyStroke('F', Event.META_MASK));
+    searchMenuItem.setAccelerator(KeyStroke.getKeyStroke('F', MENU_MASK));
     webSearchMenuItem.setMnemonic('g');
-    webSearchMenuItem.setAccelerator(KeyStroke.getKeyStroke('G', Event.META_MASK));
-    launchUrlMenuItem.setAccelerator(KeyStroke.getKeyStroke('L', Event.META_MASK));
+    webSearchMenuItem.setAccelerator(KeyStroke.getKeyStroke('G', MENU_MASK));
+    launchUrlMenuItem.setAccelerator(KeyStroke.getKeyStroke('L', MENU_MASK));
     launchUrlMenuItem.setMnemonic('l');
-    stripTagsMenuItem.setAccelerator(KeyStroke.getKeyStroke('T', Event.META_MASK));
+    stripTagsMenuItem.setAccelerator(KeyStroke.getKeyStroke('T', MENU_MASK));
     stripTagsMenuItem.setMnemonic('t');
-    insertDateMenuItem.setAccelerator(KeyStroke.getKeyStroke('E', Event.META_MASK));
+    insertDateMenuItem.setAccelerator(KeyStroke.getKeyStroke('E', MENU_MASK));
     insertDateMenuItem.setMnemonic('e');
-    characterWrapArticleMenuItem.setAccelerator(KeyStroke.getKeyStroke('R', Event.META_MASK));
+    characterWrapArticleMenuItem.setAccelerator(KeyStroke.getKeyStroke('R', MENU_MASK));
     characterWrapArticleMenuItem.setMnemonic('r');
     thisNodesUrlMenuItem.setMnemonic('n');
     viewMenu.setMnemonic('V');
     viewBothMenuItem.setMnemonic('b');
     viewTreeMenuItem.setMnemonic('t');
     viewArticleMenuItem.setMnemonic('a');
-    viewBothMenuItem.setAccelerator(KeyStroke.getKeyStroke('1', Event.META_MASK));
-    viewTreeMenuItem.setAccelerator(KeyStroke.getKeyStroke('2', Event.META_MASK));
-    viewArticleMenuItem.setAccelerator(KeyStroke.getKeyStroke('3', Event.META_MASK));
-    viewToolbarMenuItem.setAccelerator(KeyStroke.getKeyStroke('4', Event.META_MASK));
+    viewBothMenuItem.setAccelerator(KeyStroke.getKeyStroke('1', MENU_MASK));
+    viewTreeMenuItem.setAccelerator(KeyStroke.getKeyStroke('2', MENU_MASK));
+    viewArticleMenuItem.setAccelerator(KeyStroke.getKeyStroke('3', MENU_MASK));
+    viewToolbarMenuItem.setAccelerator(KeyStroke.getKeyStroke('4', MENU_MASK));
     viewToolbarMenuItem.setMnemonic('o');
     optionsMenu.setMnemonic('O');
     autoSaveMenuItem.setMnemonic('a');
@@ -590,7 +574,6 @@ public class JreepadViewer extends JFrame
     keyboardHelpMenuItem.setMnemonic('k');
     dragDropHelpMenuItem.setMnemonic('d');
     linksHelpMenuItem.setMnemonic('l');
-    aboutMenuItem.setMnemonic('a');
     licenseMenuItem.setMnemonic('i');
     // Finished creating the menu bar
     
@@ -1048,6 +1031,9 @@ public class JreepadViewer extends JFrame
               chosenWidth, chosenHeight);
     nodeUrlDisplayDialog.setBounds((int)(wndSize.width*0.1f),(int)(chosenHeight*0.7f),
               (int)(chosenWidth*1.3f), chosenHeight/3);
+
+    macOSXRegistration();
+
     setVisible(true);
   }
   
@@ -1424,6 +1410,27 @@ public class JreepadViewer extends JFrame
     updateWindowTitle();
   }
   
+  private void aboutAction()
+  {
+              JOptionPane.showMessageDialog(theApp, 
+              "Jreepad is an open-source Java program\n" +
+              "designed to provide the functionality\n" +
+              "(including file interoperability) of\n" +
+              "a Windows program called \"Treepad Lite\",\n" +
+              "part of the \"Treepad\" suite of software \n" +
+              "written by Henk Hagedoorn.\n" +
+              "\nJreepad \u00A9 2004 Dan Stowell" +
+              "\n" +
+              "\nJreepad project website:" +
+              "\n  http://jreepad.sourceforge.net" +
+              "\n" +
+              "\nTreepad website:" +
+              "\n  http://www.treepad.com"
+              ,
+              "About Jreepad", 
+              JOptionPane.INFORMATION_MESSAGE); 
+  }
+  
   private void showAutoSaveDialog()
   {
     // The autosave simply launches a background thread which periodically triggers saveAction if saveLocation != null
@@ -1474,7 +1481,7 @@ public class JreepadViewer extends JFrame
   {
               JOptionPane.showMessageDialog(theApp, 
 "           Jreepad - personal information manager.\n" +
-"           Copyright (C) 2004 Dan Stowell\n" +
+"           Copyright \u00A9 2004 Dan Stowell\n" +
 "\n" +
 "This program is free software; you can redistribute it and/or\n" +
 "modify it under the terms of the GNU General Public License\n" +
@@ -1628,5 +1635,72 @@ public class JreepadViewer extends JFrame
 //    theJreepad.setTreeFont(getPrefs().treeFont);
 //    theJreepad.setArticleFont(getPrefs().articleFont);
 //  }
+
+
+
+// Generic registration with the Mac OS X application menu.  Checks the platform, then attempts
+  // to register with the Apple EAWT.
+  // This method calls OSXAdapter.registerMacOSXApplication() and OSXAdapter.enablePrefs().
+  // See OSXAdapter.java for the signatures of these methods.
+  public void macOSXRegistration() {
+    if (MAC_OS_X) {
+      try {
+        Class osxAdapter = Class.forName("jreepad.OSXAdapter");
+        
+        Class[] defArgs = {JreepadViewer.class};
+        Method registerMethod = osxAdapter.getDeclaredMethod("registerMacOSXApplication", defArgs);
+        if (registerMethod != null) {
+          Object[] args = { this };
+          registerMethod.invoke(osxAdapter, args);
+        }
+/*
+        // This is slightly gross.  to reflectively access methods with boolean args, 
+        // use "boolean.class", then pass a Boolean object in as the arg, which apparently
+        // gets converted for you by the reflection system.
+        defArgs[0] = boolean.class;
+        Method prefsEnableMethod =  osxAdapter.getDeclaredMethod("enablePrefs", defArgs);
+        if (prefsEnableMethod != null) {
+          Object args[] = {Boolean.TRUE};
+          prefsEnableMethod.invoke(osxAdapter, args);
+        }
+*/
+      } catch (NoClassDefFoundError e) {
+        // This will be thrown first if the OSXAdapter is loaded on a system without the EAWT
+        // because OSXAdapter extends ApplicationAdapter in its def
+        System.err.println("This version of Mac OS X does not support the Apple EAWT.  Application Menu handling has been disabled (" + e + ")");
+      } catch (ClassNotFoundException e) {
+        // This shouldn't be reached; if there's a problem with the OSXAdapter we should get the 
+        // above NoClassDefFoundError first.
+        System.err.println("This version of Mac OS X does not support the Apple EAWT.  Application Menu handling has been disabled (" + e + ")");
+      } catch (Exception e) {
+        System.err.println("Exception while loading the OSXAdapter:");
+        e.printStackTrace();
+      }
+    }
+  } 
+
+
+// General info dialog.  The OSXAdapter calls this method when "About OSXAdapter" 
+  // is selected from the application menu.
+  public void about() {
+    aboutAction();
+  }
+  
+  // General preferences dialog.  The OSXAdapter calls this method when "Preferences..." 
+  // is selected from the application menu.
+  public void preferences() {
+//    prefs.setSize(320, 240);
+//    prefs.setLocation((int)this.getLocation().getX() + 22, (int)this.getLocation().getY() + 22);
+//    prefs.setResizable(false);
+//    prefs.setVisible(true);
+  }
+
+  // General info dialog.  The OSXAdapter calls this method when "Quit OSXAdapter" 
+  // is selected from the application menu, Cmd-Q is pressed, or "Quit" is selected from the Dock.
+  public void quit() {  
+      quitAction();
+  } 
+
+
 
 }
