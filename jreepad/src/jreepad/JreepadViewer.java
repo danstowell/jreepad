@@ -63,7 +63,8 @@ public class JreepadViewer extends JFrame
 
   private JDialog autoSaveDialog;
   private JCheckBox autoSaveCheckBox;
-  private JSpinner autoSavePeriodSpinner;
+//  private JSpinner autoSavePeriodSpinner;
+  private DSpinner autoSavePeriodSpinner;
   private JButton autoSaveOkButton;
   private JButton autoSaveCancelButton;
   
@@ -76,7 +77,8 @@ public class JreepadViewer extends JFrame
 //    private JComboBox treeFontSizeSelector;
 //    private JComboBox articleFontFamilySelector;
 //    private JComboBox articleFontSizeSelector;
-  private JSpinner wrapWidthSpinner;
+//  private JSpinner wrapWidthSpinner;
+  private DSpinner wrapWidthSpinner;
   private Box webSearchPrefsBox;
     private JComboBox defaultSearchModeSelector;
     private JTextField webSearchNameField;
@@ -92,7 +94,8 @@ public class JreepadViewer extends JFrame
   private JComboBox searchCombinatorSelector;
   private JCheckBox searchCaseCheckBox;
   private JComboBox searchWhereSelector;
-  private JSpinner searchMaxNumSpinner;
+//  private JSpinner searchMaxNumSpinner;
+  private DSpinner searchMaxNumSpinner;
   private JButton searchGoButton;
   private JButton searchCloseButton;
   private JLabel searchResultsLabel;
@@ -729,7 +732,8 @@ public class JreepadViewer extends JFrame
     hBox.add(searchWhereSelector);
     vBox.add(hBox);
     //
-    searchMaxNumSpinner = new JSpinner(new SpinnerNumberModel(getPrefs().searchMaxNum,1,1000,1));
+//    searchMaxNumSpinner = new JSpinner(new SpinnerNumberModel(getPrefs().searchMaxNum,1,1000,1));
+    searchMaxNumSpinner = new DSpinner(1,1000,getPrefs().searchMaxNum);
     hBox = Box.createHorizontalBox();
     hBox.add(new JLabel("Max number of results: "));
     hBox.add(searchMaxNumSpinner);
@@ -741,7 +745,8 @@ public class JreepadViewer extends JFrame
     searchGoButton.addActionListener(new ActionListener(){
                                public void actionPerformed(ActionEvent e)
                                {
-                                 getPrefs().searchMaxNum = (Integer.valueOf(searchMaxNumSpinner.getValue().toString())).intValue();
+//                                 getPrefs().searchMaxNum = (Integer.valueOf(searchMaxNumSpinner.getValue().toString())).intValue();
+                                 getPrefs().searchMaxNum = searchMaxNumSpinner.getValue();
 
                                  performSearch(nodeSearchField.getText(), articleSearchField.getText(), 
                                  searchWhereSelector.getSelectedIndex(), searchCombinatorSelector.getSelectedIndex()==0,
@@ -872,13 +877,15 @@ public class JreepadViewer extends JFrame
     vBox.add(autoSaveCheckBox = new JCheckBox("Autosave", getPrefs().autoSave));
     hBox = Box.createHorizontalBox();
     hBox.add(new JLabel("Frequency (minutes):"));
-    hBox.add(autoSavePeriodSpinner = new JSpinner(new SpinnerNumberModel(getPrefs().autoSavePeriod,1,1000,1)));
+///    hBox.add(autoSavePeriodSpinner = new JSpinner(new SpinnerNumberModel(getPrefs().autoSavePeriod,1,1000,1)));
+    hBox.add(autoSavePeriodSpinner = new DSpinner(1, 1000, getPrefs().autoSavePeriod));
     vBox.add(hBox);
     hBox = Box.createHorizontalBox();
     hBox.add(autoSaveOkButton = new JButton("OK"));
     hBox.add(autoSaveCancelButton = new JButton("Cancel"));
     autoSaveOkButton.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e){
-									getPrefs().autoSavePeriod = ((Integer)(autoSavePeriodSpinner.getValue())).intValue();
+//									getPrefs().autoSavePeriod = ((Integer)(autoSavePeriodSpinner.getValue())).intValue();
+									getPrefs().autoSavePeriod = autoSavePeriodSpinner.getValue();
 									getPrefs().autoSave = autoSaveCheckBox.isSelected();
                                     autoSaveDialog.hide();
 									if(getPrefs().autoSave && !(autoSaveThread.isAlive()))
@@ -952,9 +959,10 @@ public class JreepadViewer extends JFrame
 //    hBox.add(wrapToWindowCheckBox = new JCheckBox("Wrap article to window width", getPrefs().wrapToWindow));
 //    hBox.add(new JLabel("(won't take effect until you restart Jreepad)"));
 //    genPrefVBox.add(hBox);
-    hBox = Box.createHorizontalBox();
-    hBox.add(new JLabel("Column width to use for hard-wrap action:"));
-    hBox.add(wrapWidthSpinner = new JSpinner(new SpinnerNumberModel(getPrefs().characterWrapWidth,1,1000,1)));
+ //   hBox = Box.createHorizontalBox();
+    vBox.add(new JLabel("Column width to use for hard-wrap action:"));
+//    hBox.add(wrapWidthSpinner = new JSpinner(new SpinnerNumberModel(getPrefs().characterWrapWidth,1,1000,1)));
+    vBox.add(wrapWidthSpinner = new DSpinner(1,1000,getPrefs().characterWrapWidth));
     genPrefVBox.add(hBox);
     genPanel.add(genPrefVBox);
     genPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), "Wrapping article text"));
@@ -1005,7 +1013,8 @@ public class JreepadViewer extends JFrame
 									getPrefs().webSearchPostfix = webSearchPostfixField.getText();
 									getPrefs().defaultSearchMode = defaultSearchModeSelector.getSelectedIndex();
 									getPrefs().fileEncoding = fileEncodingSelector.getSelectedIndex();
-									getPrefs().characterWrapWidth = ((Integer)(wrapWidthSpinner.getValue())).intValue();
+//									getPrefs().characterWrapWidth = ((Integer)(wrapWidthSpinner.getValue())).intValue();
+									getPrefs().characterWrapWidth = wrapWidthSpinner.getValue();
                                     characterWrapArticleMenuItem.setText("Hard-wrap current article to " + getPrefs().characterWrapWidth + " columns");
 							//		setFontsFromPrefsBox();
 //									getPrefs().wrapToWindow = wrapToWindowCheckBox.isSelected();
@@ -1558,7 +1567,8 @@ public class JreepadViewer extends JFrame
   {
     // The autosave simply launches a background thread which periodically triggers saveAction if saveLocation != null
     autoSaveCheckBox.setSelected(getPrefs().autoSave);
-    autoSavePeriodSpinner.getModel().setValue(new Integer(getPrefs().autoSavePeriod));
+ //   autoSavePeriodSpinner.getModel().setValue(new Integer(getPrefs().autoSavePeriod));
+    autoSavePeriodSpinner.setValue(getPrefs().autoSavePeriod);
     autoSaveDialog.show();
     autoSaveDialog.toFront();
   }
@@ -1824,6 +1834,42 @@ public class JreepadViewer extends JFrame
       quitAction();
   } 
 
+
+  // Replacement for the "JSpinner" which is not available in Java 1.3
+  class DSpinner extends Box
+  {
+    private int min, max, val;
+    private JTextField textField;
+    private JButton upBut, downBut;
+    
+    DSpinner(int min, int max, int myVal)
+    {
+      super(BoxLayout.X_AXIS);
+      this.min=this.val=min;
+      this.max=max;
+      this.add(textField = new JTextField(val));
+      this.add(downBut = new JButton("-"));
+      this.add(upBut = new JButton("+"));
+      
+      downBut.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {
+                  		    setValue(val-1);}});
+      upBut.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {
+                  		    setValue(val+1);}});
+      setValue(myVal);
+    }
+    
+    int getValue()
+    {
+      return Integer.parseInt(textField.getText());
+    }
+    void setValue(int newVal)
+    {
+      if(newVal>=min && newVal<=max)
+        val=newVal;
+        textField.setText("" + val);
+    }
+    
+  } // End of class DSpinner
 
 
 }
