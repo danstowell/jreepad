@@ -273,7 +273,7 @@ public class JreepadViewer extends JFrame
       exportHtmlMenuItem = new JMenuItem("...subtree to HTML");
       exportHtmlMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {
      //DELETE             		    htmlExportOkChecker = false;
-     //DELETE             		    htmlExportDialog.show();
+     //DELETE             		    htmlExportDialog.setVisible(true);
      //DELETE             		    if(htmlExportOkChecker)
                   		      exportAction(FILE_FORMAT_HTML);}});
       exportMenu.add(exportHtmlMenuItem);
@@ -784,7 +784,7 @@ public class JreepadViewer extends JFrame
                                } });
     hBox.add(searchCloseButton = new JButton("Close"));
     searchCloseButton.addActionListener(new ActionListener(){
-                               public void actionPerformed(ActionEvent e){ searchDialog.hide(); } });
+                               public void actionPerformed(ActionEvent e){ searchDialog.setVisible(false); } });
     hBox.add(Box.createGlue());
     vBox.add(hBox);
 */
@@ -855,7 +855,7 @@ public class JreepadViewer extends JFrame
           // Select the node in the tree, and move focus to the tree
           theJreepad.getTree().setSelectionPath(results[selectedRow].getTreePath());
           theJreepad.getTree().scrollPathToVisible(results[selectedRow].getTreePath());
-          searchDialog.hide();
+          searchDialog.setVisible(false);
           theApp.toFront();
           theJreepad.returnFocusToTree();
         }
@@ -920,7 +920,7 @@ public class JreepadViewer extends JFrame
 //									getPrefs().autoSavePeriod = ((Integer)(autoSavePeriodSpinner.getValue())).intValue();
 									getPrefs().autoSavePeriod = autoSavePeriodSpinner.getValue();
 									getPrefs().autoSave = autoSaveCheckBox.isSelected();
-                                    autoSaveDialog.hide();
+                                    autoSaveDialog.setVisible(false);
 									if(getPrefs().autoSave && !(autoSaveThread.isAlive()))
 									{
 	  JOptionPane.showMessageDialog(theApp, "Autosave turned on. It will stay on until you deactivate it (even if you quit and re-start Jreepad).", "Autosave is ON" , JOptionPane.INFORMATION_MESSAGE);
@@ -928,7 +928,7 @@ public class JreepadViewer extends JFrame
 									}
 									updateWindowTitle();
                                    }});
-    autoSaveCancelButton.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e){autoSaveDialog.hide();}});
+    autoSaveCancelButton.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e){autoSaveDialog.setVisible(false);}});
     vBox.add(Box.createGlue());
     vBox.add(hBox);
     autoSaveDialog.getContentPane().add(vBox);
@@ -973,7 +973,7 @@ public class JreepadViewer extends JFrame
     hBox.add(htmlExportCancelButton = new JButton("Cancel"));
     htmlExportCancelButton.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e){
                                     htmlExportOkChecker = false;
-                                    htmlExportDialog.hide();
+                                    htmlExportDialog.setVisible(false);
                                    }});
     hBox.add(htmlExportOkButton = new JButton("Export"));
     htmlExportOkButton.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e){
@@ -984,7 +984,7 @@ public class JreepadViewer extends JFrame
                                     // If exporting as HTML then we ignore this checkbox
                                     if(htmlExportModeSelector.getSelectedIndex()!=2)
                                       getPrefs().htmlExportUrlsToLinks = urlsToLinksCheckBox.isSelected();
-                                    htmlExportDialog.hide();
+                                    htmlExportDialog.setVisible(false);
                                    }});
     hBox.add(Box.createGlue());
     vBox.add(hBox);
@@ -1133,9 +1133,9 @@ public class JreepadViewer extends JFrame
                                     // If exporting as HTML then we ignore this checkbox
                                     if(htmlExportModeSelector.getSelectedIndex()!=2)
                                       getPrefs().htmlExportUrlsToLinks = urlsToLinksCheckBox.isSelected();
-									prefsDialog.hide();
+									prefsDialog.setVisible(false);
                                    }});
-    prefsCancelButton.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e){prefsDialog.hide();}});
+    prefsCancelButton.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e){prefsDialog.setVisible(false);}});
     vBox.add(hBox);
     prefsDialog.getContentPane().add(vBox);
     // Finished establishing the prefs dialogue box
@@ -1149,7 +1149,7 @@ public class JreepadViewer extends JFrame
     vBox.add(new JLabel("(You can copy-and-paste this into an article)"));
     vBox.add(nodeUrlDisplayOkButton = new JButton("OK"));
     nodeUrlDisplayOkButton.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e){
-									nodeUrlDisplayDialog.hide();
+									nodeUrlDisplayDialog.setVisible(false);
                                    }});
     nodeUrlDisplayDialog.getContentPane().add(vBox);
     // Finished: Establish the nodeUrlDisplay dialogue box
@@ -1415,7 +1415,7 @@ public class JreepadViewer extends JFrame
 
   private void openSearchDialog()
   {
-    searchDialog.show();
+    searchDialog.setVisible(true);
     nodeSearchField.requestFocus();
   } // End of: openSearchDialog()
   
@@ -1708,7 +1708,7 @@ public class JreepadViewer extends JFrame
     autoSaveCheckBox.setSelected(getPrefs().autoSave);
  //   autoSavePeriodSpinner.getModel().setValue(new Integer(getPrefs().autoSavePeriod));
     autoSavePeriodSpinner.setValue(getPrefs().autoSavePeriod);
-    autoSaveDialog.show();
+    autoSaveDialog.setVisible(true);
     autoSaveDialog.toFront();
   }
 
@@ -1718,7 +1718,7 @@ public class JreepadViewer extends JFrame
     loadLastFileOnOpenCheckBox.setSelected(getPrefs().loadLastFileOnOpen);
     autoDateNodesCheckBox.setSelected(getPrefs().autoDateInArticles);
 
-    prefsDialog.show();
+    prefsDialog.setVisible(true);
     prefsDialog.toFront();
   }
 
@@ -1736,7 +1736,7 @@ public class JreepadViewer extends JFrame
   {
 //    String ret = theJreepad.getTreepadNodeUrl();
     nodeUrlDisplayField.setText(theJreepad.getTreepadNodeUrl());
-	nodeUrlDisplayDialog.show();
+	nodeUrlDisplayDialog.setVisible(true);
   }
 
   private boolean checkOverwrite(File theFile)
