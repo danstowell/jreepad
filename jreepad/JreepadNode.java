@@ -129,14 +129,14 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
     StringBuffer ret = new StringBuffer();
     if(isRoot)
     {
-      ret.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML Basic 1.0//EN\" \"http://www.w3.org/TR/xhtml-basic/xhtml-basic10.dtd\">\n<html xmlns=\"http://www.w3.org/1999/xhtml\" xml:lang=\"en\">\n<head>\n<title>");
-      ret.append(getTitle());
-      ret.append("</title>\n</head>\n\n<body>\n<!-- Exported from Jreepad -->\n<dl>");
+      ret.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">\n<html xmlns=\"http://www.w3.org/1999/xhtml\" xml:lang=\"en\">\n<head>\n<title>");
+      ret.append(htmlSpecialChars(getTitle()));
+      ret.append("</title>\n<style type=\"text/css\">\ndl {}\ndt { font-weight: bold; margin-top: 10px; }\ndd {}\n</style>\n</head>\n\n<body>\n<!-- Exported from Jreepad -->\n<dl>");
     }
     ret.append("\n<dt>");
-    ret.append(getTitle());
+    ret.append(htmlSpecialChars(getTitle()));
     ret.append("</dt>\n<dd>");
-    ret.append(getContent());
+    ret.append(htmlSpecialChars(getContent()));
     if(children.size()>0)
       ret.append("\n<dl>");
     for(int i=0; i<children.size(); i++)
@@ -148,6 +148,23 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
     if(isRoot)
       ret.append("\n</dl>\n</body>\n</html>");
     return ret;
+  }
+  private String htmlSpecialChars(String in)
+  {
+    char[] c = in.toCharArray();
+    StringBuffer ret = new StringBuffer();
+    for(int i=0; i<c.length; i++)
+      if(c[i]=='<')
+        ret.append("&lt;");
+      else if(c[i]=='>')
+        ret.append("&gt;");
+      else if(c[i]=='&')
+        ret.append("&amp;");
+      else if(c[i]=='\n')
+        ret.append("<br />\n");
+      else
+        ret.append(c[i]);
+    return ret.toString();
   }
 
   public String exportAsSimpleXml()

@@ -3,6 +3,7 @@ package jreepad;
 import javax.swing.*;
 import javax.swing.tree.*;
 import javax.swing.event.*;
+import java.awt.*;
 import java.awt.event.*;
 import java.util.Enumeration;
 import java.util.Vector;
@@ -14,10 +15,6 @@ import java.awt.print.*;
 The original free Windows version is 380Kb
 
 Todo:
-- Drag-and-drop of nodes
-- Menus and the actions they entail
-- Toolbar actions
-- Search for text
 - The article needs to resize properly, EVERY time its container (its scrollpane) is resized
 
 */
@@ -104,6 +101,7 @@ public class JreepadView extends Box
         if(selPath != null)
         {
           currentDragDropNode = (JreepadNode)selPath.getLastPathComponent();
+          setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
           // if(e.getClickCount() == 1) {mySingleClick(selPath);}
 //            System.out.println("Setting dragdrop node to " + currentDragDropNode);
         }
@@ -124,6 +122,7 @@ public class JreepadView extends Box
             moveNode(currentDragDropNode, (JreepadNode)selPath.getLastPathComponent());
           }
         }
+        setCursor(Cursor.getDefaultCursor());
         currentDragDropNode = null;
       }
       public void mouseClicked(MouseEvent e)
@@ -153,6 +152,7 @@ public class JreepadView extends Box
     					{
     					  public void componentResized(ComponentEvent e)
     					  {
+    					    editorPane.setMaximumSize(new Dimension(articleView.getViewport().getWidth(), Integer.MAX_VALUE));
     					    editorPane.setSize(articleView.getViewport().getViewSize());
     					  }
     					  public void componentMoved(ComponentEvent e){}
@@ -165,6 +165,7 @@ public class JreepadView extends Box
     					  public void stateChanged(ChangeEvent e)
     					  {
  			     editorPane.setPreferredSize(articleView.getViewport().getExtentSize());
+    					    editorPane.setMaximumSize(new Dimension(articleView.getViewport().getWidth(), Integer.MAX_VALUE));
     					    editorPane.setSize(articleView.getViewport().getViewSize());
     					  }
     					}

@@ -826,6 +826,7 @@ public class JreepadViewer extends JFrame
           return; // This cancels quit if the save action failed or was cancelled
     }
 
+    setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
     try
     {
       fileChooser.setCurrentDirectory(getPrefs().openLocation);
@@ -841,10 +842,12 @@ public class JreepadViewer extends JFrame
         repaint();
         warnAboutUnsaved = false;
         theJreepad.clearUndoCache();
+        setCursor(Cursor.getDefaultCursor());
       }
     }
     catch(IOException err)
     {
+      setCursor(Cursor.getDefaultCursor());
       JOptionPane.showMessageDialog(theApp, err, "File input error" , JOptionPane.ERROR_MESSAGE);
     }
   } // End of: openAction()
@@ -857,6 +860,7 @@ public class JreepadViewer extends JFrame
     }
     try
     {
+      setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
       String writeMe = theJreepad.getRootJreepadNode().toTreepadString();
       FileOutputStream fO = new FileOutputStream(getPrefs().saveLocation);
       DataOutputStream dO = new DataOutputStream(fO);
@@ -865,10 +869,12 @@ public class JreepadViewer extends JFrame
       fO.close();
       warnAboutUnsaved = false;
       updateWindowTitle();
+      setCursor(Cursor.getDefaultCursor());
       return true;
     }
     catch(IOException err)
     {
+      setCursor(Cursor.getDefaultCursor());
       JOptionPane.showMessageDialog(theApp, err, "File error during Save" , JOptionPane.ERROR_MESSAGE);
     }
     return false;
@@ -878,8 +884,9 @@ public class JreepadViewer extends JFrame
     try
     {
       fileChooser.setCurrentDirectory(getPrefs().saveLocation);
-      if(fileChooser.showSaveDialog(theApp) == JFileChooser.APPROVE_OPTION)
+      if(fileChooser.showSaveDialog(theApp) == JFileChooser.APPROVE_OPTION && checkOverwrite(fileChooser.getSelectedFile()))
       {
+        setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
         getPrefs().saveLocation = fileChooser.getSelectedFile();
         String writeMe = theJreepad.getRootJreepadNode().toTreepadString();
         FileOutputStream fO = new FileOutputStream(getPrefs().saveLocation);
@@ -889,6 +896,7 @@ public class JreepadViewer extends JFrame
         fO.close();
         warnAboutUnsaved = false;
         setTitleBasedOnFilename(getPrefs().saveLocation.getName());
+        setCursor(Cursor.getDefaultCursor());
         return true;
       }
       else
@@ -896,6 +904,7 @@ public class JreepadViewer extends JFrame
     }
     catch(IOException err)
     {
+      setCursor(Cursor.getDefaultCursor());
       JOptionPane.showMessageDialog(theApp, err, "File error during Save As" , JOptionPane.ERROR_MESSAGE);
     }
     return false;
@@ -906,8 +915,9 @@ public class JreepadViewer extends JFrame
     try
     {
       fileChooser.setCurrentDirectory(getPrefs().backupLocation);
-      if(fileChooser.showSaveDialog(theApp) == JFileChooser.APPROVE_OPTION)
+      if(fileChooser.showSaveDialog(theApp) == JFileChooser.APPROVE_OPTION && checkOverwrite(fileChooser.getSelectedFile()))
       {
+        setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
         getPrefs().backupLocation = fileChooser.getSelectedFile();
         String writeMe = theJreepad.getRootJreepadNode().toTreepadString();
         FileOutputStream fO = new FileOutputStream(getPrefs().backupLocation);
@@ -915,6 +925,7 @@ public class JreepadViewer extends JFrame
         dO.writeBytes(writeMe);
         dO.close();
         fO.close();
+        setCursor(Cursor.getDefaultCursor());
         return true;
       }
       else
@@ -922,6 +933,7 @@ public class JreepadViewer extends JFrame
     }
     catch(IOException err)
     {
+      setCursor(Cursor.getDefaultCursor());
       JOptionPane.showMessageDialog(theApp, err, "File error during Backup" , JOptionPane.ERROR_MESSAGE);
     }
     return false;
@@ -936,8 +948,10 @@ public class JreepadViewer extends JFrame
   private boolean performSearch(String inNodes, String inArticles, int searchWhat /* 0=selected, 1=all */, 
                                 boolean orNotAnd, boolean caseSensitive, int maxResults)
   {
+    setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
     boolean ret = theJreepad.performSearch(inNodes, inArticles, searchWhat, orNotAnd, 
                                           caseSensitive, maxResults);
+    setCursor(Cursor.getDefaultCursor());
     if(!ret)
     {
       JOptionPane.showMessageDialog(searchDialog, "Found nothing.", "Search result..." , JOptionPane.INFORMATION_MESSAGE);
@@ -973,6 +987,7 @@ public class JreepadViewer extends JFrame
     boolean multipleFiles;
     try
     {
+
       multipleFiles = (importFormat == FILE_FORMAT_TEXT);
 
       if(multipleFiles)
@@ -982,6 +997,7 @@ public class JreepadViewer extends JFrame
 
       if(fileChooser.showOpenDialog(theApp) == JFileChooser.APPROVE_OPTION)
       {
+        setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
         getPrefs().importLocation = fileChooser.getSelectedFile();
 
 		switch(importFormat)
@@ -993,6 +1009,7 @@ public class JreepadViewer extends JFrame
 		    theJreepad.addChildrenFromTextFiles(fileChooser.getSelectedFiles());
 			break;
 		  default:
+            setCursor(Cursor.getDefaultCursor());
 			JOptionPane.showMessageDialog(theApp, "Unknown which format to import - coding error! Oops!", "Error" , JOptionPane.ERROR_MESSAGE);
 			return;
 		}
@@ -1000,9 +1017,11 @@ public class JreepadViewer extends JFrame
 	    updateWindowTitle();
       }
       fileChooser.setMultiSelectionEnabled(false);
+      setCursor(Cursor.getDefaultCursor());
     }
     catch(IOException err)
     {
+      setCursor(Cursor.getDefaultCursor());
       JOptionPane.showMessageDialog(theApp, err, "File error during Import" , JOptionPane.ERROR_MESSAGE);
     }
   } // End of: importAction()
@@ -1013,8 +1032,9 @@ public class JreepadViewer extends JFrame
     {
       fileChooser.setCurrentDirectory(getPrefs().exportLocation);
       fileChooser.setSelectedFile(new File(theJreepad.getCurrentNode().getTitle()));
-      if(fileChooser.showSaveDialog(theApp) == JFileChooser.APPROVE_OPTION)
+      if(fileChooser.showSaveDialog(theApp) == JFileChooser.APPROVE_OPTION && checkOverwrite(fileChooser.getSelectedFile()))
       {
+        setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
         getPrefs().exportLocation = fileChooser.getSelectedFile();
 
 		String output;
@@ -1033,6 +1053,7 @@ public class JreepadViewer extends JFrame
 			output = theJreepad.getCurrentNode().getContent();
 			break;
 		  default:
+            setCursor(Cursor.getDefaultCursor());
 			JOptionPane.showMessageDialog(theApp, "Unknown which format to export - coding error! Oops!", "Error" , JOptionPane.ERROR_MESSAGE);
 			return;
 		}
@@ -1042,10 +1063,12 @@ public class JreepadViewer extends JFrame
         dO.writeBytes(output);
         dO.close();
         fO.close();
+        setCursor(Cursor.getDefaultCursor());
       }
     }
     catch(IOException err)
     {
+      setCursor(Cursor.getDefaultCursor());
       JOptionPane.showMessageDialog(theApp, err, "File error during Export" , JOptionPane.ERROR_MESSAGE);
     }
   } // End of: exportAction()
@@ -1134,6 +1157,16 @@ public class JreepadViewer extends JFrame
     theJreepad.returnFocusToTree();
     warnAboutUnsaved = true;
     updateWindowTitle();
+  }
+
+  private boolean checkOverwrite(File theFile)
+  {
+    // If file doesn't already exist then fine
+    if(!theFile.isFile()) return true;
+    // Else we need to confirm
+    return (JOptionPane.showConfirmDialog(theApp, "The file "+theFile.getName()+" already exists.\nAre you sure you want to overwrite it?", 
+                "Overwrite file?", 
+                JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION); 
   }
 
 }
