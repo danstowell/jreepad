@@ -115,6 +115,7 @@ public class JreepadViewer extends JFrame
     private JMenuItem exportSimpleXmlMenuItem;
     private JMenuItem exportListMenuItem;
     private JMenuItem exportTextMenuItem;
+    private JMenuItem exportSubtreeTextMenuItem;
   private JMenuItem quitMenuItem;
   private JMenu editMenu;
   private JMenuItem undoMenuItem;
@@ -260,6 +261,9 @@ public class JreepadViewer extends JFrame
       exportTextMenuItem = new JMenuItem("...article to text file");
       exportTextMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {exportAction(FILE_FORMAT_TEXT);}});
       exportMenu.add(exportTextMenuItem);
+      exportSubtreeTextMenuItem = new JMenuItem("...subtree articles to text file");
+      exportSubtreeTextMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {exportAction(FILE_FORMAT_ARTICLESTOTEXT);}});
+      exportMenu.add(exportSubtreeTextMenuItem);
     fileMenu.add(new JSeparator());
     if(!MAC_OS_X)
     {
@@ -1248,6 +1252,7 @@ public class JreepadViewer extends JFrame
   private static final int FILE_FORMAT_XML=3;
   private static final int FILE_FORMAT_TEXT=4;
   private static final int FILE_FORMAT_TEXTASLIST=5;
+  private static final int FILE_FORMAT_ARTICLESTOTEXT=6;
   private void importAction(int importFormat)
   {
     boolean multipleFiles;
@@ -1324,6 +1329,12 @@ public class JreepadViewer extends JFrame
 		  case FILE_FORMAT_TEXTASLIST:
 			output = theJreepad.getCurrentNode().exportTitlesAsList();
 			break;
+		  case FILE_FORMAT_ARTICLESTOTEXT:
+            int answer = JOptionPane.showConfirmDialog(theApp, "Include articles' titles in output?", 
+	                   "Include titles?" , JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+		    boolean titlesToo = (answer == JOptionPane.YES_OPTION);
+			output = theJreepad.getCurrentNode().exportArticlesToText(titlesToo);
+			break;
 		  default:
             setCursor(Cursor.getDefaultCursor());
 			JOptionPane.showMessageDialog(theApp, "Unknown which format to export - coding error! Oops!", "Error" , JOptionPane.ERROR_MESSAGE);
@@ -1345,6 +1356,37 @@ public class JreepadViewer extends JFrame
     }
   } // End of: exportAction()
 
+  private void toBrowserForPrintAction()
+  {
+    try
+    {
+        setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+
+		String output = theJreepad.getCurrentNode().exportAsHtml();
+
+        File outFile = new File(System.getProperty("user.home"), "TMPjreepr.html");
+
+        FileOutputStream fO = new FileOutputStream(outFile);
+        DataOutputStream dO = new DataOutputStream(fO);
+        dO.writeBytes(output);
+        dO.close();
+        fO.close();
+        setCursor(Cursor.getDefaultCursor());
+        
+        // Now launch the file in a browser... the only question is... how?
+        
+        
+        // Also remember to tidy up the file - delete it if it exists
+        
+        
+    }
+    catch(IOException err)
+    {
+      setCursor(Cursor.getDefaultCursor());
+      JOptionPane.showMessageDialog(theApp, err, "File error during send-to-browser" , JOptionPane.ERROR_MESSAGE);
+    }
+  } // End of: toBrowserForPrintAction()
+
 
   public void quitAction()
   {
@@ -1359,6 +1401,11 @@ public class JreepadViewer extends JFrame
         if(!saveAction())
           return; // This cancels quit if the save action failed or was cancelled
     }
+
+    // Tidy up temporary file, if exists
+    File outFile = new File(System.getProperty("user.home"), "TMPjreepr.html");
+    if(outFile.isFile())
+      outFile.delete();
 
     // Save preferences
     getPrefs().windowLeft = getX();

@@ -33,6 +33,8 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
   private JreepadNode parentNode;
   private OurSortComparator ourSortComparator;
 
+  private String lineSeparator = System.getProperty("line.separator");
+
   public JreepadNode()
   {
     this((JreepadNode)null);
@@ -111,7 +113,7 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
       currentContent = new StringBuffer();
       while((currentLine = bReader.readLine())!=null && !currentLine.equals("<end node> 5P9i0s8y19Z"))
       {
-        currentContent.append(currentLine + "\r\n");
+        currentContent.append(currentLine + lineSeparator);
         lineNum++;
       }
 
@@ -151,9 +153,9 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
   public String toFullString()
   {
     String ret = "JreepadNode \""+getTitle()+"\": " + getChildCount() + " direct child nodes in subtree";
-    ret += "\r\nDirect children:";
+    ret += ""+lineSeparator+"Direct children:";
     for(int i=0; i<children.size(); i++)
-      ret += "\r\n    " + ((JreepadNode)getChildAt(i)).getTitle();
+      ret += ""+lineSeparator+"    " + ((JreepadNode)getChildAt(i)).getTitle();
     return ret;
   }
 
@@ -236,9 +238,27 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
     StringBuffer ret = new StringBuffer();
     for(int i=0; i<currentDepth; i++)
       ret.append(" ");
-    ret.append(getTitle() + "\r\n");
+    ret.append(getTitle() + lineSeparator);
     for(int i=0; i<children.size(); i++)
       ret.append(((JreepadNode)getChildAt(i)).exportTitlesAsList(currentDepth+1));
+
+    return ret;
+  }
+
+  public String exportArticlesToText(boolean titlesToo)
+  {
+//    System.out.println("Expooort beginning");
+    return exportArticlesToTextRecursive(titlesToo).toString();
+  }
+  public StringBuffer exportArticlesToTextRecursive(boolean titlesToo)
+  {
+//    System.out.println("Expooort " + getTitle());
+    StringBuffer ret = new StringBuffer();
+    if(titlesToo)
+      ret.append(getTitle() + ""+lineSeparator+""+lineSeparator+"");
+    ret.append(getContent() + ""+lineSeparator+""+lineSeparator+"");
+    for(int i=0; i<children.size(); i++)
+      ret.append(((JreepadNode)getChildAt(i)).exportArticlesToTextRecursive(titlesToo));
 
     return ret;
   }
@@ -258,12 +278,12 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
   }
   public String toTreepadString()
   {
-    return "<Treepad version 2.7>\r\n" + toTreepadString(0);
+    return "<Treepad version 2.7>"+lineSeparator+"" + toTreepadString(0);
   }
   public String toTreepadString(int currentDepth)
   {
-    StringBuffer ret = new StringBuffer("dt=Text\r\n<node>\r\n");
-    ret.append(getTitle() + "\r\n" + (currentDepth++) + "\r\n" + getContent() + "\r\n<end node> 5P9i0s8y19Z\r\n");
+    StringBuffer ret = new StringBuffer("dt=Text"+lineSeparator+"<node>"+lineSeparator+"");
+    ret.append(getTitle() + lineSeparator + (currentDepth++) + lineSeparator + getContent() + ""+lineSeparator+"<end node> 5P9i0s8y19Z"+lineSeparator+"");
     for(int i=0; i<getChildCount(); i++)
       ret.append(((JreepadNode)getChildAt(i)).toTreepadString(currentDepth));
     return ret.toString();

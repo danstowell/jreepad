@@ -82,6 +82,21 @@ public class JreepadPrefs implements Serializable
   
   int windowLeft, windowTop, windowWidth, windowHeight;
   
+  public static final int LINEBREAK_WIN=0;
+  public static final int LINEBREAK_MAC=1;
+  public static final int LINEBREAK_UNIX=2;
+  public int linebreakType = LINEBREAK_WIN;
+  public String linebreak()
+  {
+    switch(linebreakType)
+    {
+      case LINEBREAK_WIN: return "\r\n";
+      case LINEBREAK_MAC: return "\r";
+      case LINEBREAK_UNIX: return "\n";
+    }
+    return "\r\n";
+  }
+  
   JreepadPrefs(Dimension wndSize)
   {
     openLocation = new File(System.getProperty("user.home"));
@@ -186,6 +201,8 @@ public class JreepadPrefs implements Serializable
     out.writeInt(windowTop);
     out.writeInt(windowWidth);
     out.writeInt(windowHeight);
+
+    out.writeInt(linebreakType);
   }
   private void readObject(java.io.ObjectInputStream in)
      throws IOException, ClassNotFoundException
@@ -235,6 +252,8 @@ public class JreepadPrefs implements Serializable
     windowTop = in.readInt();
     windowWidth = in.readInt();
     windowHeight = in.readInt();
+
+    linebreakType = in.readInt();
    }
    catch(EOFException e)
    {
