@@ -102,31 +102,24 @@ public class JreepadView extends Box
   {   
       splitPane.setLeftComponent(treeView);    splitPane.setRightComponent(articleView);
       this.add(splitPane);
-      setSize(getSize()); repaint(); }
+      setSize(getSize()); 
+      editorPane.setSize(articleView.getViewport().getViewSize());
+      validate(); 
+      repaint();
+  }
   public void setViewTreeOnly()
   {   this.remove(splitPane);
       this.remove(articleView);
       this.add(treeView);
-      setSize(getSize());  treeView.setSize(getSize()); repaint(); }
+      setSize(getSize());  treeView.setSize(getSize());
+      validate(); repaint();
+  }
   public void setViewArticleOnly()
   {    this.remove(splitPane);
        this.remove(treeView);
        this.add(articleView); 
-       setSize(getSize());  articleView.setSize(getSize()); repaint();  }
-/*
-  public void setViewBoth()
-  {   remove(treeView); remove(articleView); 
-      add(treeView);    add(articleView); 
-      setSize(getSize()); repaint(); }
-  public void setViewTreeOnly()
-  {   remove(treeView);  remove(articleView); 
-      add(treeView);
-      setSize(getSize());  treeView.setSize(getSize()); repaint(); }
-  public void setViewArticleOnly()
-  {    remove(treeView); remove(articleView); 
-       add(articleView); 
-       setSize(getSize());  articleView.setSize(getSize()); repaint();  }
-*/
+       setSize(getSize());  articleView.setSize(getSize()); validate(); repaint();
+  }
   private void setCurrentNode(DefaultMutableTreeNode node)
   {
     setCurrentNode((JreepadNode)(node.getUserObject()));

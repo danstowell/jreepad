@@ -34,16 +34,16 @@ public class JreepadViewer extends JFrame
     
     // Add the toolbar buttons
     toolBar = Box.createHorizontalBox();
-    JButton newButton = new JButton("N");
+    JButton newButton = new JButton("New");
     toolBar.add(newButton);
-    JButton openButton = new JButton("O");
+    JButton openButton = new JButton("Open");
     toolBar.add(openButton);
-    JButton saveButton = new JButton("S");
+    JButton saveButton = new JButton("Save");
     toolBar.add(saveButton);
     //
-    JButton upButton = new JButton("U");
+    JButton upButton = new JButton("Up");
     toolBar.add(upButton);
-    JButton downButton = new JButton("D");
+    JButton downButton = new JButton("Down");
     toolBar.add(downButton);
     //
     JButton viewBothButton = new JButton("T+A");
@@ -57,50 +57,9 @@ public class JreepadViewer extends JFrame
     newButton.addActionListener(new ActionListener(){
                                public void actionPerformed(ActionEvent e){ content.remove(theJreepad); theJreepad = new JreepadView(); content.add(theJreepad); } });
     openButton.addActionListener(new ActionListener(){
-                               public void actionPerformed(ActionEvent e){
-                               
-                               try
-                               {
-                                 fileChooser.setCurrentDirectory(openLocation);
-                                 if(fileChooser.showOpenDialog(theApp) == JFileChooser.APPROVE_OPTION)
-                                 {
-                                   openLocation = fileChooser.getSelectedFile();
-                                   content.remove(theJreepad);
-                                   theJreepad = new JreepadView(new JreepadNode(new FileInputStream(openLocation)));
-                                   content.add(theJreepad);
-                                 }
-                               }
-                               catch(IOException err)
-                               {
-                                 JOptionPane.showMessageDialog(theApp, err, "File input error" , JOptionPane.ERROR_MESSAGE);
-                               }
-                               
-                               
-                               } });
+                               public void actionPerformed(ActionEvent e){ openAction(); } });
     saveButton.addActionListener(new ActionListener(){
-                               public void actionPerformed(ActionEvent e){
-                               
-                               try
-                               {
-                                 fileChooser.setCurrentDirectory(saveLocation);
-                                 if(fileChooser.showSaveDialog(theApp) == JFileChooser.APPROVE_OPTION)
-                                 {
-                                   saveLocation = fileChooser.getSelectedFile();
-                                   String writeMe = theJreepad.getRootJreepadNode().toTreepadString();
-                                   FileOutputStream fO = new FileOutputStream(saveLocation);
-                                   DataOutputStream dO = new DataOutputStream(fO);
-                                   dO.writeBytes(writeMe);
-                                   dO.close();
-                                   fO.close();
-                                 }
-                               }
-                               catch(IOException err)
-                               {
-                                 JOptionPane.showMessageDialog(theApp, err, "File input error" , JOptionPane.ERROR_MESSAGE);
-                               }
-                               
-                               
-                               } });
+                               public void actionPerformed(ActionEvent e){ saveAction(); } });
     upButton.addActionListener(new ActionListener(){
                                public void actionPerformed(ActionEvent e){ theJreepad.moveCurrentNodeUp();} });
     downButton.addActionListener(new ActionListener(){
@@ -130,4 +89,47 @@ public class JreepadViewer extends JFrame
   {
     theApp = new JreepadViewer();
   }
+  
+  private void openAction()
+  {
+    try
+    {
+      fileChooser.setCurrentDirectory(openLocation);
+      if(fileChooser.showOpenDialog(theApp) == JFileChooser.APPROVE_OPTION)
+      {
+        openLocation = fileChooser.getSelectedFile();
+        content.remove(theJreepad);
+        theJreepad = new JreepadView(new JreepadNode(new FileInputStream(openLocation)));
+        content.add(theJreepad);
+        validate();
+        repaint();
+      }
+    }
+    catch(IOException err)
+    {
+      JOptionPane.showMessageDialog(theApp, err, "File input error" , JOptionPane.ERROR_MESSAGE);
+    }
+  } // End of: openAction()
+  
+  private void saveAction()
+  {
+    try
+    {
+      fileChooser.setCurrentDirectory(saveLocation);
+      if(fileChooser.showSaveDialog(theApp) == JFileChooser.APPROVE_OPTION)
+      {
+        saveLocation = fileChooser.getSelectedFile();
+        String writeMe = theJreepad.getRootJreepadNode().toTreepadString();
+        FileOutputStream fO = new FileOutputStream(saveLocation);
+        DataOutputStream dO = new DataOutputStream(fO);
+        dO.writeBytes(writeMe);
+        dO.close();
+        fO.close();
+      }
+    }
+    catch(IOException err)
+    {
+      JOptionPane.showMessageDialog(theApp, err, "File input error" , JOptionPane.ERROR_MESSAGE);
+    }
+  } // End of: saveAction()
 }
