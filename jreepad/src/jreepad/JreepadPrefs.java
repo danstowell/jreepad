@@ -103,6 +103,8 @@ public class JreepadPrefs implements Serializable
   boolean htmlExportUrlsToLinks;
   int htmlExportAnchorLinkType;
   
+  int dividerLocation;
+  
   JreepadPrefs(Dimension wndSize)
   {
     openLocation = new File(System.getProperty("user.home"));
@@ -162,6 +164,8 @@ public class JreepadPrefs implements Serializable
     htmlExportArticleType = 0;
     htmlExportUrlsToLinks = true;
     htmlExportAnchorLinkType = 1;
+    
+    dividerLocation = -1;
   }
   
   // We override the serialization routines so that different versions of our class can read 
@@ -220,6 +224,8 @@ public class JreepadPrefs implements Serializable
     out.writeInt(htmlExportArticleType);
     out.writeBoolean(htmlExportUrlsToLinks);
     out.writeInt(htmlExportAnchorLinkType);
+    
+    out.writeInt(dividerLocation);
   }
   private void readObject(java.io.ObjectInputStream in)
      throws IOException, ClassNotFoundException
@@ -277,6 +283,8 @@ public class JreepadPrefs implements Serializable
     htmlExportArticleType = in.readInt();
     htmlExportUrlsToLinks = in.readBoolean();
     htmlExportAnchorLinkType = in.readInt();
+    
+    dividerLocation = in.readInt();
    }
    catch(IOException e)
    {

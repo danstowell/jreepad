@@ -111,6 +111,20 @@ public class JreepadView extends Box
     treeView = new JScrollPane();
     splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
     splitPane.setResizeWeight(0.5);
+    if(getPrefs().dividerLocation > 0)
+    {
+      splitPane.setDividerLocation(getPrefs().dividerLocation);
+    }
+    splitPane.addPropertyChangeListener("lastDividerLocation", new java.beans.PropertyChangeListener()
+					 {
+					   public void propertyChange(java.beans.PropertyChangeEvent evt)
+					   {
+						 // System.out.println(evt.getPropertyName());
+						 getPrefs().dividerLocation = splitPane.getDividerLocation();
+						 // System.out.println("New divider location = " + getPrefs().dividerLocation);
+					   }
+					 }
+					 );
 
     this.root = root;
 

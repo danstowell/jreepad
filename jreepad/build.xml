@@ -1,0 +1,47 @@
+<?xml version="1.0"?>
+<project default="dist" name="Project Jreepad">
+	<description>
+		Java treepad - personal information manager
+	</description>
+	<property name="srcDir" location="src" />
+	<property name="imgDir" location="images" />
+	<property name="buildDir" location="build" />
+	<property name="imgTargetDir" location="${buildDir}/images" />
+	<property name="distDir" location="dist" />
+	<property name="mainClass" location="jreepad.JreepadViewer" />
+	<property name="timeStamp" location="${DSTAMP}" />
+	<property name="packageName" location="jreepad" />
+	<target name="init">
+		<tstamp />
+		<mkdir dir="${buildDir}" />
+		<mkdir dir="${distDir}" />
+	</target>
+	<target name="compile" depends="init">
+		<javac srcdir="${srcDir}" destdir="${buildDir}" />
+	</target>
+	<target name="dist" depends="compile">
+		<copy todir="${imgTargetDir}">
+			<fileset dir="${imgDir}" />
+		</copy>
+		<jar destfile="${distDir}/jreepad-${DSTAMP}.jar" basedir="${buildDir}">
+			<manifest>
+				<attribute name="Built-By" value="${user.name}" />
+				<attribute name="Main-Class" value="jreepad.JreepadViewer" />
+			</manifest>
+		</jar>
+		<jar destfile="${distDir}/jreepad-src-${DSTAMP}.jar" basedir="${srcDir}" />
+	</target>
+	<target name="clean">
+		<delete dir="${buildDir}" />
+		<delete dir="${distDir}" />
+	</target>
+	<target name="runjreepad" depends="dist">
+		<java fork="yes" jar="${distDir}/jreepad-${DSTAMP}.jar" failonerror="true">
+			<classpath>
+				<pathelement location="${distDir}/jreepad-${DSTAMP}.jar" />
+				<pathelement path="" />
+				<pathelement path="${java.class.path}" />
+			</classpath>
+		</java>
+	</target>
+</project>
