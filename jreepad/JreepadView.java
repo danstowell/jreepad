@@ -58,6 +58,8 @@ public class JreepadView extends Box
     tree = new JTree(treeModel);
     tree.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
     tree.setEditable(true);
+    
+    tree.setModel(treeModel);
 
     DefaultTreeCellRenderer renderer = new DefaultTreeCellRenderer();
     renderer.setOpenIcon(null);
@@ -162,26 +164,21 @@ public class JreepadView extends Box
   
   public JreepadNode addNode()
   {
-    return currentNode.addChild();
+    JreepadNode ret = currentNode.addChild();
+    treeModel.nodesWereInserted(currentNode, new int[]{currentNode.getIndex(ret)});
+    return ret;
   }
-/*
-  public JreepadNode addObject(JreepadNode parent, Object child, boolean shouldBeVisible)
-  {
-    DefaultMutableTreeNode childNode = new DefaultMutableTreeNode(child);
-    treeModel.insertNodeInto(childNode, parent, parent.getChildCount());
-    // Make sure the user can view the lovely new node
-    if(shouldBeVisible)
-      tree.scrollPathToVisible(new TreePath(childNode.getPath()));
-    return childNode;
-  }
-*/
   public JreepadNode removeNode()
   {
     JreepadNode parent = (JreepadNode)currentNode.getParent();
     if(parent != null)
     {
-      JreepadNode ret = parent.removeChild(parent.getIndex(currentNode));
+      int index = parent.getIndex(currentNode);
+      JreepadNode ret = parent.removeChild(index);
       currentNode = parent;
+
+      treeModel.nodesWereRemoved(parent, new int[]{index}, new Object[]{ret});
+
       repaint();
       return ret;
     }
@@ -206,10 +203,35 @@ DEPRECATED - HOPEFULLY! Should simply use JreepadNodes instead of mirroring them
 
   class JreepadTreeModelListener implements TreeModelListener
   {
-    public void treeNodesChanged(TreeModelEvent e)     { tree.repaint(); }
-    public void treeNodesInserted(TreeModelEvent e)    { tree.repaint(); }
-    public void treeNodesRemoved(TreeModelEvent e)     { tree.repaint(); }
-    public void treeStructureChanged(TreeModelEvent e) { tree.repaint(); }
+    public void treeNodesChanged(TreeModelEvent e)
+    {
+      Object[] parentPath = e.getPath(); // Parent of the changed node(s)
+      int[] children = e.getChildIndices(); // Indices of the changed node(s)
+      JreepadNode parent = (JreepadNode)(parentPath[parentPath.length-1]);
+      tree.repaint();
+    }
+    public void treeNodesInserted(TreeModelEvent e)
+    {
+      Object[] parentPath = e.getPath(); // Parent of the new node(s)
+      int[] children = e.getChildIndices(); // Indices of the new node(s)
+      JreepadNode parent = (JreepadNode)(parentPath[parentPath.length-1]);
+      tree.expandPath(e.getTreePath());
+      tree.scrollPathToVisible(e.getTreePath());
+      tree.repaint();
+    }
+    public void treeNodesRemoved(TreeModelEvent e)
+    {
+      Object[] parentPath = e.getPath(); // Parent of the removed node(s)
+      int[] children = e.getChildIndices(); // Indices the node(s) had before they were removed
+      JreepadNode parent = (JreepadNode)(parentPath[parentPath.length-1]);
+      tree.repaint();
+    }
+    public void treeStructureChanged(TreeModelEvent e)
+    {
+      Object[] parentPath = e.getPath(); // Parent of the changed node(s)
+      JreepadNode parent = (JreepadNode)(parentPath[parentPath.length-1]);
+      tree.repaint();
+    }
   } // End of: class JreepadTreeModelListener
 
 }

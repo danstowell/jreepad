@@ -18,7 +18,7 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode
   }
   public JreepadNode(JreepadNode parentNode)
   {
-    this("Untitled node","", parentNode);
+    this("<Untitled node>","", parentNode);
   }
   public JreepadNode(String title, String content, JreepadNode parentNode)
   {
@@ -222,7 +222,6 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode
   {
     JreepadNode theChild = new JreepadNode(this);
     children.add(theChild);
-    System.out.println("I have added a child. Size of children=" + getChildCount());
     return theChild;
   }
   

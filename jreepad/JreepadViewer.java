@@ -70,9 +70,9 @@ public class JreepadViewer extends JFrame
     downButton.addActionListener(new ActionListener(){
                                public void actionPerformed(ActionEvent e){ theJreepad.moveCurrentNodeDown(); repaint(); } });
     addButton.addActionListener(new ActionListener(){
-                               public void actionPerformed(ActionEvent e){ theJreepad.addNode();} });
+                               public void actionPerformed(ActionEvent e){ theJreepad.addNode(); repaint();} });
     removeButton.addActionListener(new ActionListener(){
-                               public void actionPerformed(ActionEvent e){ theJreepad.removeNode();} });
+                               public void actionPerformed(ActionEvent e){ theJreepad.removeNode(); repaint(); } });
 
     viewBothButton.addActionListener(new ActionListener(){
                                public void actionPerformed(ActionEvent e){ theJreepad.setViewBoth();} });
