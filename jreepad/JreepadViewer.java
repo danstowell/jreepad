@@ -2,6 +2,7 @@ package jreepad;
 
 import javax.swing.*;
 import javax.swing.event.*;
+import javax.swing.table.*;
 import javax.swing.text.*;
 import javax.swing.text.html.*;
 import java.awt.*;
@@ -21,6 +22,19 @@ public class JreepadViewer extends JFrame
   
   private JComboBox viewSelector;
   
+  private JDialog searchDialog;
+  private JTextField nodeSearchField;
+  private JTextField articleSearchField;
+  private JComboBox searchCombinatorSelector;
+  private JCheckBox searchCaseCheckBox;
+  private JComboBox searchWhereSelector;
+  private JButton searchGoButton;
+  private JButton searchCloseButton;
+  private JLabel searchResultsLabel;
+  private JTable searchResultsTable;
+  private JScrollPane searchResultsTableScrollPane;
+  private AbstractTableModel searchResultsTableModel;
+  
   private JMenuBar menuBar;
   private JMenu fileMenu;
   private JMenuItem newMenuItem;
@@ -39,6 +53,8 @@ public class JreepadViewer extends JFrame
   private JMenuItem outdentMenuItem;
   private JMenuItem sortMenuItem;
   private JMenuItem sortRecursiveMenuItem;
+  private JMenu searchMenu;
+  private JMenuItem searchMenuItem;
   private JMenu viewMenu;
   private JMenuItem viewBothMenuItem;
   private JMenuItem viewTreeMenuItem;
@@ -71,6 +87,7 @@ public class JreepadViewer extends JFrame
     //
     fileMenu = new JMenu("File");
     editMenu = new JMenu("Edit");
+    searchMenu = new JMenu("Search");
     viewMenu = new JMenu("View");
     helpMenu = new JMenu("Help");
     //
@@ -125,6 +142,10 @@ public class JreepadViewer extends JFrame
     sortRecursiveMenuItem = new JMenuItem("Sort children (all levels)");
     sortRecursiveMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { theJreepad.sortChildrenRecursive(); }});
     editMenu.add(sortRecursiveMenuItem);
+    //
+    searchMenuItem = new JMenuItem("Search");
+    searchMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { openSearchDialog(); }});
+    searchMenu.add(searchMenuItem);
     //
     viewBothMenuItem = new JMenuItem("Both tree and article");
     viewBothMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { theJreepad.setViewBoth(); }});
@@ -195,8 +216,10 @@ public class JreepadViewer extends JFrame
               
               JOptionPane.showMessageDialog(theApp, 
 //				aboutPane,
-              "Jreepad is an open-source Java clone of \n" +
-              "a Windows program called \"Treepad Lite\", \n" +
+              "Jreepad is an open-source Java program\n" +
+              "designed to provide the functionality\n" +
+              "(including file interoperability) of\n" +
+              "a Windows program called \"Treepad Lite\"\n" +
               "part of the \"Treepad\" suite of software \n" +
               "written by Henk Hagedoorn.\n" +
               "\n" +
@@ -213,6 +236,7 @@ public class JreepadViewer extends JFrame
     //
     menuBar.add(fileMenu);
     menuBar.add(editMenu);
+    menuBar.add(searchMenu);
     menuBar.add(viewMenu);
     menuBar.add(helpMenu);
     setJMenuBar(menuBar);
@@ -233,6 +257,8 @@ public class JreepadViewer extends JFrame
     indentMenuItem.setMnemonic('i');
     outdentMenuItem.setMnemonic('o');
     deleteMenuItem.setMnemonic('k');
+    searchMenu.setMnemonic('S');
+    searchMenuItem.setMnemonic('s');
     viewMenu.setMnemonic('V');
     viewBothMenuItem.setMnemonic('b');
     viewTreeMenuItem.setMnemonic('t');
@@ -332,6 +358,129 @@ public class JreepadViewer extends JFrame
     removeButton.addActionListener(new ActionListener(){
                                public void actionPerformed(ActionEvent e){ theJreepad.removeNode(); repaint(); theJreepad.returnFocusToTree(); } });
 
+    // Establish the search dialogue box - so that it can be called whenever wanted
+    searchDialog = new JDialog(theApp, "Search Jreepad", false);
+    searchDialog.setVisible(false);
+    Box vBox = Box.createVerticalBox();
+    //
+    Box hBox = Box.createHorizontalBox();
+    nodeSearchField = new JTextField("");
+    vBox.add(new JLabel("Search in node titles for: "));
+    hBox.add(nodeSearchField);
+    vBox.add(hBox);
+    //
+    hBox = Box.createHorizontalBox();
+    articleSearchField = new JTextField("");
+    vBox.add(new JLabel("Search in article text for: "));
+    hBox.add(articleSearchField);
+    vBox.add(hBox);
+    //
+    searchCombinatorSelector = new JComboBox(new String[]{"\"OR\" (Either one must be found)", "\"AND\" (Both must be found)"});
+    searchCombinatorSelector.setEditable(false);
+    hBox = Box.createHorizontalBox();
+    hBox.add(new JLabel("Combine searches using: "));
+    hBox.add(searchCombinatorSelector);
+    vBox.add(hBox);
+    //
+    vBox.add(searchCaseCheckBox = new JCheckBox("Case sensitive search", false));
+    //
+    searchWhereSelector = new JComboBox(new String[]{"Selected node and its children", "Entire tree"});
+    searchWhereSelector.setEditable(false);
+    hBox = Box.createHorizontalBox();
+    hBox.add(new JLabel("Search where: "));
+    hBox.add(searchWhereSelector);
+    vBox.add(hBox);
+    //
+    hBox = Box.createHorizontalBox();
+    hBox.add(searchGoButton = new JButton("Search"));
+    searchGoButton.addActionListener(new ActionListener(){
+                               public void actionPerformed(ActionEvent e)
+                               {
+                                 performSearch(nodeSearchField.getText(), articleSearchField.getText(), 
+                                 searchWhereSelector.getSelectedIndex(), searchCombinatorSelector.getSelectedIndex()==0,
+                                 searchCaseCheckBox.isSelected());
+                               } });
+    hBox.add(searchCloseButton = new JButton("Close"));
+    searchCloseButton.addActionListener(new ActionListener(){
+                               public void actionPerformed(ActionEvent e){ searchDialog.hide(); } });
+    vBox.add(hBox);
+    //
+    // NOW FOR THE SEARCH RESULTS TABLE - COULD BE TRICKY!
+    searchResultsTableModel = new AbstractTableModel()
+    {
+      private final String[] columns = new String[]{"Node","Article text","Full path"};
+      public int getColumnCount() { return columns.length; }
+      public String getColumnName(int index)
+      {
+        return columns[index];
+      }
+      public int getRowCount()
+      {
+        JreepadView.JreepadSearchResult[] results = theJreepad.getSearchResults();
+        if(results==null || results.length==0)
+          return 1;
+        else
+          return results.length;
+      }
+      public Object getValueAt(int row, int col)
+      {
+        JreepadView.JreepadSearchResult[] results = theJreepad.getSearchResults();
+        if(results==null || results.length==0)
+          switch(col)
+          {
+            case 2:
+              return "";
+            case 1:
+              return "Results will appear here...";
+            default:
+              return "";
+          }
+        else
+          switch(col)
+          {
+            case 2:
+              return results[row].getTreePath();
+            case 1:
+              return results[row].getArticleQuote();
+            default:
+              return results[row].getNode().getTitle();
+          }
+      } 
+    };
+    searchResultsTable = new JTable(searchResultsTableModel);
+    searchResultsTable.setCellSelectionEnabled(false);
+    searchResultsTable.setColumnSelectionAllowed(false);
+    searchResultsTable.setRowSelectionAllowed(true);
+    searchResultsTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+    searchResultsTableScrollPane = new JScrollPane(searchResultsTable);
+    vBox.add(searchResultsLabel = new JLabel("Search results:"));
+    vBox.add(searchResultsTableScrollPane);
+    //
+    // Add mouse listener
+    MouseListener sml = new MouseAdapter()
+    {
+      public void mouseClicked(MouseEvent e)
+      {
+        JreepadView.JreepadSearchResult[] results = theJreepad.getSearchResults();
+        int selectedRow = searchResultsTable.getSelectedRow();
+        if(results==null || results.length==0 || selectedRow==-1)
+          return;
+        
+        if(e.getClickCount()>1)
+        {
+          // Select the node in the tree, and move focus to the tree
+          theJreepad.getTree().setSelectionPath(results[selectedRow].getTreePath());
+          theJreepad.getTree().scrollPathToVisible(results[selectedRow].getTreePath());
+          theApp.toFront();
+          theJreepad.returnFocusToTree();
+        }
+      }
+    };
+    searchResultsTable.addMouseListener(sml); 
+    //
+    searchDialog.getContentPane().add(vBox);
+    // Finished establishing the search dialogue box
+
     
     content.setLayout(new BoxLayout(content, BoxLayout.Y_AXIS));
     content.add(toolBar);
@@ -364,8 +513,10 @@ public class JreepadViewer extends JFrame
     setTitleBasedOnFilename("");
     Toolkit theToolkit = getToolkit();
     Dimension wndSize = theToolkit.getScreenSize();
-    setBounds((int)(wndSize.width*0.2f),(int)(wndSize.width*0.2f),
+    setBounds((int)(wndSize.width*0.2f),(int)(wndSize.height*0.2f),
               (int)(wndSize.width*0.6f),(int)(wndSize.height*0.6f));
+    searchDialog.setBounds((int)(wndSize.width*0.3f),(int)(wndSize.height*0.1f),
+              (int)(wndSize.width*0.4f),(int)(wndSize.height*0.5f));
     setVisible(true);
   }
   
@@ -445,6 +596,28 @@ public class JreepadViewer extends JFrame
       JOptionPane.showMessageDialog(theApp, err, "File error during Save As" , JOptionPane.ERROR_MESSAGE);
     }
   } // End of: saveAction()
+
+  private void openSearchDialog()
+  {
+//    searchDialog.setVisible(true);
+    searchDialog.show();
+  } // End of: openSearchDialog()
+  
+  private boolean performSearch(String inNodes, String inArticles, int searchWhat /* 0=selected, 1=all */, 
+                                boolean orNotAnd, boolean caseSensitive)
+  {
+    boolean ret = theJreepad.performSearch(inNodes, inArticles, searchWhat, orNotAnd, caseSensitive);
+    if(!ret)
+    {
+      JOptionPane.showMessageDialog(searchDialog, "Found nothing.", "Search result..." , JOptionPane.INFORMATION_MESSAGE);
+      searchResultsLabel.setText("Search results: ");
+    }
+    else
+      searchResultsLabel.setText("Search results: " + theJreepad.getSearchResults().length + " nodes matched");
+    searchResultsTableModel.fireTableStructureChanged();
+//    searchResultsTable.repaint();
+    return ret;
+  }
 
   private void setTitleBasedOnFilename(String filename)
   {

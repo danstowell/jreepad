@@ -4,6 +4,8 @@ import javax.swing.*;
 import javax.swing.tree.*;
 import javax.swing.event.*;
 import java.awt.event.*;
+import java.util.Enumeration;
+import java.util.Vector;
 
 /*
 
@@ -194,6 +196,10 @@ public class JreepadView extends Box
     editorPane.setText(n.getContent());
   }
 
+  public JTree getTree()
+  {
+    return tree;
+  }
   public JreepadNode getRootJreepadNode()
   {
     setCurrentNode(getCurrentNode()); // Ensures any edits have been committed
@@ -210,14 +216,38 @@ public class JreepadView extends Box
     // - otherwise things would go really wonky!
     if(node.isNodeInSubtree(newParent))
     {
-//      System.out.println("New parent is in subtree - therefore moving not possible!");
       return;
     }
     JreepadNode oldParent = node.getParentNode();
+
+    // Now make a note of the expanded/collapsed state of the subtree of the moving node
+    boolean thisOnesExpanded = tree.isExpanded(tree.getSelectionPath());
+    Enumeration enum;
+    Vector expanded;
+    if(thisOnesExpanded)
+    {
+      enum = tree.getExpandedDescendants(tree.getSelectionPath());
+      expanded = new Vector();
+      while(enum.hasMoreElements())
+      {
+        expanded.add((TreePath)enum.nextElement());
+        System.out.println(expanded.lastElement());
+      }
+    }
+
     node.removeFromParent();
     newParent.addChild(node);
-//    treeModel.reload(oldParent);
-    treeModel.reload((TreeNode)tree.getPathForRow(0).getLastPathComponent());
+
+    treeModel.reload(oldParent);
+    treeModel.reload(newParent);
+  //  treeModel.reload((TreeNode)tree.getPathForRow(0).getLastPathComponent());
+    
+    // If the destination node didn't previously have any children, then we'll expand it
+ //   if(newParent.getChildCount()==1)
+      
+    
+    // Reapply the expanded/collapsed states
+    
   }
 
   public void indentCurrentNode()
@@ -339,7 +369,131 @@ public class JreepadView extends Box
   {
     tree.requestFocus();
   }
-  
+
+  // Functions and inner class for searching nodes
+  private JreepadSearchResult[] searchResults;
+  private Vector searchResultsVec;
+  private Object foundObject;
+  public boolean performSearch(String inNodes, String inArticles, int searchWhat /* 0=selected, 1=all */,
+  							boolean orNotAnd, boolean caseSensitive)
+  {
+    searchResults = null;
+    searchResultsVec = new Vector();
+    
+    // Now look through the nodes, adding things to searchResultsVec if found.
+    switch(searchWhat)
+    {
+      case 0: // search selected node
+        recursiveSearchNode(inNodes, inArticles, currentNode, tree.getSelectionPath(), orNotAnd, caseSensitive);
+        break;
+      default: // case 1==search whole tree
+        recursiveSearchNode(inNodes, inArticles, root, new TreePath(root), orNotAnd, caseSensitive);
+        break;
+    }
+
+    if(searchResultsVec.size()>0)
+    {
+      searchResults = new JreepadSearchResult[searchResultsVec.size()];
+      for(int i=0; i<searchResults.length; i++)
+      {
+        foundObject = searchResultsVec.get(i);
+        searchResults[i] = (JreepadSearchResult)foundObject;
+      }
+      return true;
+    }
+    return false;
+  }
+  private static final int articleQuoteMaxLen = 40;
+  private void recursiveSearchNode(String inNodes, String inArticles, JreepadNode thisNode, TreePath pathSoFar,
+  					boolean orNotAnd, boolean caseSensitive)
+  {
+    String quoteText;
+    
+    // These things ensure case-sensitivity behaves
+    String casedInNodes = caseSensitive    ? inNodes               : inNodes.toUpperCase();
+    String casedInArticles = caseSensitive ? inArticles            : inArticles.toUpperCase();
+    String casedNode = caseSensitive       ? thisNode.getTitle()   : thisNode.getTitle().toUpperCase();
+    String casedArticle = caseSensitive    ? thisNode.getContent() : thisNode.getContent().toUpperCase();
+    
+    // Look in current node. If it matches criteria, add "pathSoFar" to the Vector
+    boolean itMatches;
+    boolean nodeMatches    = inNodes.equals("")    || casedNode.indexOf(casedInNodes)!=-1;
+    boolean articleMatches = inArticles.equals("") || casedArticle.indexOf(casedInArticles)!=-1;
+
+
+    if(inNodes.equals("") && inArticles.equals(""))
+      itMatches = false;
+    else if(inNodes.equals("")) // Only looking in articles
+      itMatches = articleMatches;
+    else if(inArticles.equals("")) // Only looking in nodes
+      itMatches = nodeMatches;
+    else // Looking in both
+      if(orNotAnd) // Use OR combinator
+        itMatches = nodeMatches || articleMatches;
+      else // Use AND combinator
+        itMatches = nodeMatches && articleMatches;
+
+
+    if(itMatches)
+    {
+      if(!articleMatches)
+      {
+        if(thisNode.getContent().length()>articleQuoteMaxLen)
+          quoteText = thisNode.getContent().substring(0,articleQuoteMaxLen) + "...";
+        else
+          quoteText = thisNode.getContent();
+      }
+      else
+      {
+        quoteText = "";
+        int start = casedArticle.indexOf(casedInArticles);
+        String substring;
+        if(start>0)
+          quoteText += "...";
+        else
+          start = 0;
+        substring = thisNode.getContent();
+        if(substring.length() > articleQuoteMaxLen)
+          quoteText += substring.substring(0,articleQuoteMaxLen) + "...";
+        else
+          quoteText += thisNode.getContent().substring(start);
+      }
+      searchResultsVec.add(new JreepadSearchResult(pathSoFar, quoteText, thisNode));
+//      System.out.println("Positive match: "+thisNode);
+    }
+    
+    // Whether or not it matches, make the recursive call on the children
+    Enumeration getKids = thisNode.children();
+    JreepadNode thisKid;
+    while(getKids.hasMoreElements())
+    {
+      thisKid = (JreepadNode)getKids.nextElement();
+      recursiveSearchNode(inNodes, inArticles, thisKid, pathSoFar.pathByAddingChild(thisKid), 
+                          orNotAnd, caseSensitive);
+    }
+  }
+  public JreepadSearchResult[] getSearchResults()
+  {
+    return searchResults;
+  }
+  public class JreepadSearchResult
+  {
+    private TreePath treePath;
+    private String articleQuote;
+    private JreepadNode node;
+    public JreepadSearchResult(TreePath treePath, String articleQuote, JreepadNode node)
+    {
+      this.treePath = treePath;
+      this.articleQuote = articleQuote;
+      this.node = node;
+    }
+    public String getArticleQuote()	{ return articleQuote;	}
+    public TreePath getTreePath()	{ return treePath;		}
+    public JreepadNode getNode()	{ return node;		}
+  }
+  // End of: functions and inner class for searching nodes
+
+
   class JreepadTreeModelListener implements TreeModelListener
   {
     public void treeNodesChanged(TreeModelEvent e)
