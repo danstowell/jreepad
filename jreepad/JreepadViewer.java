@@ -55,7 +55,7 @@ public class JreepadViewer extends JFrame
     
     // Add the actions to the toolbar buttons
     newButton.addActionListener(new ActionListener(){
-                               public void actionPerformed(ActionEvent e){ content.remove(theJreepad); theJreepad = new JreepadView(); content.add(theJreepad); } });
+                               public void actionPerformed(ActionEvent e){ content.remove(theJreepad); theJreepad = new JreepadView(); content.add(theJreepad); repaint(); } });
     openButton.addActionListener(new ActionListener(){
                                public void actionPerformed(ActionEvent e){ openAction(); } });
     saveButton.addActionListener(new ActionListener(){

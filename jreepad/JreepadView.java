@@ -62,6 +62,12 @@ public class JreepadView extends Box
     tree.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
     tree.setEditable(true);
 
+    DefaultTreeCellRenderer renderer = new DefaultTreeCellRenderer();
+    renderer.setOpenIcon(null);
+    renderer.setClosedIcon(null);
+    renderer.setLeafIcon(null);
+    tree.setCellRenderer(renderer);
+
     //Listen for when the selection changes.
     tree.addTreeSelectionListener(new TreeSelectionListener()
                    {
