@@ -1115,6 +1115,13 @@ public class JreepadViewer extends JFrame
   
   public static void main(String[] args)
   {
+    try
+    {
+      UIManager.setLookAndFeel(
+      UIManager.getSystemLookAndFeelClassName());
+    } catch (Exception e)
+    {}
+
     if(args.length==0)
       /* theApp = */ new JreepadViewer();
     else if(args.length==1)
@@ -1472,6 +1479,15 @@ public class JreepadViewer extends JFrame
   public void quitAction()
   {
     // We need to check about warning-if-unsaved!
+
+    // FIXME: For multiple-Jreepad interface, we would need to use:
+    //  for(int i=0; i<theApps.length(); i++)
+    //  {
+    //    currApp = getApp(i);
+    //    if(currApp.warnAboutUnsaved())
+    //    {
+    //      
+
     if(warnAboutUnsaved())
     {
 	  int answer = JOptionPane.showConfirmDialog(theApp, "Save current file before quitting?", 
@@ -1836,7 +1852,7 @@ public class JreepadViewer extends JFrame
   } 
 
 
-  // Replacement for the "JSpinner" which is not available in Java 1.3
+  // Replacement for the "JSpinner" which is not available in Java 1.3 or 1.2
   class DSpinner extends Box
   {
     private int min, max, val;
