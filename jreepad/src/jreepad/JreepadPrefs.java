@@ -61,6 +61,8 @@ public class JreepadPrefs implements Serializable
   
   int defaultSearchMode;
   
+  boolean wikiBehaviourActive;
+  
   JreepadPrefs()
   {
     openLocation = new File(System.getProperty("user.home"));
@@ -83,6 +85,8 @@ public class JreepadPrefs implements Serializable
     webSearchPostfix = "&hl=en";
     
     defaultSearchMode = 0;
+    
+    wikiBehaviourActive = true;
   }
   
   // We override the serialization routines so that different versions of our class can read 
@@ -114,6 +118,8 @@ public class JreepadPrefs implements Serializable
     out.writeObject(webSearchPostfix);
 
     out.writeInt(defaultSearchMode);
+    
+    out.writeBoolean(wikiBehaviourActive);
   }
   private void readObject(java.io.ObjectInputStream in)
      throws IOException, ClassNotFoundException
@@ -142,5 +148,7 @@ public class JreepadPrefs implements Serializable
     webSearchPostfix = (String)in.readObject();
 
     defaultSearchMode = in.readInt();
+    
+    wikiBehaviourActive = in.readBoolean();
   } 
 }

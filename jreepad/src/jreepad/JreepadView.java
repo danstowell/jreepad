@@ -751,7 +751,7 @@ public class JreepadView extends Box
         // Select the character before/after the current position, and grow it until we hit whitespace...
         while(startpos>0 && !Character.isWhitespace(editorPane.getText(startpos-1,1).charAt(0)))
           startpos--;
-        while(endpos<(text.length()-1) && !Character.isWhitespace(editorPane.getText(endpos,1).charAt(0)))
+        while(endpos<(text.length()) && !Character.isWhitespace(editorPane.getText(endpos,1).charAt(0)))
           endpos++;
         if(endpos>startpos)
         {
@@ -791,7 +791,7 @@ System.out.println(err);
         // Select the character before/after the current position, and grow it until we hit whitespace...
         while(startpos>0 && !Character.isWhitespace(editorPane.getText(startpos-1,1).charAt(0)))
           startpos--;
-        while(endpos<(text.length()-1) && !Character.isWhitespace(editorPane.getText(endpos,1).charAt(0)))
+        while(endpos<(text.length()) && !Character.isWhitespace(editorPane.getText(endpos,1).charAt(0)))
           endpos++;
         if(endpos>startpos)
         {
@@ -815,6 +815,31 @@ System.out.println(err);
         return false;
     return true;
   }
+  public static boolean isWikiWord(String in)
+  {
+    if(in.length()>4 && in.startsWith("[[") && in.endsWith("]]"))
+      return true;
+
+    char[] c = in.toCharArray();
+    int uppers = 0;
+    boolean currentlyUpper = false;
+    for(int i=0; i<c.length; i++)
+      if(!Character.isLetter(c[i]))
+        return false;
+      else if(i==0 && !Character.isUpperCase(c[i]))
+        return false;
+      else
+        if(currentlyUpper && Character.isLowerCase(c[i]))
+        {
+          currentlyUpper = false;
+          uppers++;
+        }
+        else if(!currentlyUpper && Character.isUpperCase(c[i]))
+        {
+          currentlyUpper = true;
+        }
+    return uppers>1;
+  }
   public void openURL(String url)
   {
     if(url==null || url=="")
@@ -822,17 +847,22 @@ System.out.println(err);
     url = url.trim();
 
     // Wiki-like links
-    if(url.length()>4 && url.startsWith("[[") && url.endsWith("]]"))
+    if(isWikiWord(url))
     {
-      followWikiLink(url.substring(2, url.length()-2));
+      followWikiLink(url, prefs.wikiBehaviourActive);
       return;
     }
+//    if(url.length()>4 && url.startsWith("[[") && url.endsWith("]]"))
+//    {
+//      followWikiLink(url.substring(2, url.length()-2));
+//      return;
+//    }
     if(isPureWord(url))
     {
       if(prefs.defaultSearchMode == 0)
         webSearchText(url);
       else
-        followWikiLink(url);
+        followWikiLink(url, false);
       return;
     }
     
@@ -907,12 +937,15 @@ System.out.println(err);
   // End of: stuff concerned with linking
 
   // Searching (for wikilike action)
-  public void followWikiLink(String text)
+  public void followWikiLink(String text, boolean noNeedToConfirm)
   {
+    if(text.length()>4 && text.startsWith("[[") && text.endsWith("]]"))
+      text = text.substring(2, text.length()-2);
+
     TreePath tp = findNearestNodeTitled(text);
     if(tp == null)
     {
-	  if(JOptionPane.showConfirmDialog(this, "No node named \n\"" + text + "\"\nwas found. Create it?", "Not found" , JOptionPane.YES_NO_OPTION, JOptionPane.ERROR_MESSAGE)
+	  if(noNeedToConfirm || JOptionPane.showConfirmDialog(this, "No node named \n\"" + text + "\"\nwas found. Create it?", "Not found" , JOptionPane.YES_NO_OPTION, JOptionPane.ERROR_MESSAGE)
 	             == JOptionPane.YES_OPTION)
 	  {
         JreepadNode newNode;

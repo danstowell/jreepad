@@ -1,0 +1,278 @@
+<Treepad version 2.7>
+dt=Text
+<node>
+Jreepad manual
+0
+
+_______________________________
+
+Jreepad (C) 2004 Dan Stowell
+http://jreepad.sourceforge.net/
+
+Jreepad is open-source software. 
+See "Help > License" in the menu 
+for more detail.
+
+This manual written in Jreepad 1.0 
+by Dan Stowell 
+ - with inspiration taken liberally 
+from the "Treepad Lite" manual!
+
+_______________________________
+
+
+
+<end node> 5P9i0s8y19Z
+dt=Text
+<node>
+How to read this manual
+1
+This manual was written using Jreepad 1.0 
+and consists of numerous articles 
+linked in a tree structure. 
+
+The tree, in the left pane of the program, 
+consists of 'tree nodes'. Each 'node' has 
+an 'article' of text associated with it - 
+click on the node's title to view the 
+associated article in this pane.
+
+If a node has 'children' then you'll see 
+a symbol (such as a plus-sign or minus 
+sign, or a little triangle) to indicate that 
+its subtree can be opened or closed. 
+Double-click on a node's title to 
+expand/collapse the subtree (or click 
+on the plus/minus/triangle/whatever 
+symbol!).
+
+<end node> 5P9i0s8y19Z
+dt=Text
+<node>
+Using Jreepad
+1
+Open up this node to see a set of nodes
+containing information about using
+the main features of Jreepad....
+
+<end node> 5P9i0s8y19Z
+dt=Text
+<node>
+Overview
+2
+The main Jreepad window consists of the Tree part on the left, and the Article part on the right. The Tree and the Article part can both be resized by dragging the vertical separation line between the two parts.
+
+The tree part consists of 'nodes', which can be considered leafs of the tree. Nodes can be connected to each other in a hierarchical fashion.
+
+Every node can itself be associated with an article. An article contains the information you want to store in the form of a piece of text. 
+
+Jreepad is a simple to use utility.
+Tree nodes can be moved, deleted, inserted and edited in the standard tree-based way which will be familiar to anyone who has used some of the common graphical file-management utilities. The articles can be edited like in a normal text-editor. 
+Although the program is easy-to-use and conforms to the standard behaviour of Java GUI interfaces, actions like moving nodes and editing are explained in full detail below.
+
+<end node> 5P9i0s8y19Z
+dt=Text
+<node>
+Tree
+2
+The tree is the left part of the screen.
+If it's empty you can load a file into it,
+or you can add a node into the empty 
+tree (see "How to add node" below).
+
+You can select one of the "nodes" in 
+the tree just by clicking on it.
+You can also use your cursor-keys to 
+navigate your way around the tree - try it!
+<end node> 5P9i0s8y19Z
+dt=Text
+<node>
+Article
+2
+
+<end node> 5P9i0s8y19Z
+dt=Text
+<node>
+Searching within a tree
+2
+
+<end node> 5P9i0s8y19Z
+dt=Text
+<node>
+Searching on the web
+2
+
+<end node> 5P9i0s8y19Z
+dt=Text
+<node>
+Hyperlinks
+2
+The basic idea: You can follow any link 
+by choosing "Follow highlighted link" 
+from the "Actions" menu.
+
+Open up this node and read the articles 
+contained within, for more about 
+how to use this functionality!
+
+<end node> 5P9i0s8y19Z
+dt=Text
+<node>
+Normal hyperlinks - http:// , ftp:// , mailto:
+3
+Most of the standard forms of links should work as you expect.
+Try these examples - either select them, or just position the cursor somewhere inside them, then choose "Actions > Follow highlighted link" from the menu.
+
+Web link:
+http://jreepad.sourceforge.net/
+
+FTP link:
+ftp://ftp.compaq.com/pub/
+
+Email link:
+mailto:bgates@microsoft.com
+
+
+
+__________________________________________________
+
+
+
+At the time of writing, "file://" links don't seem to work correctly - not on Mac OSX, at least. It's possible that they'll work on your operating system... who knows?
+<end node> 5P9i0s8y19Z
+dt=Text
+<node>
+Treepad internal hyperlinks - node://
+3
+Treepad Lite uses a URI-like format for links to a specific node within the current node. Try this one, for example - select the whole link and choose the menu option "Actions > Follow highlighted link".
+
+"node://Jreepad manual/Using Jreepad/File import and export"
+
+<end node> 5P9i0s8y19Z
+dt=Text
+<node>
+WikiLikeBehaviour
+3
+If you've used a wiki before you'll know what this is about - but if not, fear not! The idea behind a Wiki is simply to make it easy to create an interconnected web of articles, just as easily as typing text.
+
+Jreepad adapts some of the ideas from wiki. The key ingredient in a wiki is that if you type a WikiWord, which is any word which begins with a capital letter and has other capital letter(s) somewhere in the middle, the wiki converts this into a link to an article of that name. If the article exists, you can jump straight to it. If the article doesn't exist, it gets created and you can start to type text into it.
+
+You can also force a chunk of text to behave like a WikiWord by wrapping it in [[double square brackets]].
+
+Try selecting these wiki-links and chosing "Actions > Follow highlighted link":
+
+  WikiWikiWeb
+
+  DanStowell
+
+  [[The importance of being earnest]]
+
+
+<end node> 5P9i0s8y19Z
+dt=Text
+<node>
+Choosing "Follow link" when you have a plain piece of text selected
+3
+If you choose "follow link" but you haven't actually selected something which is obviously a link (it doesn't begin with something like "http://", it isn't a WikiWord, etc etc), Jreepad will either:
+
+- Assume it's a node title and search for a node of that title
+
+                 or
+
+- Do a web-search for the text
+
+You can specify which of these you want to happen in the Options > Preferences panel.
+
+<end node> 5P9i0s8y19Z
+dt=Text
+<node>
+File import and export
+2
+Look in the "File" menu and see what 
+options are available under the two 
+submenus, 
+"Import..." and "Export selected...".
+There are plenty of options!
+
+The HTML export is particularly useful 
+for exporting a chunk of your Jreepad 
+file, either for emailing to a colleague 
+who doesn't use Jreepad or Treepad, 
+or for printing out.
+
+<end node> 5P9i0s8y19Z
+dt=Text
+<node>
+Importing / exporting a Treepad file
+3
+
+<end node> 5P9i0s8y19Z
+dt=Text
+<node>
+Importing / exporting text files
+3
+
+<end node> 5P9i0s8y19Z
+dt=Text
+<node>
+Importing / exporting text lists
+3
+
+<end node> 5P9i0s8y19Z
+dt=Text
+<node>
+Exporting XML / HTML
+3
+The XML export creates an XML file with a very simple structure. It contains all of the information from the selected Jreepad subtree (node structure, titles, and articles). It should be straightforward to use this data in an XML editor or in other applications.
+
+ - 
+
+The HTML export creates a nice, human-readable output. The output includes a nice simple embedded CSS stylesheet which formats the HTML page quite neatly.
+
+<end node> 5P9i0s8y19Z
+dt=Text
+<node>
+Toolbars
+2
+The toolbar gives you shortcuts to
+some of the main options for working
+with nodes.
+<end node> 5P9i0s8y19Z
+dt=Text
+<node>
+View options
+2
+
+<end node> 5P9i0s8y19Z
+dt=Text
+<node>
+Additional information
+1
+
+<end node> 5P9i0s8y19Z
+dt=Text
+<node>
+Treepad
+2
+The concept for Jreepad is based on Treepad Lite. Treepad Lite is free software created by Henk Hagedoorn, primarily for Windows computers. The "Treepad" suite includes more feature-rich versions (these are not free!). Jreepad is only designed to be compatible with Treepad Lite files....
+
+See http://www.treepad.com/ for more about the Treepad suite of software.
+
+<end node> 5P9i0s8y19Z
+dt=Text
+<node>
+DanStowell
+2
+Dan Stowell is the author of Jreepad.
+His website is http://www.mcld.co.uk/
+
+(If you are wondering why this node exists, 
+and why its title is "DanStowell" and not "Dan Stowell",
+then you haven't read the description of Jreepad's
+
+WikiLikeBehaviour
+
+Select the text on the line above, and choose 
+"Follow highlighted link" from the Actions menu...!
+
+<end node> 5P9i0s8y19Z

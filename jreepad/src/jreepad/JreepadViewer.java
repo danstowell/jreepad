@@ -371,11 +371,13 @@ public class JreepadViewer extends JFrame
               "\n      FTP:   e.g. ftp://ftp.compaq.com/pub/" +
               "\n      File:  (can't get these to work, on OSX at least)" +
               "\n" +
-              "\nWiki link - If the selected text begins " +
+              "\nWiki link - If the selected text is a WikiWord (i.e. if " +
+              "\n            it LooksLikeThis with no spaces and some capital " + 
+              "\n            letters somewhere in the middle) OR begins " +
               "\n            with \"[[\" and ends with \"]]\" then " +
               "\n            Jreepad will search for a node of the same " +
               "\n            title, and jump directly to it. If one " +
-              "\n            isn't found then it'll offer to create one " +
+              "\n            isn't found then it'll create one " +
               "\n            for you. Try it!" +
               "\n" + 
               "\nTreepad link - Treepad Lite uses links which begin " +
