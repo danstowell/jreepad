@@ -216,9 +216,9 @@ public class JreepadViewer extends JFrame
     newMenuItem = new JMenuItem("New");
     newMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { newAction();}});
     fileMenu.add(newMenuItem);
-    newWindowMenuItem = new JMenuItem("New window");
-    newWindowMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { new JreepadViewer();}});
-    fileMenu.add(newWindowMenuItem);
+//    newWindowMenuItem = new JMenuItem("New window");
+//    newWindowMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { new JreepadViewer();}});
+//    fileMenu.add(newWindowMenuItem);
     openMenuItem = new JMenuItem("Open");
     openMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {openAction();}});
     fileMenu.add(openMenuItem);
