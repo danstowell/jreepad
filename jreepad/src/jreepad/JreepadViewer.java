@@ -128,6 +128,7 @@ public class JreepadViewer extends JFrame
   private JMenuItem thisNodesUrlMenuItem;
   private JMenuItem characterWrapArticleMenuItem;
   private JMenuItem stripTagsMenuItem;
+  private JMenuItem insertDateMenuItem;
   private JMenu viewMenu;
   private JMenuItem viewBothMenuItem;
   private JMenuItem viewTreeMenuItem;
@@ -302,6 +303,9 @@ public class JreepadViewer extends JFrame
     stripTagsMenuItem = new JMenuItem("Strip <tags> from article");
     stripTagsMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { stripAllTags(); }});
     searchMenu.add(stripTagsMenuItem);
+    insertDateMenuItem = new JMenuItem("Insert date");
+    insertDateMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { insertDate(); }});
+    searchMenu.add(insertDateMenuItem);
     //
     viewBothMenuItem = new JMenuItem("Both tree and article");
     viewBothMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { setViewMode(JreepadPrefs.VIEW_BOTH); }});
@@ -562,6 +566,10 @@ public class JreepadViewer extends JFrame
     webSearchMenuItem.setAccelerator(KeyStroke.getKeyStroke('G', Event.META_MASK));
     launchUrlMenuItem.setAccelerator(KeyStroke.getKeyStroke('L', Event.META_MASK));
     launchUrlMenuItem.setMnemonic('l');
+    stripTagsMenuItem.setAccelerator(KeyStroke.getKeyStroke('T', Event.META_MASK));
+    stripTagsMenuItem.setMnemonic('t');
+    insertDateMenuItem.setAccelerator(KeyStroke.getKeyStroke('E', Event.META_MASK));
+    insertDateMenuItem.setMnemonic('e');
     thisNodesUrlMenuItem.setMnemonic('n');
     viewMenu.setMnemonic('V');
     viewBothMenuItem.setMnemonic('b');
@@ -1549,6 +1557,11 @@ public class JreepadViewer extends JFrame
       tempMenuItem.addActionListener(new FileOpeningActionListener(tempFile));
       openRecentMenu.add(tempMenuItem); 
     }
+  }
+
+  private void insertDate()
+  {
+    theJreepad.insertDate();
   }
 
   private class FileOpeningActionListener implements ActionListener

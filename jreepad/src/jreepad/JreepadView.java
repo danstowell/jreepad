@@ -469,9 +469,33 @@ public class JreepadView extends Box
   private String getContentForNewNode()
   {
     if(prefs.autoDateInArticles)
-      return java.text.DateFormat.getDateInstance().format(new java.util.Date());
+      return getCurrentDate(); // java.text.DateFormat.getDateInstance().format(new java.util.Date());
     else
       return "";
+  }
+  
+  private java.text.DateFormat dateFormat = java.text.DateFormat.getDateInstance();
+  private String getCurrentDate()
+  {
+    return dateFormat.format(new java.util.Date());
+  }
+  
+  public void insertDate()
+  {
+    storeForUndo();
+    String theDate = getCurrentDate();
+    Document doc = editorPane.getDocument();
+    int here = editorPane.getCaretPosition();
+    try
+    {
+      editorPane.setText(doc.getText(0, here) + theDate + 
+                              doc.getText(here, doc.getLength() - here)); 
+      editorPane.setCaretPosition(here + theDate.length()); 
+    }
+    catch(BadLocationException e)
+    {
+      // Simply ignore this
+    }
   }
   
   public JreepadNode addNodeAbove()
