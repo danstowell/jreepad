@@ -1608,7 +1608,7 @@ public class JreepadViewer extends JFrame
   {
     // We need to check about warning-if-unsaved!
 
-    // FIXME: For multiple-Jreepad interface, we would need to use:
+    //  For a multiple-Jreepad interface, we would need to use:
     //  for(int i=0; i<theApps.length(); i++)
     //  {
     //    currApp = getApp(i);

@@ -744,7 +744,11 @@ public class JreepadView extends Box implements TableModelListener
     switch(currentNode.getArticleMode())
     {
       case JreepadNode.ARTICLEMODE_CSV:
-        return ""; //editorPane.getSelectedText(); // FIXME - SHOULD BE ABLE TO RETURN SOMETHING SENSIBLE!
+        int x = editorPaneCsv.getSelectedColumn();
+        int y = editorPaneCsv.getSelectedRow();
+        if(x==-1 || y ==-1)
+          return "";
+        return editorPaneCsv.getValueAt(y,x).toString();
       case JreepadNode.ARTICLEMODE_HTML:
         return editorPaneHtml.getSelectedText();
       case JreepadNode.ARTICLEMODE_ORDINARY:
@@ -752,26 +756,6 @@ public class JreepadView extends Box implements TableModelListener
         return editorPanePlainText.getSelectedText();
     }
   }
-
-  // Stuff concerned with printing
-  public void printCurrentArticle()
-  {
-    PrinterJob job = PrinterJob.getPrinterJob();
-    if(job.printDialog())
-    {
-      PageFormat pageFormat = job.validatePage(job.defaultPage());
-      job.setJobName(currentNode.getTitle());
-      try
-      {
-        job.print();
-      }
-      catch(PrinterException err)
-      {
-        System.out.println(err);
-      }
-    }
-  }
-  // End of: stuff concerned with printing
   
   public static JreepadPrefs getPrefs()
   {
@@ -829,12 +813,10 @@ public class JreepadView extends Box implements TableModelListener
     if(url==null || url.length()==0)
       url = currentNode.getTitle();
   
-    if(url==null)
+    if((url == null) && (currentNode.getArticleMode()==JreepadNode.ARTICLEMODE_ORDINARY))
     {
       try
       {
-      
-        // FIXME - THIS WILL NOT WORK UNLESS IN PLAINTEXT MODE! CARET POSITION, YOU SEE...
       
       String text = getEditorPaneText();
       int startpos = editorPanePlainText.getCaretPosition();
@@ -872,12 +854,10 @@ System.out.println(err);
   public void openURLSelectedInArticle()
   {
     String url = getSelectedTextInArticle();
-    if(url == null)
+    if((url == null) && (currentNode.getArticleMode()==JreepadNode.ARTICLEMODE_ORDINARY))
     {
       try
       {
-      
-        // FIXME - THIS WILL NOT WORK UNLESS IN PLAINTEXT MODE - CARET POSITIONS ETC
       
       String text = getEditorPaneText();
       int startpos = editorPanePlainText.getCaretPosition();
@@ -1198,26 +1178,6 @@ System.out.println(err);
 
   public void ensureCorrectArticleRenderMode()
   {
-    /*
-    currentNode.setContent(getEditorPaneText());
-    
-    setEditorPaneText(getEditorPaneText());
-    switch(currentNode.getArticleMode())
-    {
-      case JreepadNode.ARTICLEMODE_ORDINARY:
-        editorPanePlainText.setText(getEditorPaneText());
-        break;
-      case JreepadNode.ARTICLEMODE_HTML:
-        editorPaneHtml.setText(getEditorPaneText());
-        break;
-      case JreepadNode.ARTICLEMODE_CSV:
-        articleToJTable(getEditorPaneText()); // FIXME: This is the WRONG place to do this, but it's OK for dev purposes...
-        break;
-      default:
-        System.err.println("ensureCorrectArticleRenderMode() says: JreepadNode.getArticleMode() returned an unrecognised value");
-        return;
-    }
-    */
     articleView.setViewportView(getEditorPaneComponent());
   }
 

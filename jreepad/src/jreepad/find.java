@@ -226,7 +226,7 @@ public class find
     JreepadNode root = new JreepadNode();
 	try
 	{
-	  root = new JreepadNode(new InputStreamReader(new FileInputStream(userFile), encoding));
+	  root = new JreepadNode(new InputStreamReader(new FileInputStream(userFile), encoding), false);
 	}
 	catch(IOException err)
 	{
