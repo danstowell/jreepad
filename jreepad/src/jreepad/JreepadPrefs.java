@@ -78,6 +78,8 @@ public class JreepadPrefs implements Serializable
   
   int characterWrapWidth;
   
+  boolean wrapToWindow;
+  
   JreepadPrefs()
   {
     openLocation = new File(System.getProperty("user.home"));
@@ -112,6 +114,8 @@ public class JreepadPrefs implements Serializable
     articleFont = (new JEditorPane()).getFont();
     
     characterWrapWidth = 80;
+    
+    wrapToWindow = true;
   }
   
   // We override the serialization routines so that different versions of our class can read 
@@ -155,6 +159,8 @@ public class JreepadPrefs implements Serializable
     out.writeObject(articleFont);
     
     out.writeInt(characterWrapWidth);
+    
+    out.writeBoolean(wrapToWindow);
   }
   private void readObject(java.io.ObjectInputStream in)
      throws IOException, ClassNotFoundException
@@ -197,6 +203,8 @@ public class JreepadPrefs implements Serializable
     articleFont = (Font)in.readObject();
     
     characterWrapWidth = in.readInt();
+    
+    wrapToWindow = in.readBoolean();
    }
    catch(EOFException e)
    {

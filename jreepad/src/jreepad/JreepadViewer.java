@@ -69,6 +69,7 @@ public class JreepadViewer extends JFrame
     private JTextField webSearchNameField;
     private JTextField webSearchPrefixField;
     private JTextField webSearchPostfixField;
+  private JCheckBox wrapToWindowCheckBox;
   private JButton prefsOkButton;
   private JButton prefsCancelButton;
   
@@ -297,7 +298,7 @@ public class JreepadViewer extends JFrame
     webSearchMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { theJreepad.webSearchTextSelectedInArticle(); }});
     searchMenu.add(webSearchMenuItem);
     searchMenu.add(new JSeparator());
-    characterWrapArticleMenuItem = new JMenuItem("Wrap article to " + getPrefs().characterWrapWidth + " columns");
+    characterWrapArticleMenuItem = new JMenuItem("Hard-wrap current article to " + getPrefs().characterWrapWidth + " columns");
     characterWrapArticleMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { wrapContentToCharWidth(); }});
     searchMenu.add(characterWrapArticleMenuItem);
     stripTagsMenuItem = new JMenuItem("Strip <tags> from article");
@@ -570,6 +571,8 @@ public class JreepadViewer extends JFrame
     stripTagsMenuItem.setMnemonic('t');
     insertDateMenuItem.setAccelerator(KeyStroke.getKeyStroke('E', Event.META_MASK));
     insertDateMenuItem.setMnemonic('e');
+    characterWrapArticleMenuItem.setAccelerator(KeyStroke.getKeyStroke('R', Event.META_MASK));
+    characterWrapArticleMenuItem.setMnemonic('r');
     thisNodesUrlMenuItem.setMnemonic('n');
     viewMenu.setMnemonic('V');
     viewBothMenuItem.setMnemonic('b');
@@ -896,11 +899,17 @@ public class JreepadViewer extends JFrame
     vBox.add(genPanel);
 
     genPanel = new JPanel();
+    genPrefVBox = Box.createVerticalBox();
+//    hBox = Box.createHorizontalBox();
+//    hBox.add(wrapToWindowCheckBox = new JCheckBox("Wrap article to window width", getPrefs().wrapToWindow));
+//    hBox.add(new JLabel("(won't take effect until you restart Jreepad)"));
+//    genPrefVBox.add(hBox);
     hBox = Box.createHorizontalBox();
-    hBox.add(new JLabel("Column width to use for wrapping:"));
+    hBox.add(new JLabel("Column width to use for hard-wrap action:"));
     hBox.add(wrapWidthSpinner = new JSpinner(new SpinnerNumberModel(getPrefs().characterWrapWidth,1,1000,1)));
-    genPanel.add(hBox);
-    genPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), "\"Wrap article to n columns\" action"));
+    genPrefVBox.add(hBox);
+    genPanel.add(genPrefVBox);
+    genPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), "Wrapping article text"));
     vBox.add(genPanel);
 
 //    fontsPrefsBox = Box.createHorizontalBox();
@@ -949,8 +958,10 @@ public class JreepadViewer extends JFrame
 									getPrefs().defaultSearchMode = defaultSearchModeSelector.getSelectedIndex();
 									getPrefs().fileEncoding = fileEncodingSelector.getSelectedIndex();
 									getPrefs().characterWrapWidth = ((Integer)(wrapWidthSpinner.getValue())).intValue();
-                                    characterWrapArticleMenuItem.setText("Wrap article to " + getPrefs().characterWrapWidth + " columns");
+                                    characterWrapArticleMenuItem.setText("Hard-wrap current article to " + getPrefs().characterWrapWidth + " columns");
 							//		setFontsFromPrefsBox();
+//									getPrefs().wrapToWindow = wrapToWindowCheckBox.isSelected();
+//							        theJreepad.setEditorPaneKit();
 									prefsDialog.hide();
                                    }});
     prefsCancelButton.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e){prefsDialog.hide();}});
@@ -1385,7 +1396,13 @@ public class JreepadViewer extends JFrame
   {
     theJreepad.setViewMode(mode);
     // Update the dropdown menu
-    
+    if(mode==JreepadPrefs.VIEW_ARTICLE)
+      viewSelector.setSelectedIndex(2);
+    else if(mode==JreepadPrefs.VIEW_TREE)
+      viewSelector.setSelectedIndex(1);
+    else
+      viewSelector.setSelectedIndex(0);
+
     // Update the preferences object
     getPrefs().viewWhich = mode;
   }

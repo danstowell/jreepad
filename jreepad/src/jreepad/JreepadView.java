@@ -51,49 +51,29 @@ public class JreepadView extends Box
       String kind = elem.getName();
 	  if(kind != null)
 		if (kind.equals(AbstractDocument.ContentElementName)) {
-					return new LabelView(elem);
+			return new LabelView(elem);
 		} else if (kind.equals(AbstractDocument.ParagraphElementName)) {
-					//              return new ParagraphView(elem);
-					return new JPParagraphView(elem);
+			return new JPParagraphView(elem);
 		} else if (kind.equals(AbstractDocument.SectionElementName)) {
-					return new BoxView(elem, View.Y_AXIS);
+			return new BoxView(elem, View.Y_AXIS);
 		} else if (kind.equals(StyleConstants.ComponentElementName)) {
-					return new ComponentView(elem);
+			return new ComponentView(elem);
 		} else if (kind.equals(StyleConstants.IconElementName)) {
-					return new IconView(elem);
+			return new IconView(elem);
 		}
 		// default to text display
 		return new LabelView(elem);
 	}
   }
 
+  private short paraRightMargin = 0; 
   class JPParagraphView extends javax.swing.text.ParagraphView
   {
-	public int childCount;
-	public int shift=0;
 	public JPParagraphView(Element e)
 	{
 	  super(e);
-	  short top=0;
-	  short left=0;
-	  short bottom=0;
-	  short right=0;
-	  this.setInsets(top,left,bottom,right);
+	  this.setInsets((short)0, (short)0, (short)0, paraRightMargin);
 	}
-
-	public void paint(Graphics g, Shape a)
-	{
-	  childCount=this.getViewCount();
-	  super.paint (g,a);
-			//int rowCountInThisParagraph=this.getViewCount(); //<----- YOU HAVE REAL ROW COUNT FOR ONE PARAGRAPH
-			//System.err.println(rowCountInThisParagraph);
-	}
-		/*
-		public void paintChild(Graphics g,Rectangle r,int n) {
-			super.paintChild(g,r,n);
-			g.drawString(Integer.toString(shift+n+1),r.x-20,r.y+r.height-3);
-		}
-		*/
   }
   // Code to ensure that the article word-wraps ends here
   //   - contributed by Michael Labhard
@@ -221,7 +201,7 @@ public class JreepadView extends Box
 
     editorPane = new JEditorPane("text/plain", root.getContent());
     editorPane.setEditable(true);
-	editorPane.setEditorKit(new JPEditorKit());
+    setEditorPaneKit();
     // Add a listener to make sure the editorpane's content is always stored when it changes
     editorPane.addCaretListener(new CaretListener() {
     				public void caretUpdate(CaretEvent e)
@@ -267,6 +247,14 @@ public class JreepadView extends Box
     setViewBoth();
     setCurrentNode(root);
     tree.setSelectionRow(0);
+  }
+
+  public void setEditorPaneKit()
+  {
+    if(getPrefs().wrapToWindow)
+      editorPane.setEditorKit(new JPEditorKit());
+ //   else
+ //     editorPane.setEditorKit(new javax.swing.text.StyledEditorKit());
   }
 
   public void setViewMode(int mode)
@@ -971,7 +959,7 @@ System.out.println(err);
     }
     catch(IOException err)
     {
-	  JOptionPane.showMessageDialog(this, "I/O error while opening URL:\n"+surl+"\n\nWe'd appreciate it if you could submit a bug report to\nhttp://sourceforge.net/projects/jreepad\nThe browser-launching code is taken from a separate open-source project,\nso bug reporting is particularly important.", "Error" , JOptionPane.ERROR_MESSAGE);
+	  JOptionPane.showMessageDialog(this, "I/O error while opening URL:\n"+surl+"\n\nThe \"BrowserLauncher\" used to open a URL is an open-source Java library \nseparate from Jreepad itself - i.e. a separate Sourceforge project. \nIt may be a good idea to submit a bug report to\nhttp://sourceforge.net/projects/browserlauncher\n\nIf you do, please remember to supply information about the operating system\nyou are using - which type, and which version.", "Error" , JOptionPane.ERROR_MESSAGE);
     }
   }
 
