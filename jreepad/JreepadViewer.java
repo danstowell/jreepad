@@ -35,7 +35,7 @@ public class JreepadViewer extends JFrame
   private JreepadView theJreepad;
   private Container content;
 //  private JreepadPrefs prefs;
-  private static final File prefsFile = new File(System.getProperty("user.dir"), ".jreepref");
+  private static final File prefsFile = new File(System.getProperty("user.home"), ".jreepref");
   
   private boolean warnAboutUnsaved = false;
   
