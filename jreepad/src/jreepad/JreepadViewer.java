@@ -1041,6 +1041,7 @@ public class JreepadViewer extends JFrame
     // Finished: Establish the nodeUrlDisplay dialogue box
     
     content.setLayout(new BoxLayout(content, BoxLayout.Y_AXIS));
+    content.add(new ColouredStrip(new Color(0.09f, 0.4f, 0.12f)));
     content.add(toolBar);
     content.add(theJreepad);
 
@@ -1106,7 +1107,7 @@ public class JreepadViewer extends JFrame
 
     setVisible(true);
         // If loading the last-saved file, expand the nodes we last had open
-        if(fileNameToLoad == "" && getPrefs().loadLastFileOnOpen && getPrefs().saveLocation != null)
+        if(fileNameToLoad == "" && getPrefs().loadLastFileOnOpen && getPrefs().saveLocation != null && getPrefs().treePathCollection.paths != null)
         {
           theJreepad.expandPaths(getPrefs().treePathCollection.paths);
         }
@@ -1870,6 +1871,23 @@ public class JreepadViewer extends JFrame
     }
     
   } // End of class DSpinner
+
+  class ColouredStrip extends JPanel
+  {
+    Color col;
+    ColouredStrip(Color col)
+    {
+      super(false);
+      setBackground(col);
+//      this.col = col;
+    }
+//    public void paint(Graphics gggg)
+//    {
+//      Graphics2D g = (Graphics2D)gggg;
+//      g.setPaint(col);
+//      g.fillRect(0,0,getWidth(),getHeight());
+//    }
+  }
 
 
 }
