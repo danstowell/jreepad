@@ -68,10 +68,12 @@ public class JreepadViewer extends JFrame
     private JMenu importMenu;
     private JMenuItem importHjtMenuItem;
     private JMenuItem importTextMenuItem;
+    private JMenuItem importTextAsListMenuItem;
     private JMenu exportMenu;
     private JMenuItem exportHjtMenuItem;
     private JMenuItem exportHtmlMenuItem;
     private JMenuItem exportSimpleXmlMenuItem;
+    private JMenuItem exportListMenuItem;
     private JMenuItem exportTextMenuItem;
   private JMenuItem quitMenuItem;
   private JMenu editMenu;
@@ -171,6 +173,9 @@ public class JreepadViewer extends JFrame
       importTextMenuItem = new JMenuItem("...text file(s) as child node(s)");
       importTextMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {importAction(FILE_FORMAT_TEXT);}});
       importMenu.add(importTextMenuItem);
+      importTextAsListMenuItem = new JMenuItem("...text list file, one-child-per-line");
+      importTextAsListMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {importAction(FILE_FORMAT_TEXTASLIST);}});
+      importMenu.add(importTextAsListMenuItem);
       //
       exportMenu = new JMenu("Export selected...");
       fileMenu.add(exportMenu);
@@ -183,6 +188,10 @@ public class JreepadViewer extends JFrame
       exportSimpleXmlMenuItem = new JMenuItem("...subtree to simple XML");
       exportSimpleXmlMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {exportAction(FILE_FORMAT_XML);}});
       exportMenu.add(exportSimpleXmlMenuItem);
+      exportListMenuItem = new JMenuItem("...subtree to text list (node titles only)");
+      exportListMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {exportAction(FILE_FORMAT_TEXTASLIST);}});
+      exportMenu.add(exportListMenuItem);
+      exportMenu.add(new JSeparator());
       exportTextMenuItem = new JMenuItem("...article to text file");
       exportTextMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {exportAction(FILE_FORMAT_TEXT);}});
       exportMenu.add(exportTextMenuItem);
@@ -393,6 +402,7 @@ public class JreepadViewer extends JFrame
     importMenu.setMnemonic('I');
     importHjtMenuItem.setMnemonic('f');
     importTextMenuItem.setMnemonic('t');
+    importTextAsListMenuItem.setMnemonic('l');
     exportMenu.setMnemonic('E');
     exportHjtMenuItem.setMnemonic('f');
     exportHtmlMenuItem.setMnemonic('h');
@@ -835,7 +845,7 @@ public class JreepadViewer extends JFrame
         getPrefs().openLocation = fileChooser.getSelectedFile();
         content.remove(theJreepad);
         theJreepad = new JreepadView(new JreepadNode(new FileInputStream(getPrefs().openLocation)));
-        getPrefs().backupLocation = getPrefs().saveLocation = getPrefs().exportLocation = getPrefs().importLocation = getPrefs().openLocation;
+        getPrefs().saveLocation = getPrefs().openLocation;
         content.add(theJreepad);
         setTitleBasedOnFilename(getPrefs().openLocation.getName());
         validate();
@@ -982,6 +992,7 @@ public class JreepadViewer extends JFrame
   private static final int FILE_FORMAT_HTML=2;
   private static final int FILE_FORMAT_XML=3;
   private static final int FILE_FORMAT_TEXT=4;
+  private static final int FILE_FORMAT_TEXTASLIST=5;
   private void importAction(int importFormat)
   {
     boolean multipleFiles;
@@ -1007,6 +1018,9 @@ public class JreepadViewer extends JFrame
 			break;
 		  case FILE_FORMAT_TEXT:
 		    theJreepad.addChildrenFromTextFiles(fileChooser.getSelectedFiles());
+			break;
+		  case FILE_FORMAT_TEXTASLIST:
+		    theJreepad.addChildrenFromListTextFile(getPrefs().importLocation);
 			break;
 		  default:
             setCursor(Cursor.getDefaultCursor());
@@ -1051,6 +1065,9 @@ public class JreepadViewer extends JFrame
 			break;
 		  case FILE_FORMAT_TEXT:
 			output = theJreepad.getCurrentNode().getContent();
+			break;
+		  case FILE_FORMAT_TEXTASLIST:
+			output = theJreepad.getCurrentNode().exportTitlesAsList();
 			break;
 		  default:
             setCursor(Cursor.getDefaultCursor());

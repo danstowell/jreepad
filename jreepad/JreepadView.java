@@ -591,6 +591,21 @@ public class JreepadView extends Box
     tree.expandPath(tree.getSelectionPath());
   }
 
+  public void addChildrenFromListTextFile(File inFile) throws IOException
+  {
+    storeForUndo();
+
+    BufferedReader bReader = new BufferedReader(new InputStreamReader(new FileInputStream(inFile)));
+
+    String curLine;
+    while((curLine = bReader.readLine())!=null)
+      if(curLine.trim().length() > 0)
+        getCurrentNode().addChild(new JreepadNode(curLine.trim(), "", getCurrentNode()));
+
+    treeModel.reload(currentNode);
+    tree.expandPath(tree.getSelectionPath());
+  }
+
   public String getSelectedTextInArticle()
   {
     return editorPane.getSelectedText();

@@ -188,6 +188,23 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
     return ret;
   }
 
+  public String exportTitlesAsList()
+  {
+    return exportTitlesAsList(0).toString();
+  }
+  public StringBuffer exportTitlesAsList(int currentDepth)
+  {
+    StringBuffer ret = new StringBuffer();
+    for(int i=0; i<currentDepth; i++)
+      ret.append(" ");
+    ret.append(getTitle() + "\r\n");
+    for(int i=0; i<children.size(); i++)
+      ret.append(((JreepadNode)getChildAt(i)).exportTitlesAsList(currentDepth+1));
+
+    return ret;
+  }
+
+
   private void writeObject(ObjectOutputStream out) throws IOException
   {
     out.writeBytes(this.toTreepadString());
