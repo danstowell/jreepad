@@ -23,6 +23,7 @@ import javax.swing.*;
 import javax.swing.tree.*;
 import javax.swing.event.*;
 import javax.swing.text.BadLocationException;
+import javax.swing.text.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.Enumeration;
@@ -41,6 +42,71 @@ Todo:
 
 public class JreepadView extends Box
 {
+
+  // Code to ensure that the article word-wraps follows
+  //   - contributed by Michael Labhard based on code found on the web...
+  class JPEditorKit extends StyledEditorKit
+  {
+	public ViewFactory getViewFactory()
+	{
+      return new JPRTFViewFactory();
+	}
+  }
+
+  class JPRTFViewFactory implements ViewFactory
+  {
+	public View create(Element elem)
+	{
+      String kind = elem.getName();
+	  if(kind != null)
+		if (kind.equals(AbstractDocument.ContentElementName)) {
+					return new LabelView(elem);
+		} else if (kind.equals(AbstractDocument.ParagraphElementName)) {
+					//              return new ParagraphView(elem);
+					return new JPParagraphView(elem);
+		} else if (kind.equals(AbstractDocument.SectionElementName)) {
+					return new BoxView(elem, View.Y_AXIS);
+		} else if (kind.equals(StyleConstants.ComponentElementName)) {
+					return new ComponentView(elem);
+		} else if (kind.equals(StyleConstants.IconElementName)) {
+					return new IconView(elem);
+		}
+		// default to text display
+		return new LabelView(elem);
+	}
+  }
+
+  class JPParagraphView extends javax.swing.text.ParagraphView
+  {
+	public int childCount;
+	public int shift=0;
+	public JPParagraphView(Element e)
+	{
+	  super(e);
+	  short top=0;
+	  short left=0;
+	  short bottom=0;
+	  short right=0;
+	  this.setInsets(top,left,bottom,right);
+	}
+
+	public void paint(Graphics g, Shape a)
+	{
+	  childCount=this.getViewCount();
+	  super.paint (g,a);
+			//int rowCountInThisParagraph=this.getViewCount(); //<----- YOU HAVE REAL ROW COUNT FOR ONE PARAGRAPH
+			//System.err.println(rowCountInThisParagraph);
+	}
+		/*
+		public void paintChild(Graphics g,Rectangle r,int n) {
+			super.paintChild(g,r,n);
+			g.drawString(Integer.toString(shift+n+1),r.x-20,r.y+r.height-3);
+		}
+		*/
+  }
+  // Code to ensure that the article word-wraps ends here
+  //   - contributed by Michael Labhard
+
   private static JreepadPrefs prefs;
   private JreepadNode root;
   private JreepadNode currentNode;
@@ -93,6 +159,7 @@ public class JreepadView extends Box
     tree.setExpandsSelectedPaths(true);
     tree.setInvokesStopCellEditing(true);
     tree.setEditable(true);
+//    setTreeFont(getPrefs().treeFont);
     
     tree.setModel(treeModel);
 
@@ -172,6 +239,7 @@ public class JreepadView extends Box
 
     editorPane = new JEditorPane("text/plain", root.getContent());
     editorPane.setEditable(true);
+	editorPane.setEditorKit(new JPEditorKit());
     // Add a listener to make sure the editorpane's content is always stored when it changes
     editorPane.addCaretListener(new CaretListener() {
     				public void caretUpdate(CaretEvent e)
@@ -1017,6 +1085,15 @@ System.out.println(err);
   {
     warnAboutUnsaved = yo;
   }
+  
+//  public void setTreeFont(Font f)
+//  {
+//    ((DefaultTreeCellRenderer)tree.getCellRenderer()).setFont(f);
+//  }
+//  public void setArticleFont(Font f)
+//  {
+//    editorPane.setFont(f);
+//  }
 
 
   class JreepadTreeModelListener implements TreeModelListener

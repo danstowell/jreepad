@@ -35,15 +35,11 @@ public class JreepadViewer extends JFrame
   private Box toolBar;
   private JreepadView theJreepad;
   private Container content;
-//  private JreepadPrefs prefs;
   private static final File prefsFile = new File(System.getProperty("user.home"), ".jreepref");
-  
-/////REMOVE  private boolean warnAboutUnsaved = false;
-  
-//  private File openLocation = new File("/Users/dan/javaTestArea/Jreepad/");
-//  private File saveLocation;
-//  private File importLocation;
-//  private File exportLocation;
+
+//  private static final String[] fonts = GraphicsEnvironment.getLocalGraphicsEnvironment().getAvailableFontFamilyNames(null);  
+//  private static final String[] fontSizes = new String[] {"8","9","10","11","12","13","14","16","18","20","24","30","36"};
+
   private JFileChooser fileChooser;
   
   private String windowTitle;
@@ -62,6 +58,11 @@ public class JreepadViewer extends JFrame
   private JCheckBox loadLastFileOnOpenCheckBox;
   private JCheckBox autoDateNodesCheckBox;
   private JComboBox fileEncodingSelector;
+//  private Box fontsPrefsBox;
+//    private JComboBox treeFontFamilySelector;
+//    private JComboBox treeFontSizeSelector;
+//    private JComboBox articleFontFamilySelector;
+//    private JComboBox articleFontSizeSelector;
   private Box webSearchPrefsBox;
     private JComboBox defaultSearchModeSelector;
     private JTextField webSearchNameField;
@@ -177,6 +178,7 @@ public class JreepadViewer extends JFrame
     }
     catch(IOException e)    {      e.printStackTrace();    }
 */
+
     
     // Create the menu bar
     menuBar = new JMenuBar();
@@ -313,7 +315,9 @@ public class JreepadViewer extends JFrame
     autoSaveMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { showAutoSaveDialog(); }});
     optionsMenu.add(autoSaveMenuItem);
     prefsMenuItem = new JMenuItem("Preferences");
-    prefsMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { showPrefsDialog(); }});
+    prefsMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { 
+                                            // updateFontsInPrefsBox(); 
+                                            showPrefsDialog(); }});
     optionsMenu.add(prefsMenuItem);
     //
     keyboardHelpMenuItem = new JMenuItem("Keyboard shortcuts");
@@ -873,6 +877,23 @@ public class JreepadViewer extends JFrame
     genPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), "\"Follow selected link\" action"));
     vBox.add(genPanel);
 
+//    fontsPrefsBox = Box.createHorizontalBox();
+//    fontsPrefsBox.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), "Font (for article)"));
+//    Box tempVBox = Box.createHorizontalBox();
+//    tempVBox.add(new JLabel("Font for tree:"));
+//    tempVBox.add(treeFontFamilySelector = new JComboBox(fonts));
+//    fontsPrefsBox.add(tempVBox);
+//    tempVBox = Box.createHorizontalBox();
+//    fontsPrefsBox.add(new JLabel("Font face:"));
+//    fontsPrefsBox.add(articleFontFamilySelector = new JComboBox(fonts));
+//    fontsPrefsBox.add(tempVBox);
+//    tempVBox = Box.createHorizontalBox();
+//    tempVBox.add(new JLabel("Font size:"));
+//    fontsPrefsBox.add(articleFontSizeSelector = new JComboBox(fontSizes));
+//    fontsPrefsBox.add(new JLabel("pt"));
+ //   fontsPrefsBox.add(tempVBox);
+ //   vBox.add(fontsPrefsBox);
+
     webSearchPrefsBox = Box.createVerticalBox();
     hBox = Box.createHorizontalBox();
     hBox.add(new JLabel("Web search is labelled \""));
@@ -901,6 +922,7 @@ public class JreepadViewer extends JFrame
 									getPrefs().webSearchPostfix = webSearchPostfixField.getText();
 									getPrefs().defaultSearchMode = defaultSearchModeSelector.getSelectedIndex();
 									getPrefs().fileEncoding = fileEncodingSelector.getSelectedIndex();
+							//		setFontsFromPrefsBox();
 									prefsDialog.hide();
                                    }});
     prefsCancelButton.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e){prefsDialog.hide();}});
@@ -959,7 +981,6 @@ public class JreepadViewer extends JFrame
       getPrefs().saveLocation = null;
 
 
-
     // Set close operation
     setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
     addWindowListener(new WindowAdapter() { public void windowClosing(WindowEvent e){ quitAction(); }});
@@ -968,16 +989,26 @@ public class JreepadViewer extends JFrame
     setTitleBasedOnFilename("");
     Toolkit theToolkit = getToolkit();
     Dimension wndSize = theToolkit.getScreenSize();
-    setBounds((int)(wndSize.width*0.2f),(int)(wndSize.height*0.2f),
-              (int)(wndSize.width*0.6f),(int)(wndSize.height*0.6f));
-    searchDialog.setBounds((int)(wndSize.width*0.3f),(int)(wndSize.height*0.1f),
-              (int)(wndSize.width*0.4f),(int)(wndSize.height*0.5f));
-    autoSaveDialog.setBounds((int)(wndSize.width*0.5f),(int)(wndSize.height*0.3f),
-              (int)(wndSize.width*0.3f),(int)(wndSize.height*0.15f));
-    prefsDialog.setBounds((int)(wndSize.width*0.3f),(int)(wndSize.height*0.2f),
-              (int)(wndSize.width*0.6f),(int)(wndSize.height*0.4f));
-    nodeUrlDisplayDialog.setBounds((int)(wndSize.width*0.1f),(int)(wndSize.height*0.4f),
-              (int)(wndSize.width*0.8f),(int)(wndSize.height*0.2f));
+    int chosenWidth = (int)(wndSize.getWidth() * 0.6f);
+    int chosenHeight = (int)(wndSize.getHeight() * 0.6f);
+
+    // This bit attempts to ensure that the Jreepad view doesn't get too wide 
+    //   (e.g. for people with dual-screen systems)
+    //   - it limits the width/height proportion to the golden ratio!
+    // Can't seem to find anything in the Toolkit which would automatically give us multi-screen info
+    if(chosenWidth > (int)(((float)chosenHeight)*1.618034f) )
+      chosenWidth = (int)(((float)chosenHeight)*1.618034f);
+
+    setBounds(chosenWidth/3,chosenHeight/3,
+              chosenWidth, chosenHeight);
+    searchDialog.setBounds(chosenWidth/2,chosenHeight/6,
+              (int)(chosenWidth*0.7f),(int)(chosenHeight*0.9f));
+    autoSaveDialog.setBounds((int)(wndSize.width*0.5f),chosenHeight/2,
+              chosenWidth/2, chosenHeight/4);
+    prefsDialog.setBounds(chosenWidth/2,chosenHeight/3,
+              chosenWidth, chosenHeight);
+    nodeUrlDisplayDialog.setBounds((int)(wndSize.width*0.1f),(int)(chosenHeight*0.7f),
+              (int)(chosenWidth*1.3f), chosenHeight/3);
     setVisible(true);
   }
   
@@ -1465,20 +1496,20 @@ public class JreepadViewer extends JFrame
       openRecentTempFileList = new File[0];
     }
 
-    openRecentMenu.setEnabled(getPrefs().openRecentList.size()!=0);
+    openRecentMenu.setEnabled(getPrefs().openRecentList.size()>1);
 
     openRecentMenu.removeAll();
     
     JMenuItem tempMenuItem;
     File tempFile;
     char theChar;
-    for(int i=0; i<openRecentTempFileList.length; i++)
+    for(int i=1; i<openRecentTempFileList.length; i++)
     {
       tempFile = openRecentTempFileList[i];
       tempMenuItem = new JMenuItem(tempFile.getParentFile().getName() + "/" + tempFile.getName());
-      if(i<9)
+      if(i<10)
       {
-        theChar = ("" + (i+1)).charAt(0);
+        theChar = ("" + i).charAt(0);
         tempMenuItem.setText("("+theChar+") "+tempMenuItem.getText());
         tempMenuItem.setMnemonic(theChar);
       }
@@ -1495,5 +1526,45 @@ public class JreepadViewer extends JFrame
     public void actionPerformed(ActionEvent e) {openHjtFile(f);}
   } // End of:   private class FileOpeningActionListener extends ActionListener
 
+
+//  private void updateFontsInPrefsBox()
+//  {
+//    String treeFontName = getPrefs().treeFont.getFamily();
+//    String articleFontName = getPrefs().articleFont.getFamily();
+//    String treeFontSize = "" + getPrefs().treeFont.getSize();
+//    String articleFontSize = "" + getPrefs().articleFont.getSize();
+    
+//    int i;
+//    for(i=0; i<fonts.length; i++)
+//    {
+//      if(treeFontName.equals(fonts[i]))
+//        treeFontFamilySelector.setSelectedIndex(i);
+//      if(articleFontName.equals(fonts[i]))
+//      {
+//        articleFontFamilySelector.setSelectedIndex(i);
+//        break;
+//      }
+//    }
+//    for(i=0; i<fontSizes.length; i++)
+//    {
+//      if(treeFontSize.equals(fontSizes[i]))
+//        treeFontSizeSelector.setSelectedIndex(i);
+//      if(articleFontSize.equals(fontSizes[i]))
+//      {
+//        articleFontSizeSelector.setSelectedIndex(i);
+//        break;
+//      }
+//    }
+//  }
+  
+//  private void setFontsFromPrefsBox()
+//  {
+//    getPrefs().treeFont = new Font((String)treeFontFamilySelector.getSelectedItem(), Font.PLAIN, 
+//                   getPrefs().treeFont.getSize() );
+//    getPrefs().articleFont = new Font((String)articleFontFamilySelector.getSelectedItem(), Font.PLAIN, 
+//                   (Integer.valueOf((String)articleFontSizeSelector.getSelectedItem())).intValue()  );
+//    theJreepad.setTreeFont(getPrefs().treeFont);
+//    theJreepad.setArticleFont(getPrefs().articleFont);
+//  }
 
 }

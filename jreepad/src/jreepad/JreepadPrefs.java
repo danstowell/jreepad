@@ -73,6 +73,9 @@ public class JreepadPrefs implements Serializable
   Vector openRecentList;
   int openRecentListLength;
   
+  Font treeFont;
+  Font articleFont;
+  
   JreepadPrefs()
   {
     openLocation = new File(System.getProperty("user.home"));
@@ -102,6 +105,9 @@ public class JreepadPrefs implements Serializable
     
     openRecentList = new Vector();
     openRecentListLength = 10;
+    
+    treeFont = (new JTree()).getFont();
+    articleFont = (new JEditorPane()).getFont();
   }
   
   // We override the serialization routines so that different versions of our class can read 
@@ -140,6 +146,9 @@ public class JreepadPrefs implements Serializable
 
     out.writeObject(openRecentList);
     out.writeInt(openRecentListLength);
+
+    out.writeObject(treeFont);
+    out.writeObject(articleFont);
   }
   private void readObject(java.io.ObjectInputStream in)
      throws IOException, ClassNotFoundException
@@ -177,6 +186,9 @@ public class JreepadPrefs implements Serializable
     
     openRecentList = (Vector)in.readObject();
     openRecentListLength = in.readInt();
+
+    treeFont = (Font)in.readObject();
+    articleFont = (Font)in.readObject();
    }
    catch(EOFException e)
    {
