@@ -17,6 +17,13 @@ public class JreepadViewer extends JFrame
   private File saveLocation = new File("/Users/dan/javaTestArea/Jreepad/");
   private JFileChooser fileChooser;
   
+  private JMenuBar menuBar;
+  private JMenu fileMenu;
+  private JMenuItem newMenuItem;
+  private JMenuItem openMenuItem;
+  private JMenuItem saveMenuItem;
+  private JMenuItem quitMenuItem;
+  
   public JreepadViewer()
   {
     fileChooser = new JFileChooser();
@@ -32,14 +39,38 @@ public class JreepadViewer extends JFrame
     catch(IOException e)    {      e.printStackTrace();    }
 */
     
+    // Create the menu bar
+    menuBar = new JMenuBar();
+    //
+    fileMenu = new JMenu("File");
+    //
+    newMenuItem = new JMenuItem("New");
+    newMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {content.remove(theJreepad); theJreepad = new JreepadView(); content.add(theJreepad); repaint();}});
+    fileMenu.add(newMenuItem);
+    openMenuItem = new JMenuItem("Open");
+    openMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {openAction();}});
+    fileMenu.add(openMenuItem);
+    saveMenuItem = new JMenuItem("Save");
+    saveMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {saveAction();}});
+    fileMenu.add(saveMenuItem);
+    quitMenuItem = new JMenuItem("Quit");
+    quitMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { System.exit(0); }});
+    fileMenu.add(quitMenuItem);
+    //
+    menuBar.add(fileMenu);
+    setJMenuBar(menuBar);
+    // Finished creating the menu bar
+    
     // Add the toolbar buttons
     toolBar = Box.createHorizontalBox();
+   /* THESE BUTTONS HAVE BEEN REMOVED. But leave the code here, since they may later be replaced with iconic buttons.
     JButton newButton = new JButton("New");
     toolBar.add(newButton);
     JButton openButton = new JButton("Open");
     toolBar.add(openButton);
     JButton saveButton = new JButton("Save");
     toolBar.add(saveButton);
+   */
     //
     JButton addButton = new JButton("Add");
     toolBar.add(addButton);
@@ -59,12 +90,14 @@ public class JreepadViewer extends JFrame
     toolBar.add(viewArticleButton);
     
     // Add the actions to the toolbar buttons
+   /* THESE BUTTONS HAVE BEEN REMOVED. But leave the code here, since they may later be replaced with iconic buttons.
     newButton.addActionListener(new ActionListener(){
                                public void actionPerformed(ActionEvent e){ content.remove(theJreepad); theJreepad = new JreepadView(); content.add(theJreepad); repaint(); } });
     openButton.addActionListener(new ActionListener(){
                                public void actionPerformed(ActionEvent e){ openAction(); } });
     saveButton.addActionListener(new ActionListener(){
                                public void actionPerformed(ActionEvent e){ saveAction(); } });
+   */
     upButton.addActionListener(new ActionListener(){
                                public void actionPerformed(ActionEvent e){ theJreepad.moveCurrentNodeUp(); repaint(); } });
     downButton.addActionListener(new ActionListener(){
@@ -87,10 +120,11 @@ public class JreepadViewer extends JFrame
 
     // Finally, make the window visible and well-sized
     setDefaultCloseOperation(EXIT_ON_CLOSE);
-    setTitle("JreepadViewer - Java Treepad Viewer");
+    setTitleBasedOnFilename("");
     Toolkit theToolkit = getToolkit();
     Dimension wndSize = theToolkit.getScreenSize();
-    setBounds(0,0,(int)(wndSize.width*0.6f),(int)(wndSize.height*0.6f));
+    setBounds((int)(wndSize.width*0.2f),(int)(wndSize.width*0.2f),
+              (int)(wndSize.width*0.6f),(int)(wndSize.height*0.6f));
     setVisible(true);
   }
   
@@ -110,6 +144,7 @@ public class JreepadViewer extends JFrame
         content.remove(theJreepad);
         theJreepad = new JreepadView(new JreepadNode(new FileInputStream(openLocation)));
         content.add(theJreepad);
+        setTitleBasedOnFilename(openLocation.getName());
         validate();
         repaint();
       }
@@ -134,6 +169,7 @@ public class JreepadViewer extends JFrame
         dO.writeBytes(writeMe);
         dO.close();
         fO.close();
+        setTitleBasedOnFilename(saveLocation.getName());
       }
     }
     catch(IOException err)
@@ -141,4 +177,12 @@ public class JreepadViewer extends JFrame
       JOptionPane.showMessageDialog(theApp, err, "File input error" , JOptionPane.ERROR_MESSAGE);
     }
   } // End of: saveAction()
+
+  private void setTitleBasedOnFilename(String filename)
+  {
+    if(filename=="")
+      setTitle("Jreepad (Java Treepad Editor)");
+    else
+      setTitle(filename + " - Jreepad");
+  }
 }
