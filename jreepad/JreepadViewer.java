@@ -32,6 +32,8 @@ public class JreepadViewer extends JFrame
   private JMenuItem deleteMenuItem;
   private JMenuItem upMenuItem;
   private JMenuItem downMenuItem;
+  private JMenuItem sortMenuItem;
+  private JMenuItem sortRecursiveMenuItem;
   private JMenu viewMenu;
   private JMenuItem viewBothMenuItem;
   private JMenuItem viewTreeMenuItem;
@@ -68,6 +70,7 @@ public class JreepadViewer extends JFrame
     saveMenuItem = new JMenuItem("Save");
     saveMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {saveAction();}});
     fileMenu.add(saveMenuItem);
+    fileMenu.add(new JSeparator());
     quitMenuItem = new JMenuItem("Quit");
     quitMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { System.exit(0); }});
     fileMenu.add(quitMenuItem);
@@ -81,15 +84,24 @@ public class JreepadViewer extends JFrame
     addChildMenuItem = new JMenuItem("Add child");
     addChildMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { theJreepad.addNode(); }});
     editMenu.add(addChildMenuItem);
+    editMenu.add(new JSeparator());
     deleteMenuItem = new JMenuItem("Delete node");
     deleteMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { theJreepad.removeNode();  }});
     editMenu.add(deleteMenuItem);
+    editMenu.add(new JSeparator());
     upMenuItem = new JMenuItem("Move node up");
     upMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { theJreepad.moveCurrentNodeUp(); }});
     editMenu.add(upMenuItem);
     downMenuItem = new JMenuItem("Move node down");
     downMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { theJreepad.moveCurrentNodeDown(); }});
     editMenu.add(downMenuItem);
+    editMenu.add(new JSeparator());
+    sortMenuItem = new JMenuItem("Sort children (one level)");
+    sortMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { theJreepad.sortChildren(); }});
+    editMenu.add(sortMenuItem);
+    sortRecursiveMenuItem = new JMenuItem("Sort children (all levels)");
+    sortRecursiveMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { theJreepad.sortChildrenRecursive(); }});
+    editMenu.add(sortRecursiveMenuItem);
     //
     viewBothMenuItem = new JMenuItem("Both tree and article");
     viewBothMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { theJreepad.setViewBoth(); }});

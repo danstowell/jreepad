@@ -4,13 +4,14 @@ import java.util.*;
 import java.io.*;
 import javax.swing.tree.*;
 
-public class JreepadNode implements Serializable, TreeNode, MutableTreeNode
+public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Comparable
 {
   private Vector children;
   private String title;
   private String content;
 //  private int childrenCount=0;
   private JreepadNode parentNode;
+  private OurSortComparator ourSortComparator;
 
   public JreepadNode()
   {
@@ -25,6 +26,7 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode
     this.title = title;
     this.content = content;
     this.parentNode = parentNode;
+    ourSortComparator = new OurSortComparator();
     children = new Vector();
   }
   public JreepadNode(InputStream treeInputStream) throws IOException
@@ -138,14 +140,13 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode
   public void addChild(JreepadNode child)
   {
     children.add(child);
- //   childrenCount++;
+    child.setParent(this);
   }
   public JreepadNode removeChild(int child) // Can be used to delete, OR to 'get' one for moving
   {
     if(child<0 || child > children.size()) return null;
     
     JreepadNode ret = (JreepadNode)children.remove(child);
-//    childrenCount--;
     return ret;
   }
   public TreeNode getChildAt(int child)
@@ -188,16 +189,6 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode
 
     children.add(child+1, children.remove(child));
   }
-/*
-  public void moveChildUp(JreepadNode thisChild)
-  {
-    moveChildUp(children.indexOf(thisChild));
-  }
-  public void moveChildDown(JreepadNode thisChild)
-  {
-    moveChildDown(children.indexOf(thisChild));
-  }
-*/
   public void moveUp()
   {
     if(getParentNode()==null) return;
@@ -206,7 +197,6 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode
     
     removeFromParent();
     getParentNode().insert(this, index-1);
-    System.out.println("Moved from pos " + index + " to " + (index-1));
   }
   public void moveDown()
   {
@@ -216,18 +206,19 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode
     
     removeFromParent();
     getParentNode().insert(this, index+1);
-    System.out.println("Moved from pos " + index + " to " + (index+1));
   }
   public JreepadNode addChild()
   {
     JreepadNode theChild = new JreepadNode(this);
     children.add(theChild);
+    theChild.setParent(this);
     return theChild;
   }
   public JreepadNode addChild(int index)
   {
     JreepadNode theChild = new JreepadNode(this);
     children.add(index, theChild);
+    theChild.setParent(this);
     return theChild;
   }
   
@@ -245,14 +236,57 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode
     return getParent().getIndex(this);
   }
   
+  public boolean isNodeInSubtree(JreepadNode n)
+  {
+    for(int i=0; i<getChildCount(); i++)
+    {
+      JreepadNode aChild = (JreepadNode)getChildAt(i);
+      if(aChild.equals(n) || aChild.isNodeInSubtree(n))
+        return true;
+    }
+    return false;
+  }
+  
   public void sortChildren()
   {
+    sort();
   }
 
   public void sortChildrenRecursive()
   {
+    sort();
+    for(int i=0; i<getChildCount(); i++)
+      ((JreepadNode)getChildAt(i)).sortChildrenRecursive();
   }
-  
+
+  // Function for using Java's built-in mergesort
+  private void sort()
+  {
+    Object[] childrenArray = children.toArray();
+    java.util.Arrays.sort(childrenArray, ourSortComparator);
+    children = new Vector();
+    for(int i=0; i<childrenArray.length; i++)
+      children.add((JreepadNode)childrenArray[i]);
+  }
+  private class OurSortComparator implements Comparator
+  {
+    public int compare(Object o1, Object o2)
+    {
+      return ((JreepadNode)o1).getTitle().compareToIgnoreCase(
+            ((JreepadNode)o2).getTitle());
+    }
+    public boolean equals(Object obj)
+    {
+      return obj.equals(this); // Lazy!
+    }
+  }
+  public int compareTo(Object o)
+  {
+    return getTitle().compareToIgnoreCase(
+            ((JreepadNode)o).getTitle());
+  }
+  // End of: Stuff to use Java's built-in mergesort
+
   public boolean getAllowsChildren() { return true; } // Required by TreeNode interface
   public boolean isLeaf()
   {

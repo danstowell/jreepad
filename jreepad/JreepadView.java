@@ -22,6 +22,7 @@ public class JreepadView extends Box
 {
   private JreepadNode root;
   private JreepadNode currentNode;
+  private JreepadNode currentDragDropNode;
   private TreeNode topNode;
   private JreepadTreeModel treeModel;
   private JTree tree;
@@ -81,6 +82,55 @@ public class JreepadView extends Box
                       }
                    }); 
 
+    // Add mouse listener - this will be used to implement drag-and-drop, context menu (?), etc
+    MouseListener ml = new MouseAdapter()
+    {
+      public void mousePressed(MouseEvent e)
+      {
+        TreePath selPath = tree.getPathForLocation(e.getX(), e.getY());
+//        System.out.println("Mouse pressed: path = " + selPath);
+        if(selPath != null)
+        {
+          currentDragDropNode = (JreepadNode)selPath.getLastPathComponent();
+          // if(e.getClickCount() == 1) {mySingleClick(selPath);}
+//            System.out.println("Setting dragdrop node to " + currentDragDropNode);
+        }
+      }
+      public void mouseReleased(MouseEvent e)
+      {
+        TreePath selPath = tree.getPathForLocation(e.getX(), e.getY());
+//        System.out.println("Mouse released: path = " + selPath);
+        if(selPath != null)
+        {
+          if(currentDragDropNode != null && 
+             currentDragDropNode.getParentNode() != null && 
+             currentDragDropNode.getParentNode() != (JreepadNode)selPath.getLastPathComponent() && 
+             currentDragDropNode != (JreepadNode)selPath.getLastPathComponent())
+          {
+            // Then we need to perform a drag-and-drop operation!
+//            System.out.println("Drag-and-drop event occurred!");
+            moveNode(currentDragDropNode, (JreepadNode)selPath.getLastPathComponent());
+          }
+        }
+        currentDragDropNode = null;
+      }
+      public void mouseClicked(MouseEvent e)
+      {
+        TreePath selPath = tree.getPathForLocation(e.getX(), e.getY());
+ //       System.out.println("Mouse clicked: path = " + selPath);
+        if(selPath != null)
+        {
+          if(e.isPopupTrigger())
+          {
+            // Now we can implement the pop-up content menu
+            System.out.println("Context menu would be launched here!");
+          }
+        }
+      }
+    };
+    tree.addMouseListener(ml); 
+ 
+ 
     treeView.setViewportView(tree);
 
 
@@ -151,6 +201,22 @@ public class JreepadView extends Box
     return currentNode;
   }
 
+  public void moveNode(JreepadNode node, JreepadNode newParent)
+  {
+    // First we need to make sure that the node is not a parent of the new parent
+    // - otherwise things would go really wonky!
+    if(node.isNodeInSubtree(newParent))
+    {
+//      System.out.println("New parent is in subtree - therefore moving not possible!");
+      return;
+    }
+    JreepadNode oldParent = node.getParentNode();
+    node.removeFromParent();
+    newParent.addChild(node);
+//    treeModel.reload(oldParent);
+    treeModel.reload((TreeNode)tree.getPathForRow(0).getLastPathComponent());
+  }
+
   public void moveCurrentNodeUp()
   {
     currentNode.moveUp();
@@ -185,6 +251,8 @@ public class JreepadView extends Box
   public JreepadNode addNode()
   {
     JreepadNode ret = currentNode.addChild();
+//    TreePath path = 
+//    tree.setSelectionPath(path);
     treeModel.nodesWereInserted(currentNode, new int[]{currentNode.getIndex(ret)});
     return ret;
   }
@@ -206,21 +274,20 @@ public class JreepadView extends Box
       return null;
   }
 
-/*
-DEPRECATED - HOPEFULLY! Should simply use JreepadNodes instead of mirroring them in DMTNs
 
-  private void createNodes(DefaultMutableTreeNode parentNode, JreepadNode parent)
+  public void sortChildren()
   {
-    DefaultMutableTreeNode temp;
-    for(int i=0; i<parent.getChildCount(); i++)
-    {
-      temp = new DefaultMutableTreeNode(parent.getChildAt(i)); // Create a "leaf"
-      createNodes(temp, (JreepadNode)parent.getChildAt(i)); // Create any children the leaf requires
-      parentNode.add(temp); // Add the leaf on to the tree
-    }
+    currentNode.sortChildren();
+    treeModel.reload(currentNode);
+    // System.out.println(currentNode.toFullString());
   }
-*/
-
+  public void sortChildrenRecursive()
+  {
+    currentNode.sortChildrenRecursive();
+    treeModel.reload(currentNode);
+    // System.out.println(currentNode.toFullString());
+  }
+  
   class JreepadTreeModelListener implements TreeModelListener
   {
     public void treeNodesChanged(TreeModelEvent e)
