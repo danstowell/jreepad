@@ -58,6 +58,8 @@ public class JreepadView extends Box
 
     tree = new JTree(treeModel);
     tree.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
+    tree.setExpandsSelectedPaths(true);
+    tree.setInvokesStopCellEditing(true);
     tree.setEditable(true);
     
     tree.setModel(treeModel);
@@ -151,6 +153,7 @@ public class JreepadView extends Box
 
     setViewBoth();
     setCurrentNode(root);
+    tree.setSelectionRow(0);
   }
 
   public void setViewBoth()
@@ -217,15 +220,56 @@ public class JreepadView extends Box
     treeModel.reload((TreeNode)tree.getPathForRow(0).getLastPathComponent());
   }
 
+  public void indentCurrentNode()
+  {
+    int nodeRow = tree.getLeadSelectionRow();
+    TreePath parentPath = tree.getSelectionPath().getParentPath();
+    int pos = currentNode.getIndex();
+    if(pos<1) return;
+    
+    JreepadNode newParent = ((JreepadNode)currentNode.getParent().getChildAt(pos-1));
+    
+    if(currentNode.indent())
+    {
+      treeModel.reload(currentNode.getParent().getParent());
+      parentPath = parentPath.pathByAddingChild(newParent);
+      TreePath myPath = parentPath.pathByAddingChild(currentNode);
+      // Now use scrollPathToVisible() or scrollRowToVisible() to make sure it's visible
+      tree.scrollPathToVisible(myPath);
+      tree.setSelectionPath(myPath);
+    }
+  }
+  public void outdentCurrentNode()
+  {
+    TreePath parentPath = tree.getSelectionPath().getParentPath();
+    if(parentPath==null) return;
+    TreePath parentParentPath = parentPath.getParentPath();
+    if(parentParentPath==null) return;
+
+    if(currentNode.outdent())
+    {
+      TreePath myPath = parentParentPath.pathByAddingChild(currentNode);
+      treeModel.reload(currentNode.getParent());
+      // Now use scrollPathToVisible() or scrollRowToVisible() to make sure it's visible
+      tree.scrollPathToVisible(myPath);
+      tree.setSelectionPath(myPath);
+      System.out.println("New path: " + myPath);
+    }
+  }
+
   public void moveCurrentNodeUp()
   {
+    TreePath nodePath = tree.getSelectionPath();
     currentNode.moveUp();
     treeModel.reload(currentNode.getParent());
+    tree.setSelectionPath(nodePath);
   }
   public void moveCurrentNodeDown()
   {
+    TreePath nodePath = tree.getSelectionPath();
     currentNode.moveDown();
     treeModel.reload(currentNode.getParent());
+    tree.setSelectionPath(nodePath);
   }
   
   public JreepadNode addNodeAbove()
@@ -233,9 +277,11 @@ public class JreepadView extends Box
     int index = currentNode.getIndex();
     if(index==-1)
       return null;
+    TreePath parentPath = tree.getSelectionPath().getParentPath();
     JreepadNode parent = currentNode.getParentNode();
     JreepadNode ret = parent.addChild(index);
     treeModel.nodesWereInserted(parent, new int[]{index});
+    tree.startEditingAtPath(parentPath.pathByAddingChild(ret));
     return ret;
   }
   public JreepadNode addNodeBelow()
@@ -243,17 +289,19 @@ public class JreepadView extends Box
     int index = currentNode.getIndex();
     if(index==-1)
       return null;
+    TreePath parentPath = tree.getSelectionPath().getParentPath();
     JreepadNode parent = currentNode.getParentNode();
     JreepadNode ret = parent.addChild(index+1);
     treeModel.nodesWereInserted(parent, new int[]{index+1});
+    tree.startEditingAtPath(parentPath.pathByAddingChild(ret));
     return ret;
   }
   public JreepadNode addNode()
   {
     JreepadNode ret = currentNode.addChild();
-//    TreePath path = 
-//    tree.setSelectionPath(path);
+    TreePath nodePath = tree.getSelectionPath();
     treeModel.nodesWereInserted(currentNode, new int[]{currentNode.getIndex(ret)});
+    tree.startEditingAtPath(nodePath.pathByAddingChild(ret));
     return ret;
   }
   public JreepadNode removeNode()
@@ -274,7 +322,6 @@ public class JreepadView extends Box
       return null;
   }
 
-
   public void sortChildren()
   {
     currentNode.sortChildren();
@@ -286,6 +333,11 @@ public class JreepadView extends Box
     currentNode.sortChildrenRecursive();
     treeModel.reload(currentNode);
     // System.out.println(currentNode.toFullString());
+  }
+  
+  public void returnFocusToTree()
+  {
+    tree.requestFocus();
   }
   
   class JreepadTreeModelListener implements TreeModelListener

@@ -160,20 +160,39 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
   {
     return children.size();
   }
-
-  public void indentChild(int child)
+  public boolean indent()
   {
-    if(child<0 || child>= children.size())
-      return;
-//    else
-//      return (JreepadNode)children.get(child);
+    // Get position in parent. If zero or -1 then return.
+    int pos = getIndex();
+    if(pos<1) return false;
+    // Get sibling node just above, and move self to there.
+    getParentNode().removeChild(pos);
+    JreepadNode newParent = (JreepadNode)getParentNode().getChildAt(pos-1);
+    newParent.addChild(this);
+    setParent(newParent);
+    return true;
   }
-  public void outdentChild(int child)
+  public boolean outdent()
   {
-    if(child<0 || child>= children.size())
-      return;
-//    else
-//      return (JreepadNode)children.get(child);
+    // Get parent's parent. If null then return.
+    JreepadNode p = (JreepadNode)getParent();
+    if(p==null) return false;
+    JreepadNode pp = (JreepadNode)p.getParent();
+    if(pp==null) return false;
+    // Get parent's position in its parent. = ppos
+    int ppos = p.getIndex();
+    // Move self to parent's parent, at (ppos+1)
+    p.removeChild(getIndex());
+    pp.insert(this, ppos+1);
+    setParent(pp);
+
+    // Also (as in the original treepad) move all the later siblings so they're children of this node
+
+
+    // NOT DONE YET
+
+
+    return true;
   }
   public void moveChildUp(int child)
   {
