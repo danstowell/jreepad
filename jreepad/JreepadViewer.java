@@ -28,6 +28,7 @@ public class JreepadViewer extends JFrame
   private JComboBox searchCombinatorSelector;
   private JCheckBox searchCaseCheckBox;
   private JComboBox searchWhereSelector;
+  private JSpinner searchMaxNumSpinner;
   private JButton searchGoButton;
   private JButton searchCloseButton;
   private JLabel searchResultsLabel;
@@ -391,6 +392,12 @@ public class JreepadViewer extends JFrame
     hBox.add(searchWhereSelector);
     vBox.add(hBox);
     //
+    searchMaxNumSpinner = new JSpinner(new SpinnerNumberModel(200,1,1000,1));
+    hBox = Box.createHorizontalBox();
+    hBox.add(new JLabel("Max number of results: "));
+    hBox.add(searchMaxNumSpinner);
+    vBox.add(hBox);
+    //
     hBox = Box.createHorizontalBox();
     hBox.add(searchGoButton = new JButton("Search"));
     searchGoButton.addActionListener(new ActionListener(){
@@ -398,7 +405,9 @@ public class JreepadViewer extends JFrame
                                {
                                  performSearch(nodeSearchField.getText(), articleSearchField.getText(), 
                                  searchWhereSelector.getSelectedIndex(), searchCombinatorSelector.getSelectedIndex()==0,
-                                 searchCaseCheckBox.isSelected());
+                                 searchCaseCheckBox.isSelected(), 
+                                 (Integer.valueOf(searchMaxNumSpinner.getValue().toString())).intValue()
+                                 );
                                } });
     hBox.add(searchCloseButton = new JButton("Close"));
     searchCloseButton.addActionListener(new ActionListener(){
@@ -604,9 +613,10 @@ public class JreepadViewer extends JFrame
   } // End of: openSearchDialog()
   
   private boolean performSearch(String inNodes, String inArticles, int searchWhat /* 0=selected, 1=all */, 
-                                boolean orNotAnd, boolean caseSensitive)
+                                boolean orNotAnd, boolean caseSensitive, int maxResults)
   {
-    boolean ret = theJreepad.performSearch(inNodes, inArticles, searchWhat, orNotAnd, caseSensitive);
+    boolean ret = theJreepad.performSearch(inNodes, inArticles, searchWhat, orNotAnd, 
+                                          caseSensitive, maxResults);
     if(!ret)
     {
       JOptionPane.showMessageDialog(searchDialog, "Found nothing.", "Search result..." , JOptionPane.INFORMATION_MESSAGE);

@@ -375,7 +375,7 @@ public class JreepadView extends Box
   private Vector searchResultsVec;
   private Object foundObject;
   public boolean performSearch(String inNodes, String inArticles, int searchWhat /* 0=selected, 1=all */,
-  							boolean orNotAnd, boolean caseSensitive)
+  							boolean orNotAnd, boolean caseSensitive, int maxResults)
   {
     searchResults = null;
     searchResultsVec = new Vector();
@@ -384,10 +384,10 @@ public class JreepadView extends Box
     switch(searchWhat)
     {
       case 0: // search selected node
-        recursiveSearchNode(inNodes, inArticles, currentNode, tree.getSelectionPath(), orNotAnd, caseSensitive);
+        recursiveSearchNode(inNodes, inArticles, currentNode, tree.getSelectionPath(), orNotAnd, caseSensitive, maxResults);
         break;
       default: // case 1==search whole tree
-        recursiveSearchNode(inNodes, inArticles, root, new TreePath(root), orNotAnd, caseSensitive);
+        recursiveSearchNode(inNodes, inArticles, root, new TreePath(root), orNotAnd, caseSensitive, maxResults);
         break;
     }
 
@@ -405,8 +405,10 @@ public class JreepadView extends Box
   }
   private static final int articleQuoteMaxLen = 40;
   private void recursiveSearchNode(String inNodes, String inArticles, JreepadNode thisNode, TreePath pathSoFar,
-  					boolean orNotAnd, boolean caseSensitive)
+  					boolean orNotAnd, boolean caseSensitive, int maxResults)
   {
+    if(searchResultsVec.size()>=maxResults) return;
+    
     String quoteText;
     
     // These things ensure case-sensitivity behaves
@@ -469,7 +471,7 @@ public class JreepadView extends Box
     {
       thisKid = (JreepadNode)getKids.nextElement();
       recursiveSearchNode(inNodes, inArticles, thisKid, pathSoFar.pathByAddingChild(thisKid), 
-                          orNotAnd, caseSensitive);
+                          orNotAnd, caseSensitive, maxResults);
     }
   }
   public JreepadSearchResult[] getSearchResults()
