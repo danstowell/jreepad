@@ -159,35 +159,71 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
     return ret;
   }
 
-  public String exportAsHtml()
+  public static final String[] getHtmlExportArticleTypes()
   {
-    return exportAsHtml(true).toString();
+    return new String[]{"Ordinary text", "Preformatted text", "HTML markup"};
   }
-  public StringBuffer exportAsHtml(boolean isRoot)
+  public static final String[] getHtmlExportAnchorLinkTypes()
+  {
+    return new String[]{"node:// links", "WikiLike links"};
+  }
+  public static final int EXPORT_HTML_NORMAL=0;
+  public static final int EXPORT_HTML_PREFORMATTED=1;
+  public static final int EXPORT_HTML_HTML=2;
+  public static final int EXPORT_HTML_ANCHORS_PATH=0;
+  public static final int EXPORT_HTML_ANCHORS_WIKI=1;
+  public String exportAsHtml(int exportMode, boolean urlsToLinks, int anchorType)
   {
     StringBuffer ret = new StringBuffer();
-    if(isRoot)
-    {
-      ret.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">\n<html xmlns=\"http://www.w3.org/1999/xhtml\" xml:lang=\"en\">\n<head>\n<title>");
-      ret.append(htmlSpecialChars(getTitle()));
-      ret.append("</title>\n<style type=\"text/css\">\n"
-        + "dl {}\ndl dt { font-weight: bold; margin-top: 10px; font-size: 24pt; }\ndl dd {margin-left: 20px; padding-left: 0px;}\ndl dd dl dt {background: black; color: white; font-size: 12pt; }\ndl dd dl dd dl dt {background: white; color: black; }"
-        + "\n</style>\n</head>\n\n<body>\n<!-- Exported from Jreepad -->\n<dl>");
-    }
-    ret.append("\n<dt>");
+    ret.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">\n<html xmlns=\"http://www.w3.org/1999/xhtml\" xml:lang=\"en\">\n<head>\n<title>");
+    ret.append(htmlSpecialChars(getTitle()));
+    ret.append("</title>\n<style type=\"text/css\">\n"
+   	  + "dl {}\ndl dt { font-weight: bold; margin-top: 10px; font-size: 24pt; }\ndl dd {margin-left: 20px; padding-left: 0px;}\ndl dd dl dt {background: black; color: white; font-size: 12pt; }\ndl dd dl dd dl dt {background: white; color: black; }"
+	  + "\n</style>\n</head>\n\n<body>\n<!-- Exported from Jreepad -->\n<dl>");
+    ret.append(exportAsHtml(exportMode, urlsToLinks, htmlSpecialChars(getTitle()), anchorType));
+    ret.append("\n</dl>\n</body>\n</html>");
+    return ret.toString();
+  }
+  public StringBuffer exportAsHtml(int exportMode, boolean urlsToLinks, String anchorName, int anchorType)
+  {
+    StringBuffer ret = new StringBuffer();
+    ret.append("\n<dt><a name=\"");
+    if(anchorType==EXPORT_HTML_ANCHORS_WIKI)
+      ret.append(getTitle());
+    else
+      ret.append(anchorName);
+    ret.append("\"></a>");
     ret.append(htmlSpecialChars(getTitle()));
     ret.append("</dt>\n<dd>");
-    ret.append(htmlSpecialChars(getContent()));
+
+    // Write out the node's article content - using normal, preformatted, or HTML modes as appropriate
+    switch(exportMode)
+    {
+      case EXPORT_HTML_PREFORMATTED:
+        ret.append("<pre>");
+        ret.append(urlsToLinks ? urlsToHtmlLinksAndHtmlSpecialChars(getContent(), anchorType) : htmlSpecialChars(getContent()) );
+        ret.append("</pre>");
+        break;
+      case EXPORT_HTML_HTML:
+        ret.append(getContent());
+        break;
+      case EXPORT_HTML_NORMAL:
+      default:
+        ret.append(urlsToLinks ? urlsToHtmlLinksAndHtmlSpecialChars(getContent(), anchorType) : htmlSpecialChars(getContent()) );
+        break;
+    }
+
     if(children.size()>0)
       ret.append("\n<dl>");
     for(int i=0; i<children.size(); i++)
-      ret.append(((JreepadNode)getChildAt(i)).exportAsHtml(false));
+    {
+      JreepadNode thisKid = (JreepadNode)getChildAt(i);
+      ret.append(thisKid.exportAsHtml(exportMode, urlsToLinks, anchorName+"/"+htmlSpecialChars(thisKid.getTitle()), anchorType));
+    }
     if(children.size()>0)
       ret.append("\n</dl>");
     ret.append("</dd>");
 
-    if(isRoot)
-      ret.append("\n</dl>\n</body>\n</html>");
     return ret;
   }
   private String htmlSpecialChars(String in)
@@ -195,17 +231,88 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
     char[] c = in.toCharArray();
     StringBuffer ret = new StringBuffer();
     for(int i=0; i<c.length; i++)
-      if(c[i]=='<')
-        ret.append("&lt;");
-      else if(c[i]=='>')
-        ret.append("&gt;");
-      else if(c[i]=='&')
-        ret.append("&amp;");
-      else if(c[i]=='\n')
-        ret.append("<br />\n");
-      else
-        ret.append(c[i]);
+      if(c[i]=='<')       ret.append("&lt;");
+      else if(c[i]=='>')  ret.append("&gt;");
+      else if(c[i]=='&')  ret.append("&amp;");
+      else if(c[i]=='\n') ret.append(" <br />\n");
+      else if(c[i]=='"') ret.append("&quot;");
+      else                ret.append(c[i]);
     return ret.toString();
+  }
+  
+  // Search through the String, replacing URI-like substrings (containing ://) with HTML links
+  private String urlsToHtmlLinksAndHtmlSpecialChars(String in, int anchorType)
+  {
+    StringCharacterIterator iter = new StringCharacterIterator(in);
+    StringBuffer out = new StringBuffer("");
+    StringBuffer currentWord = new StringBuffer(""); // "space" characters get stuck straight back out, but words need aggregating
+
+    char c = iter.current(), c2;
+    while(true)
+    {
+      if(Character.isWhitespace(c) || c=='"' || c=='\'' || c=='<' || c=='>' || c=='\n' || c==CharacterIterator.DONE)
+      {
+       // // First check whether currentWord is empty...?
+       // if(c!=CharacterIterator.DONE && currentWord.length()==0)
+       //   continue;
+        
+        // Check if the current word is a URL - do weird stuff to it if so, else just output it
+        if(currentWord.toString().indexOf("://")>0)
+        {
+          // We don't like quotes - let's remove 'em!
+          // Ideally, a beginning quote would signify that we need to keep on searching until we find an end quote
+          //   but that aspect is NOT IMPLEMENTED YET
+          c2 = currentWord.charAt(0);
+          if(c2=='"' || c2=='\'')
+            currentWord.deleteCharAt(0);
+          c2 = currentWord.charAt(currentWord.length()-1);
+          if(c2=='"' || c2=='\'')
+            currentWord.deleteCharAt(currentWord.length()-1);
+
+          // At this stage, beginning with "node://" should indicate that we want an anchor link not a "real" HTML link
+          String currentWordString = currentWord.toString();
+          if(currentWordString.startsWith("node://"))
+          {
+            String anchorLink;
+            if(anchorType==EXPORT_HTML_ANCHORS_WIKI)
+              anchorLink = currentWordString.substring(currentWordString.lastIndexOf('/')+1);
+            else
+              anchorLink = currentWordString.substring(7);
+            out.append("<a href=\"#" + anchorLink + "\">" + currentWordString + "</a>");
+          }
+          else
+            out.append("<a href=\"" + currentWord + "\">" + currentWordString + "</a>");
+        }
+        else if(anchorType==EXPORT_HTML_ANCHORS_WIKI && JreepadView.isWikiWord(currentWord.toString()))
+        {
+          String currentWordString = currentWord.toString();
+          if(currentWordString.length()>4 && currentWordString.startsWith("[[") && currentWordString.endsWith("]]"))
+            currentWordString = currentWordString.substring(2, currentWordString.length()-2);
+          out.append("<a href=\"#" + currentWordString + "\">" + currentWordString + "</a>");
+        }
+        else
+          out.append(currentWord.toString());
+ 		if(c=='<')       out.append("&lt;");
+		else if(c=='>')  out.append("&gt;");
+		else if(c=='\n') out.append(" <br />\n");
+		else if(c=='"') out.append("&quot;");
+		else if(c=='&') out.append("&amp;");
+		else if(c==CharacterIterator.DONE);
+		else                out.append(c);
+       
+        currentWord.setLength(0);
+        
+        if(c==CharacterIterator.DONE)
+          break;
+      }
+      else
+      {
+        currentWord.append(c); // Just aggregate character onto current "Word"
+      }
+      c = iter.next();
+    } // End "while"
+
+    return out.toString();
   }
 
   public String exportAsSimpleXml()

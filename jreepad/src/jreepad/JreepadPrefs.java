@@ -99,6 +99,10 @@ public class JreepadPrefs implements Serializable
   
   TreePathCollection treePathCollection;
   
+  int htmlExportArticleType;
+  boolean htmlExportUrlsToLinks;
+  int htmlExportAnchorLinkType;
+  
   JreepadPrefs(Dimension wndSize)
   {
     openLocation = new File(System.getProperty("user.home"));
@@ -154,6 +158,10 @@ public class JreepadPrefs implements Serializable
     windowLeft = windowWidth/3;    
     
     treePathCollection = new TreePathCollection(new javax.swing.tree.TreePath[0]);
+    
+    htmlExportArticleType = 0;
+    htmlExportUrlsToLinks = true;
+    htmlExportAnchorLinkType = 1;
   }
   
   // We override the serialization routines so that different versions of our class can read 
@@ -208,6 +216,10 @@ public class JreepadPrefs implements Serializable
     out.writeInt(linebreakType);
     
     out.writeObject(treePathCollection);
+    
+    out.writeInt(htmlExportArticleType);
+    out.writeBoolean(htmlExportUrlsToLinks);
+    out.writeInt(htmlExportAnchorLinkType);
   }
   private void readObject(java.io.ObjectInputStream in)
      throws IOException, ClassNotFoundException
@@ -261,8 +273,12 @@ public class JreepadPrefs implements Serializable
     linebreakType = in.readInt();
     
     treePathCollection = (TreePathCollection)in.readObject();
+    
+    htmlExportArticleType = in.readInt();
+    htmlExportUrlsToLinks = in.readBoolean();
+    htmlExportAnchorLinkType = in.readInt();
    }
-   catch(EOFException e)
+   catch(IOException e)
    {
    }
  } 

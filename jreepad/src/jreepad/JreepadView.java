@@ -607,6 +607,9 @@ public class JreepadView extends Box
 
   public TreePath[] getAllExpandedPaths()
   {
+    if(root.getChildCount()==0)
+      return new TreePath[] {new TreePath(root)};
+
     Enumeration getPaths = tree.getExpandedDescendants(new TreePath(root));
     TreePath thisKid;
     Vector allPaths = new Vector();
