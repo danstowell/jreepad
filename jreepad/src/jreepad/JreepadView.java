@@ -174,6 +174,9 @@ public class JreepadView extends Box
             // Then we need to perform a drag-and-drop operation!
 //            System.out.println("Drag-and-drop event occurred!");
             moveNode(currentDragDropNode, (JreepadNode)selPath.getLastPathComponent());
+            
+            // Ensure that the destination node is open
+            tree.setSelectionPath(selPath.pathByAddingChild(currentDragDropNode));
           }
         }
         setCursor(Cursor.getDefaultCursor());

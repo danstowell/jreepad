@@ -176,12 +176,12 @@ public class JreepadViewer extends JFrame
       else
       {
         showLicense(); // A very crude way of showing the license on first visit
-        setPrefs(new JreepadPrefs());
+        setPrefs(new JreepadPrefs(getToolkit().getScreenSize()));
       }
     }
     catch(Exception err)
     {
-      setPrefs(new JreepadPrefs());
+      setPrefs(new JreepadPrefs(getToolkit().getScreenSize()));
     }
     
     fileChooser = new JFileChooser();
@@ -1013,30 +1013,21 @@ public class JreepadViewer extends JFrame
     setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
     addWindowListener(new WindowAdapter() { public void windowClosing(WindowEvent e){ quitAction(); }});
 
-    // Finally, make the window visible and well-sized
     setTitleBasedOnFilename("");
+
+    // Finally, make the window visible and well-sized
     Toolkit theToolkit = getToolkit();
     Dimension wndSize = theToolkit.getScreenSize();
-    int chosenWidth = (int)(wndSize.getWidth() * 0.6f);
-    int chosenHeight = (int)(wndSize.getHeight() * 0.6f);
-
-    // This bit attempts to ensure that the Jreepad view doesn't get too wide 
-    //   (e.g. for people with dual-screen systems)
-    //   - it limits the width/height proportion to the golden ratio!
-    // Can't seem to find anything in the Toolkit which would automatically give us multi-screen info
-    if(chosenWidth > (int)(((float)chosenHeight)*1.618034f) )
-      chosenWidth = (int)(((float)chosenHeight)*1.618034f);
-
-    setBounds(chosenWidth/3,chosenHeight/3,
-              chosenWidth, chosenHeight);
-    searchDialog.setBounds(chosenWidth/2,chosenHeight/6,
-              (int)(chosenWidth*0.7f),(int)(chosenHeight*0.9f));
-    autoSaveDialog.setBounds((int)(wndSize.width*0.5f),chosenHeight/2,
-              chosenWidth/2, chosenHeight/4);
-    prefsDialog.setBounds(chosenWidth/2,chosenHeight/3,
-              chosenWidth, chosenHeight);
-    nodeUrlDisplayDialog.setBounds((int)(wndSize.width*0.1f),(int)(chosenHeight*0.7f),
-              (int)(chosenWidth*1.3f), chosenHeight/3);
+    setBounds(getPrefs().windowLeft,getPrefs().windowTop,
+              getPrefs().windowWidth, getPrefs().windowHeight);
+    searchDialog.setBounds(getPrefs().windowWidth/2,getPrefs().windowHeight/6,
+              (int)(getPrefs().windowWidth*0.7f),(int)(getPrefs().windowHeight*0.9f));
+    autoSaveDialog.setBounds((int)(wndSize.width*0.5f),getPrefs().windowHeight/2,
+              getPrefs().windowWidth/2, getPrefs().windowHeight/4);
+    prefsDialog.setBounds(getPrefs().windowWidth/2,getPrefs().windowHeight/3,
+              getPrefs().windowWidth, getPrefs().windowHeight);
+    nodeUrlDisplayDialog.setBounds((int)(wndSize.width*0.1f),(int)(getPrefs().windowHeight*0.7f),
+              (int)(getPrefs().windowWidth*1.3f), getPrefs().windowHeight/3);
 
     theApps.add(theApp);
     macOSXRegistration();
@@ -1368,7 +1359,14 @@ public class JreepadViewer extends JFrame
         if(!saveAction())
           return; // This cancels quit if the save action failed or was cancelled
     }
+
+    // Save preferences
+    getPrefs().windowLeft = getX();
+    getPrefs().windowTop = getY();
+    getPrefs().windowWidth = getWidth();
+    getPrefs().windowHeight = getHeight();
     savePreferencesFile();
+
     System.exit(0);
   }
   

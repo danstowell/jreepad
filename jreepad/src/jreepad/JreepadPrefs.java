@@ -80,7 +80,9 @@ public class JreepadPrefs implements Serializable
   
   boolean wrapToWindow;
   
-  JreepadPrefs()
+  int windowLeft, windowTop, windowWidth, windowHeight;
+  
+  JreepadPrefs(Dimension wndSize)
   {
     openLocation = new File(System.getProperty("user.home"));
     
@@ -116,6 +118,24 @@ public class JreepadPrefs implements Serializable
     characterWrapWidth = 80;
     
     wrapToWindow = true;
+
+  //  Toolkit theToolkit = Toolkit.getDefaultToolkit();
+  //  Dimension wndSize = theToolkit.getScreenSize();
+    windowWidth = (int)(wndSize.getWidth() * 0.6f);
+    windowHeight = (int)(wndSize.getHeight() * 0.6f);
+
+    // This bit attempts to ensure that the Jreepad view doesn't get too wide 
+    //   (e.g. for people with dual-screen systems)
+    //   - it limits the width/height proportion to the golden ratio!
+    // Can't seem to find anything in the Toolkit which would automatically give us multi-screen info
+    if(windowWidth > (int)(((float)windowHeight)*1.618034f) )
+      windowWidth = (int)(((float)windowHeight)*1.618034f);
+    else if(windowHeight > (int)(((float)windowWidth)*1.618034f) )
+      windowHeight = (int)(((float)windowWidth)*1.618034f);
+
+    windowTop = windowHeight/3;
+    windowLeft = windowWidth/3;    
+    
   }
   
   // We override the serialization routines so that different versions of our class can read 
@@ -161,6 +181,11 @@ public class JreepadPrefs implements Serializable
     out.writeInt(characterWrapWidth);
     
     out.writeBoolean(wrapToWindow);
+
+    out.writeInt(windowLeft);
+    out.writeInt(windowTop);
+    out.writeInt(windowWidth);
+    out.writeInt(windowHeight);
   }
   private void readObject(java.io.ObjectInputStream in)
      throws IOException, ClassNotFoundException
@@ -205,6 +230,11 @@ public class JreepadPrefs implements Serializable
     characterWrapWidth = in.readInt();
     
     wrapToWindow = in.readBoolean();
+    
+    windowLeft = in.readInt();
+    windowTop = in.readInt();
+    windowWidth = in.readInt();
+    windowHeight = in.readInt();
    }
    catch(EOFException e)
    {
