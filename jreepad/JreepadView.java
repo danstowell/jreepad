@@ -708,15 +708,20 @@ public class JreepadView extends Box
   // Stuff concerned with linking
   public void webSearchTextSelectedInArticle()
   {
+    // JComponent treeOrArticle;
     String url = editorPane.getSelectedText();
-    if(url == null)
+
+    if(url==null || url.length()==0)
+      url = currentNode.getTitle();
+  
+    if(url==null)
     {
       try
       {
       String text = editorPane.getText();
       int startpos = editorPane.getCaretPosition();
       int endpos = startpos;
-      if(text != null)
+      if(text.length()>0)
       {
         // Select the character before/after the current position, and grow it until we hit whitespace...
         while(startpos>0 && !Character.isWhitespace(editorPane.getText(startpos-1,1).charAt(0)))
@@ -733,8 +738,13 @@ public class JreepadView extends Box
       }
       catch(BadLocationException err)
       {
+System.out.println(err);
       }
     }
+
+    if(url==null || !(url.length()>0))
+      url = currentNode.getTitle();
+
     webSearchText(url);
   }
   public void webSearchText(String text)

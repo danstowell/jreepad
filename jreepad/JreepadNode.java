@@ -93,7 +93,7 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
     {
       // Read "dt=text"    [or error] - NB THE OLDER FORMAT DOESN'T INCLUDE THIS LINE SO WE SKIP IT
       if(dtLine.equals("") && nodeLine.startsWith("<bmarks>"))
-        throw new IOException("This is not a Treepad-Lite-compatible file!\nIt seems to be made in a further version of Treepad.");
+        throw new IOException("This is not a Treepad-Lite-compatible file!\n\nFiles created in more advanced versions of Treepad\ncontain features that are not available in Jreepad.");
 
       if(hjtFileFormat != 2)
         if(! (dtLine.toLowerCase().startsWith("dt=text")))
