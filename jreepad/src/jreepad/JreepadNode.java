@@ -30,7 +30,7 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
   private String title;
   private String content;
 //  private int childrenCount=0;
-  private JreepadNode parentNode;
+  private JreepadNode parentNode, softLinkTarget;
   private OurSortComparator ourSortComparator;
 
 //  private String lineSeparator = System.getProperty("line.separator");
@@ -38,6 +38,7 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
   public static final int ARTICLEMODE_ORDINARY = 1;
   public static final int ARTICLEMODE_HTML = 2;
   public static final int ARTICLEMODE_CSV = 3;
+  public static final int ARTICLEMODE_SOFTLINK = 4;
   private int articleMode = ARTICLEMODE_ORDINARY;
 
   public JreepadNode()
@@ -50,7 +51,7 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
   }
   public JreepadNode(String content, JreepadNode parentNode)
   {
-    this("<Untitled node>",content, parentNode);
+    this("",content, parentNode);
   }
   public JreepadNode(String title, String content, JreepadNode parentNode)
   {
@@ -170,6 +171,8 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
       this.articleMode = ARTICLEMODE_CSV;
     else if(typeString.equals("text/html"))
       this.articleMode = ARTICLEMODE_HTML;
+    else if(typeString.equals("application/x-jreepad-softlink"))
+      this.articleMode = ARTICLEMODE_SOFTLINK;
     else
       this.articleMode = ARTICLEMODE_ORDINARY;
 
@@ -483,6 +486,8 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
   {
     switch(articleMode)
     {
+      case ARTICLEMODE_SOFTLINK:
+        return softLinkTarget.getContent();
       case ARTICLEMODE_HTML:
         return getContent();
       case ARTICLEMODE_CSV:
@@ -514,7 +519,7 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
     }
   }
   
-  private String htmlSpecialChars(String in)
+  private static String htmlSpecialChars(String in)
   {
     char[] c = in.toCharArray();
     StringBuffer ret = new StringBuffer();
@@ -602,6 +607,9 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
 
     return out.toString();
   }
+/*
+
+DELETEME
 
   public String exportAsSimpleXml()
   {
@@ -623,6 +631,7 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
     ret.append("</node>");
     return ret;
   }
+*/
 
   public String exportTitlesAsList()
   {
@@ -661,7 +670,7 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
 
   private void writeObject(ObjectOutputStream out) throws IOException
   {
-    out.writeBytes(this.toTreepadString());
+    out.writeBytes(this.toTreepadString()); // FIXME - What is this used for? Is it right? What about XML mode?
   }
 //  private void writeObject(OutputStreamWriter out) throws IOException
 //  {
@@ -690,11 +699,21 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
 
   public void addChild(JreepadNode child)
   {
+    if(articleMode==ARTICLEMODE_SOFTLINK)
+    {
+      softLinkTarget.addChild(child);
+      return;
+    }
     children.add(child);
     child.setParent(this);
   }
   public JreepadNode removeChild(int child) // Can be used to delete, OR to 'get' one for moving
   {
+    if(articleMode==ARTICLEMODE_SOFTLINK)
+    {
+      return softLinkTarget.removeChild(child);
+    }
+
     if(child<0 || child > children.size()) return null;
     
     JreepadNode ret = (JreepadNode)children.remove(child);
@@ -702,6 +721,10 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
   }
   public TreeNode getChildAt(int child)
   {
+    if(articleMode==ARTICLEMODE_SOFTLINK)
+    {
+      return softLinkTarget.getChildAt(child);
+    }
     if(child<0 || child>= children.size())
       return null;
     else
@@ -709,6 +732,10 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
   }
   public int getChildCount()
   {
+    if(articleMode==ARTICLEMODE_SOFTLINK)
+    {
+      return softLinkTarget.getChildCount();
+    }
     return children.size();
   }
   public boolean indent()
@@ -747,6 +774,11 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
   }
   public void moveChildUp(int child)
   {
+    if(articleMode==ARTICLEMODE_SOFTLINK)
+    {
+      softLinkTarget.moveChildUp(child);
+      return;
+    }
     if(child<1 || child>= children.size())
       return;
 
@@ -754,6 +786,11 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
   }
   public void moveChildDown(int child)
   {
+    if(articleMode==ARTICLEMODE_SOFTLINK)
+    {
+      softLinkTarget.moveChildDown(child);
+      return;
+    }
     if(child<0 || child>= children.size()-1)
       return;
 
@@ -779,6 +816,10 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
   }
   public JreepadNode addChild()
   {
+    if(articleMode==ARTICLEMODE_SOFTLINK)
+    {
+      return softLinkTarget.addChild();
+    }
     JreepadNode theChild = new JreepadNode(this);
     children.add(theChild);
     theChild.setParent(this);
@@ -786,6 +827,10 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
   }
   public JreepadNode addChild(int index)
   {
+    if(articleMode==ARTICLEMODE_SOFTLINK)
+    {
+      return softLinkTarget.addChild(index);
+    }
     JreepadNode theChild = new JreepadNode(this);
     children.add(index, theChild);
     theChild.setParent(this);
@@ -794,6 +839,10 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
   
   public int getIndex(TreeNode child)
   {
+    if(articleMode==ARTICLEMODE_SOFTLINK)
+    {
+      return softLinkTarget.getIndex(child);
+    }
     for(int i=0; i<getChildCount(); i++)
       if(((JreepadNode)child).equals(getChildAt(i)))
         return i;
@@ -808,6 +857,10 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
   
   public boolean isNodeInSubtree(JreepadNode n)
   {
+    if(articleMode==ARTICLEMODE_SOFTLINK)
+    {
+      return softLinkTarget.isNodeInSubtree(n);
+    }
     for(int i=0; i<getChildCount(); i++)
     {
       JreepadNode aChild = (JreepadNode)getChildAt(i);
@@ -819,11 +872,21 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
   
   public void sortChildren()
   {
+    if(articleMode==ARTICLEMODE_SOFTLINK)
+    {
+      softLinkTarget.sortChildren();
+      return;
+    }
     sort();
   }
 
   public void sortChildrenRecursive()
   {
+    if(articleMode==ARTICLEMODE_SOFTLINK)
+    {
+      softLinkTarget.sortChildrenRecursive();
+      return;
+    }
     sort();
     for(int i=0; i<getChildCount(); i++)
       ((JreepadNode)getChildAt(i)).sortChildrenRecursive();
@@ -897,6 +960,10 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
   
   public Enumeration children()
   {
+    if(articleMode==ARTICLEMODE_SOFTLINK)
+    {
+      return softLinkTarget.children();
+    }
     return new JreepadNodeEnumeration();
   } // Required by TreeNode interface
 
@@ -912,10 +979,20 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
   // MutableTreeNode functions
   public void remove(int child)
   {
+    if(articleMode==ARTICLEMODE_SOFTLINK)
+    {
+      softLinkTarget.remove(child);
+      return;
+    }
     removeChild(child);
   }
   public void remove(MutableTreeNode node)
   {
+    if(articleMode==ARTICLEMODE_SOFTLINK)
+    {
+      softLinkTarget.remove(node);
+      return;
+    }
     removeChild(getIndex((JreepadNode)node));
   }
   public void removeFromParent()
@@ -935,11 +1012,21 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
   }
   public void insert(MutableTreeNode child, int index)
   {
+    if(articleMode==ARTICLEMODE_SOFTLINK)
+    {
+      softLinkTarget.insert(child, index);
+      return;
+    }
     children.insertElementAt((JreepadNode)child, index);
   }
 
   public void addChildFromTextFile(InputStreamReader textFile, String nodeName) throws IOException
   {
+    if(articleMode==ARTICLEMODE_SOFTLINK)
+    {
+      softLinkTarget.addChildFromTextFile(textFile, nodeName);
+      return;
+    }
     // Load the content as a string
     StringBuffer contentString = new StringBuffer();
     String currentLine;
@@ -963,6 +1050,10 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
   
   public JreepadNode getChildByTitle(String title)
   {
+    if(articleMode==ARTICLEMODE_SOFTLINK)
+    {
+      return softLinkTarget.getChildByTitle(title);
+    }
     for(int i=0; i<getChildCount(); i++)
       if(((JreepadNode)getChildAt(i)).getTitle().equals(title))
         return (JreepadNode)getChildAt(i);
@@ -971,6 +1062,11 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
 
   public synchronized void wrapContentToCharWidth(int charWidth)
   {
+    if(articleMode==ARTICLEMODE_SOFTLINK)
+    {
+      softLinkTarget.wrapContentToCharWidth(charWidth);
+      return;
+    }
     if(charWidth < 2)
       return;
     
@@ -993,6 +1089,11 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
   
   public synchronized void stripAllTags()
   {
+    if(articleMode==ARTICLEMODE_SOFTLINK)
+    {
+      softLinkTarget.stripAllTags();
+      return;
+    }
     StringBuffer ret = new StringBuffer();
     StringCharacterIterator iter = new StringCharacterIterator(content);
     boolean on = true;
@@ -1008,10 +1109,23 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
     content = ret.toString();
   }
 
-  public String getTitle() { return title; }
-  public String getContent() { return content; }
-  public void setTitle(String title) { this.title = title; }
-  public void setContent(String content) { this.content = content; }
+  public String getTitle()
+  { return articleMode==ARTICLEMODE_SOFTLINK ? softLinkTarget.getTitle() : title; }
+  public String getContent() { return articleMode==ARTICLEMODE_SOFTLINK ? softLinkTarget.getContent() : content; }
+  public void setTitle(String title)
+  {
+    if(articleMode==ARTICLEMODE_SOFTLINK)
+      softLinkTarget.setTitle(title);
+    else
+      this.title = title;
+  }
+  public void setContent(String content)
+  {
+    if(articleMode==ARTICLEMODE_SOFTLINK)
+      softLinkTarget.setContent(content);
+    else
+      this.content = content;
+  }
 
 
   public void setArticleMode(int newMode)
@@ -1032,6 +1146,7 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
   //      System.out.println();
       case ARTICLEMODE_ORDINARY:
       case ARTICLEMODE_HTML:
+      case ARTICLEMODE_SOFTLINK:  // FIXME: Do we need to do anything special for the softlink creation?
         articleMode = newMode;
         break;
       default:
@@ -1043,24 +1158,6 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
   {
     return articleMode;
   }
-
-/*
-  public void toggleArticleMode()
-  {
-  
-    switch(getArticleMode())
-    {
-      case ARTICLEMODE_ORDINARY:
-        setArticleMode(ARTICLEMODE_HTML);
-        break;
-      case ARTICLEMODE_HTML:
-        setArticleMode(ARTICLEMODE_ORDINARY);
-        break;
-      default:
-        return;
-    }
-  }
-*/
 
   static final int CSVPARSE_MODE_INQUOTES = 1;
   static final int CSVPARSE_MODE_EXPECTINGDELIMITER = 2;
@@ -1224,7 +1321,7 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
     StringBuffer ret = new StringBuffer("<node ");
     if(depth==0)
       ret.append("xmlns=\"http://jreepad.sourceforge.net/formats\"  ");
-    ret.append("title=\"" + xmlEscapeChars(title) + "\" type=\"");
+    ret.append("title=\"" + xmlEscapeChars(getTitle()) + "\" type=\"");
 
     switch(getArticleMode())
     {
@@ -1250,7 +1347,7 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
     return ret.toString();
   }
 
-  private String stripControlChars(String in)
+  private static String stripControlChars(String in)
   {
     // Don't output control characters... well duh! I have no idea why my XML was coming out with control characters in the first place...
     char[] c = in.toCharArray();
@@ -1261,7 +1358,7 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
     return ret.toString();
   }
 
-  private String xmlEscapeChars(String in)
+  private static String xmlEscapeChars(String in)
   {
     char[] c = in.toCharArray();
     StringBuffer ret = new StringBuffer();
@@ -1274,7 +1371,7 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
     return ret.toString();
   }
 
-  private String xmlUnescapeChars(String in)
+  private static String xmlUnescapeChars(String in)
   {
     char[] c = in.toCharArray();
     StringBuffer ret = new StringBuffer();
@@ -1316,6 +1413,20 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
         ret.append(c[i]);
 
     return ret.toString();
+  }
+
+  private void makeMeASoftLinkTo(JreepadNode targetNode)
+  {
+    articleMode = ARTICLEMODE_SOFTLINK;
+    softLinkTarget = targetNode;
+  }
+
+  protected JreepadNode makeSoftLink()
+  {
+    JreepadNode link;
+    getParentNode().addChild(link = new JreepadNode(getParentNode()));
+    link.makeMeASoftLinkTo(this);
+    return link;
   }
 
   public class JreepadNodeEnumeration implements Enumeration

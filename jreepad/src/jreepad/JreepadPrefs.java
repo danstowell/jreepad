@@ -121,6 +121,10 @@ public class JreepadPrefs implements Serializable
   int mainFileType;
   public static final String[] mainFileTypes = {"Jreepad XML","Treepad HJT"};
   
+  static final int TOOLBAR_TEXT = 0;
+  static final int TOOLBAR_ICON = 1;
+  int toolbarMode;
+  
   JreepadPrefs(Dimension wndSize)
   {
     openLocation = new File(System.getProperty("user.home"));
@@ -188,6 +192,8 @@ public class JreepadPrefs implements Serializable
     addQuotesToCsvOutput = false;
     
     mainFileType = FILETYPE_HJT;
+    
+    toolbarMode = TOOLBAR_ICON;
   }
   
   // We override the serialization routines so that different versions of our class can read 
@@ -254,6 +260,8 @@ public class JreepadPrefs implements Serializable
     out.writeBoolean(addQuotesToCsvOutput);
     
     out.writeInt(mainFileType);
+    
+    out.writeInt(toolbarMode);
   }
   private void readObject(java.io.ObjectInputStream in)
      throws IOException, ClassNotFoundException
@@ -319,6 +327,8 @@ public class JreepadPrefs implements Serializable
     addQuotesToCsvOutput = in.readBoolean();
     
     mainFileType = in.readInt();
+    
+    toolbarMode = in.readInt();
    }
    catch(IOException e)
    {

@@ -29,6 +29,8 @@ import java.awt.event.*;
 import java.io.*;
 import java.util.*;
 
+import javax.swing.plaf.metal.MetalIconFactory; // For icons
+
 // For reflection and Mac OSX specific things
 import com.apple.eawt.*;
 import java.lang.reflect.*;
@@ -427,13 +429,13 @@ public class JreepadViewer extends JFrame
 //    editMenu.add(undoMenuItem);
     editMenu.add(new JSeparator());
     addAboveMenuItem = new JMenuItem("Add sibling above");
-    addAboveMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { theJreepad.addNodeAbove(); theJreepad.returnFocusToTree(); setWarnAboutUnsaved(true); updateWindowTitle();}});
+    addAboveMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { theJreepad.addNodeAbove(); /* theJreepad.returnFocusToTree(); */ setWarnAboutUnsaved(true); updateWindowTitle();}});
     editMenu.add(addAboveMenuItem);
     addBelowMenuItem = new JMenuItem("Add sibling below");
-    addBelowMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { theJreepad.addNodeBelow(); theJreepad.returnFocusToTree(); setWarnAboutUnsaved(true); updateWindowTitle();}});
+    addBelowMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { theJreepad.addNodeBelow(); /* theJreepad.returnFocusToTree(); */ setWarnAboutUnsaved(true); updateWindowTitle();}});
     editMenu.add(addBelowMenuItem);
     addChildMenuItem = new JMenuItem("Add child");
-    addChildMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { theJreepad.addNode(); theJreepad.returnFocusToTree(); setWarnAboutUnsaved(true);updateWindowTitle(); }});
+    addChildMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { theJreepad.addNode(); /* theJreepad.returnFocusToTree(); */ setWarnAboutUnsaved(true);updateWindowTitle(); }});
     editMenu.add(addChildMenuItem);
     editMenu.add(new JSeparator());
     deleteMenuItem = new JMenuItem("Delete node");
@@ -604,7 +606,7 @@ public class JreepadViewer extends JFrame
     undoMenuItem.setMnemonic('u');
     undoMenuItem.setAccelerator(KeyStroke.getKeyStroke('Z', MENU_MASK));
     addAboveMenuItem.setMnemonic('a');
-    addAboveMenuItem.setAccelerator(KeyStroke.getKeyStroke('A', MENU_MASK));
+    addAboveMenuItem.setAccelerator(KeyStroke.getKeyStroke('T', MENU_MASK));
     addBelowMenuItem.setMnemonic('b');
     addBelowMenuItem.setAccelerator(KeyStroke.getKeyStroke('B', MENU_MASK));
     addChildMenuItem.setMnemonic('c');
@@ -665,14 +667,18 @@ public class JreepadViewer extends JFrame
   {
     // Add the toolbar buttons
     toolBar = Box.createHorizontalBox();
-   /* THESE BUTTONS HAVE BEEN REMOVED. But leave the code here, since they may later be replaced with iconic buttons.
+   ///* THESE BUTTONS HAVE BEEN REMOVED. But leave the code here, since they may later be replaced with iconic buttons.
+
+
+new MetalIconFactory.FileIcon16();
+
     JButton newButton = new JButton("New");
     toolBar.add(newButton);
     JButton openButton = new JButton("Open");
     toolBar.add(openButton);
     JButton saveButton = new JButton("Save");
     toolBar.add(saveButton);
-   */
+   //*/
     //
     JButton addAboveButton = new JButton("Add above");
     toolBar.add(addAboveButton);
@@ -1921,6 +1927,23 @@ public class JreepadViewer extends JFrame
   
   public void keyboardHelp()
   {
+    String menuText;
+    if(MAC_OS_X)
+      menuText = "Apple";
+    else
+	  switch(MENU_MASK)
+	  {
+		case Event.ALT_MASK:
+		  menuText = "Alt";
+		  break;
+		case Event.META_MASK:
+		  menuText = "Meta";
+		  break;
+		case Event.CTRL_MASK:
+		default:
+		  menuText = "Ctrl";
+		  break;
+	  }
               JOptionPane.showMessageDialog(this, 
               "\nNAVIGATING AROUND THE TREE:" +
               "\nUse the arrow (cursor) keys to navigate around the tree." +
@@ -1928,21 +1951,21 @@ public class JreepadViewer extends JFrame
               "\nLeft/right will expand/collapse nodes." +
               "\n" +
               "\nADDING/DELETING NODES:" +
-              "\n[Alt+A] Add sibling node above current node" +
-              "\n[Alt+B] Add sibling node below current node" +
-              "\n[Alt+C] Add child node to current node" +
-              "\n[Alt+K] Delete current node" +
+              "\n["+menuText+"+T] Add sibling node above current node" +
+              "\n["+menuText+"+B] Add sibling node below current node" +
+              "\n["+menuText+"+\\] Add child node to current node" +
+              "\n["+menuText+"+K] Delete current node" +
               "\n" +
               "\nMOVING NODES:" +
-              "\n[Alt+U] Move node up" +
-              "\n[Alt+D] Move node down" +
-              "\n[Alt+I] Indent node" +
-              "\n[Alt+O] Outdent node" +
+              "\n["+menuText+"+U] Move node up" +
+              "\n["+menuText+"+D] Move node down" +
+              "\n["+menuText+"+]] Indent node" +
+              "\n["+menuText+"+[] Outdent node" +
               "\n" +
               "\nCOPYING AND PASTING:" +
-              "\n[Ctrl+X] Cut selected text" +
-              "\n[Ctrl+C] Copy selected text" +
-              "\n[Ctrl+V] Paste selected text" +
+              "\n["+menuText+"+X] Cut selected text" +
+              "\n["+menuText+"+C] Copy selected text" +
+              "\n["+menuText+"+V] Paste selected text" +
               "\n - The copy/paste functions are included automatically" +
               "\n    by the Mac OSX runtime. I can't guarantee they exist" +
               "\n    for you if you're using a different operating system!" +

@@ -96,10 +96,6 @@ public class JreepadView extends Box implements TableModelListener
   private JEditorPane editorPaneHtml;
   private JTable editorPaneCsv;
   
-  public static final int ARTICLEMODE_ORDINARY = 1;
-  public static final int ARTICLEMODE_HTML = 2;
-//DELETEME  private int articleMode = JreepadNode.ARTICLEMODE_ORDINARY;
-
 
   private JSplitPane splitPane;
 
@@ -117,7 +113,7 @@ public class JreepadView extends Box implements TableModelListener
 
   public JreepadView()
   {
-    this(new JreepadNode());
+    this(new JreepadNode("<Untitled node>", "", null));
   }
   
   public JreepadView(JreepadNode root)
@@ -176,6 +172,19 @@ public class JreepadView extends Box implements TableModelListener
                       }
                    }); 
 
+    // Fiddle with the cell editor - to ensure that when editing a new node, the <Untitled node> text is selected
+    tree.getCellEditor().addCellEditorListener(new CellEditorListener()
+                                   {
+                                     public void editingCanceled(ChangeEvent e)
+                                     {
+                                       ensureNodeTitleIsNotEmpty(e);
+                                     }
+                                     public void editingStopped(ChangeEvent e)
+                                     {
+                                       ensureNodeTitleIsNotEmpty(e);
+                                     }
+                                   });
+
     // Add mouse listener - this will be used to implement drag-and-drop, context menu (?), etc
     MouseListener ml = new MouseAdapter()
     {
@@ -217,7 +226,7 @@ public class JreepadView extends Box implements TableModelListener
           if(e.isPopupTrigger())
           {
             // Now we can implement the pop-up content menu
-      //      System.out.println("Context menu would be launched here!");
+            System.out.println("Context menu would be launched here!");
           }
         }
       }
@@ -578,6 +587,8 @@ public class JreepadView extends Box implements TableModelListener
     ret.setContent(getContentForNewNode());
     TreePath nodePath = tree.getSelectionPath();
     treeModel.nodesWereInserted(currentNode, new int[]{currentNode.getIndex(ret)});
+    
+//    tree.setSelectionPath(nodePath.pathByAddingChild(ret));
     tree.startEditingAtPath(nodePath.pathByAddingChild(ret));
     return ret;
   }
@@ -1264,6 +1275,24 @@ System.out.println(err);
     }
   }
   // End of: functions which should allow us to switch between JEditorPane and JTable
+
+  private void ensureNodeTitleIsNotEmpty(ChangeEvent e)
+  {
+    TreeCellEditor theEditor = (TreeCellEditor)tree.getCellEditor();
+    String newTitle = (String)(theEditor.getCellEditorValue());
+  
+//    JreepadNode thatNode = (JreepadNode)(tree.getEditingPath().getLastPathComponent());
+    //System.out.println("ensureNodeTitleIsNotEmpty(): Event source = " + e.getSource());
+    //System.out.println("ensureNodeTitleIsNotEmpty(): thatNode = " + thatNode);
+//    System.out.println("getCellEditorValue() = " + newTitle);
+    
+    if(newTitle.equals(""))
+    {
+      theEditor.getTreeCellEditorComponent(tree, "<Untitled node>", true, true, false, 1);
+//      thatNode.setTitle("<Untitled node>");
+    }
+  }
+
 
   public String jTableContentToCsv()
   {
