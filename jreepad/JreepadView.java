@@ -6,6 +6,7 @@ import javax.swing.event.*;
 import java.awt.event.*;
 import java.util.Enumeration;
 import java.util.Vector;
+import java.io.*;
 
 /*
 
@@ -337,12 +338,14 @@ public class JreepadView extends Box
   public JreepadNode removeNode()
   {
     JreepadNode parent = (JreepadNode)currentNode.getParent();
+    TreePath parentPath = tree.getSelectionPath().getParentPath();
     if(parent != null)
     {
       int index = parent.getIndex(currentNode);
       JreepadNode ret = parent.removeChild(index);
-      currentNode = parent;
+      setCurrentNode(parent);
 
+      tree.setSelectionPath(parentPath);
       treeModel.nodesWereRemoved(parent, new int[]{index}, new Object[]{ret});
 
       repaint();
@@ -495,6 +498,20 @@ public class JreepadView extends Box
   }
   // End of: functions and inner class for searching nodes
 
+  public void addChildrenFromTextFiles(File[] inFiles) throws IOException
+  {
+	for(int i=0; i<inFiles.length; i++)
+      getCurrentNode().addChildFromTextFile(inFiles[i]);
+    treeModel.reload(currentNode);
+    tree.expandPath(tree.getSelectionPath());
+  }
+  
+  public void addChild(JreepadNode newKid)
+  {
+	getCurrentNode().addChild(newKid);
+    treeModel.reload(currentNode);
+    tree.expandPath(tree.getSelectionPath());
+  }
 
   class JreepadTreeModelListener implements TreeModelListener
   {

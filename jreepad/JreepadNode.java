@@ -116,6 +116,57 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
     return ret;
   }
 
+  public String exportAsHtml()
+  {
+    return exportAsHtml(true).toString();
+  }
+  public StringBuffer exportAsHtml(boolean isRoot)
+  {
+    StringBuffer ret = new StringBuffer();
+    if(isRoot)
+    {
+      ret.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML Basic 1.0//EN\" \"http://www.w3.org/TR/xhtml-basic/xhtml-basic10.dtd\">\n<html xmlns=\"http://www.w3.org/1999/xhtml\" xml:lang=\"en\">\n<head>\n<title>");
+      ret.append(getTitle());
+      ret.append("</title>\n</head>\n\n<body>\n<!-- Exported from Jreepad -->\n<dl>");
+    }
+    ret.append("\n<dt>");
+    ret.append(getTitle());
+    ret.append("</dt>\n<dd>");
+    ret.append(getContent());
+    if(children.size()>0)
+      ret.append("\n<dl>");
+    for(int i=0; i<children.size(); i++)
+      ret.append(((JreepadNode)getChildAt(i)).exportAsHtml(false));
+    if(children.size()>0)
+      ret.append("\n</dl>");
+    ret.append("</dd>");
+
+    if(isRoot)
+      ret.append("\n</dl>\n</body>\n</html>");
+    return ret;
+  }
+
+  public String exportAsSimpleXml()
+  {
+    return exportAsSimpleXml(true).toString();
+  }
+  public StringBuffer exportAsSimpleXml(boolean isRoot)
+  {
+    StringBuffer ret = new StringBuffer();
+    if(isRoot)
+    {
+      ret.append("<?xml version=\"1.0\" standalone=\"yes\" encoding=\"UTF-8\"?>");
+    }
+    ret.append("\n<node title=\">");
+    ret.append(getTitle());
+    ret.append("\">");
+    ret.append(getContent());
+    for(int i=0; i<children.size(); i++)
+      ret.append(((JreepadNode)getChildAt(i)).exportAsSimpleXml(false));
+    ret.append("</node>");
+    return ret;
+  }
+
   private void writeObject(ObjectOutputStream out) throws IOException
   {
     out.writeBytes(this.toTreepadString());
@@ -352,6 +403,18 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
   public void insert(MutableTreeNode child, int index)
   {
     children.insertElementAt((JreepadNode)child, index);
+  }
+
+  public void addChildFromTextFile(File textFile) throws IOException
+  {
+    // Load the content as a string
+    StringBuffer contentString = new StringBuffer();
+    String currentLine;
+    BufferedReader bReader = new BufferedReader(new InputStreamReader(new FileInputStream(textFile)));
+    while((currentLine = bReader.readLine())!=null)
+      contentString.append(currentLine + "\n");
+    // Then just create the node
+    addChild(new JreepadNode(textFile.getName(), contentString.toString(), this));
   }
 
   public String getTitle() { return title; }

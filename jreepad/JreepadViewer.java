@@ -18,6 +18,8 @@ public class JreepadViewer extends JFrame
   
   private File openLocation = new File("/Users/dan/javaTestArea/Jreepad/");
   private File saveLocation;
+  private File importLocation;
+  private File exportLocation;
   private JFileChooser fileChooser;
   
   private JComboBox viewSelector;
@@ -42,6 +44,14 @@ public class JreepadViewer extends JFrame
   private JMenuItem openMenuItem;
   private JMenuItem saveMenuItem;
   private JMenuItem saveAsMenuItem;
+    private JMenu importMenu;
+    private JMenuItem importHjtMenuItem;
+    private JMenuItem importTextMenuItem;
+    private JMenu exportMenu;
+    private JMenuItem exportHjtMenuItem;
+    private JMenuItem exportHtmlMenuItem;
+    private JMenuItem exportSimpleXmlMenuItem;
+    private JMenuItem exportTextMenuItem;
   private JMenuItem quitMenuItem;
   private JMenu editMenu;
   private JMenuItem addAboveMenuItem;
@@ -104,6 +114,30 @@ public class JreepadViewer extends JFrame
     saveAsMenuItem = new JMenuItem("Save as...");
     saveAsMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {saveAsAction();}});
     fileMenu.add(saveAsMenuItem);
+    fileMenu.add(new JSeparator());
+      importMenu = new JMenu("Import...");
+      fileMenu.add(importMenu);
+      importHjtMenuItem = new JMenuItem("...Treepad file as subtree");
+      importHjtMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {importAction(FILE_FORMAT_HJT);}});
+      importMenu.add(importHjtMenuItem);
+      importTextMenuItem = new JMenuItem("...text file(s) as child node(s)");
+      importTextMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {importAction(FILE_FORMAT_TEXT);}});
+      importMenu.add(importTextMenuItem);
+      //
+      exportMenu = new JMenu("Export selected...");
+      fileMenu.add(exportMenu);
+      exportHjtMenuItem = new JMenuItem("...subtree to Treepad file");
+      exportHjtMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {exportAction(FILE_FORMAT_HJT);}});
+      exportMenu.add(exportHjtMenuItem);
+      exportHtmlMenuItem = new JMenuItem("...subtree to HTML");
+      exportHtmlMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {exportAction(FILE_FORMAT_HTML);}});
+      exportMenu.add(exportHtmlMenuItem);
+      exportSimpleXmlMenuItem = new JMenuItem("...subtree to simple XML");
+      exportSimpleXmlMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {exportAction(FILE_FORMAT_XML);}});
+      exportMenu.add(exportSimpleXmlMenuItem);
+      exportTextMenuItem = new JMenuItem("...article to text file");
+      exportTextMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {exportAction(FILE_FORMAT_TEXT);}});
+      exportMenu.add(exportTextMenuItem);
     fileMenu.add(new JSeparator());
     quitMenuItem = new JMenuItem("Quit");
     quitMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { System.exit(0); }});
@@ -248,6 +282,14 @@ public class JreepadViewer extends JFrame
     openMenuItem.setMnemonic('O');
     saveMenuItem.setMnemonic('S');
     saveAsMenuItem.setMnemonic('A');
+    importMenu.setMnemonic('I');
+    importHjtMenuItem.setMnemonic('f');
+    importTextMenuItem.setMnemonic('t');
+    exportMenu.setMnemonic('E');
+    exportHjtMenuItem.setMnemonic('f');
+    exportHtmlMenuItem.setMnemonic('h');
+    exportSimpleXmlMenuItem.setMnemonic('x');
+    exportTextMenuItem.setMnemonic('t');
     quitMenuItem.setMnemonic('Q');
     editMenu.setMnemonic('E');
     addAboveMenuItem.setMnemonic('a');
@@ -503,7 +545,7 @@ public class JreepadViewer extends JFrame
         openLocation = new File(fileNameToLoad);
         content.remove(theJreepad);
         theJreepad = new JreepadView(new JreepadNode(new FileInputStream(openLocation)));
-        saveLocation = openLocation;
+        saveLocation = exportLocation = importLocation = openLocation;
         content.add(theJreepad);
         setTitleBasedOnFilename(openLocation.getName());
       }
@@ -549,7 +591,7 @@ public class JreepadViewer extends JFrame
         openLocation = fileChooser.getSelectedFile();
         content.remove(theJreepad);
         theJreepad = new JreepadView(new JreepadNode(new FileInputStream(openLocation)));
-        saveLocation = openLocation;
+        saveLocation = exportLocation = importLocation = openLocation;
         content.add(theJreepad);
         setTitleBasedOnFilename(openLocation.getName());
         validate();
@@ -636,4 +678,91 @@ public class JreepadViewer extends JFrame
     else
       setTitle(filename + " - Jreepad");
   }
+  
+  private static final int FILE_FORMAT_HJT=1;
+  private static final int FILE_FORMAT_HTML=2;
+  private static final int FILE_FORMAT_XML=3;
+  private static final int FILE_FORMAT_TEXT=4;
+  private void importAction(int importFormat)
+  {
+    boolean multipleFiles;
+    try
+    {
+      multipleFiles = (importFormat == FILE_FORMAT_TEXT);
+
+      if(multipleFiles)
+        fileChooser.setMultiSelectionEnabled(true);
+      fileChooser.setCurrentDirectory(importLocation);
+      fileChooser.setSelectedFile(new File(theJreepad.getCurrentNode().getTitle()));
+
+      if(fileChooser.showOpenDialog(theApp) == JFileChooser.APPROVE_OPTION)
+      {
+        importLocation = fileChooser.getSelectedFile();
+
+		switch(importFormat)
+		{
+		  case FILE_FORMAT_HJT:
+			theJreepad.addChild(new JreepadNode(new FileInputStream(importLocation)));
+			break;
+		  case FILE_FORMAT_TEXT:
+		    theJreepad.addChildrenFromTextFiles(fileChooser.getSelectedFiles());
+			break;
+		  default:
+			JOptionPane.showMessageDialog(theApp, "Unknown which format to import - coding error! Oops!", "Error" , JOptionPane.ERROR_MESSAGE);
+			return;
+		}
+
+      }
+      fileChooser.setMultiSelectionEnabled(false);
+    }
+    catch(IOException err)
+    {
+      JOptionPane.showMessageDialog(theApp, err, "File error during Import" , JOptionPane.ERROR_MESSAGE);
+    }
+  } // End of: importAction()
+
+  private void exportAction(int exportFormat)
+  {
+    try
+    {
+      fileChooser.setCurrentDirectory(exportLocation);
+      fileChooser.setSelectedFile(new File(theJreepad.getCurrentNode().getTitle()));
+      if(fileChooser.showSaveDialog(theApp) == JFileChooser.APPROVE_OPTION)
+      {
+        exportLocation = fileChooser.getSelectedFile();
+
+		String output;
+		switch(exportFormat)
+		{
+		  case FILE_FORMAT_HJT:
+			output = theJreepad.getCurrentNode().toTreepadString();
+			break;
+		  case FILE_FORMAT_HTML:
+			output = theJreepad.getCurrentNode().exportAsHtml();
+			break;
+		  case FILE_FORMAT_XML:
+			output = theJreepad.getCurrentNode().exportAsSimpleXml();
+			break;
+		  case FILE_FORMAT_TEXT:
+			output = theJreepad.getCurrentNode().getContent();
+			break;
+		  default:
+			JOptionPane.showMessageDialog(theApp, "Unknown which format to export - coding error! Oops!", "Error" , JOptionPane.ERROR_MESSAGE);
+			return;
+		}
+
+        FileOutputStream fO = new FileOutputStream(exportLocation);
+        DataOutputStream dO = new DataOutputStream(fO);
+        dO.writeBytes(output);
+        dO.close();
+        fO.close();
+      }
+    }
+    catch(IOException err)
+    {
+      JOptionPane.showMessageDialog(theApp, err, "File error during Export" , JOptionPane.ERROR_MESSAGE);
+    }
+  } // End of: exportAction()
+
+
 }
