@@ -35,6 +35,10 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
 
 //  private String lineSeparator = System.getProperty("line.separator");
 
+  public static final int ARTICLEMODE_ORDINARY = 1;
+  public static final int ARTICLEMODE_HTML = 2;
+  private int articleMode = ARTICLEMODE_ORDINARY;
+
   public JreepadNode()
   {
     this((JreepadNode)null);
@@ -115,13 +119,21 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
 //      babyNode = new JreepadNode(titleLine, currentContent.substring(0, Math.max(currentContent.length()-2,0)),
 //                             (JreepadNode)(nodeStack.peek()));
 
+      // Turn it into a HTML-mode node if it matches "<html> ... </html>"
+      String compareContent = babyNode.getContent().toLowerCase().trim();
+      int newArticleMode = (compareContent.startsWith("<html>") && compareContent.endsWith("</html>"))
+                      ? ARTICLEMODE_HTML
+                      : ARTICLEMODE_ORDINARY;
+
       if(depthLine.equals("0"))
       {
         this.title = titleLine;
         this.content = currentContent.substring(0, Math.max(currentContent.length()-1,0));
+        this.articleMode = newArticleMode;
       }
       else
       {
+        babyNode.setArticleMode(newArticleMode);
         depthMarker = Integer.parseInt(depthLine);
         while(nodeStack.size()>depthMarker)
           nodeStack.pop();
@@ -709,6 +721,40 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
   public void setTitle(String title) { this.title = title; }
   public void setContent(String content) { this.content = content; }
 
+
+  public void setArticleMode(int newMode)
+  {
+    switch(newMode)
+    {
+      case ARTICLEMODE_ORDINARY:
+      case ARTICLEMODE_HTML:
+        articleMode = newMode;
+        break;
+      default:
+        return;
+    }
+  }
+
+  public int getArticleMode()
+  {
+    return articleMode;
+  }
+
+  public void toggleArticleMode()
+  {
+  
+    switch(getArticleMode())
+    {
+      case ARTICLEMODE_ORDINARY:
+        setArticleMode(ARTICLEMODE_HTML);
+        break;
+      case ARTICLEMODE_HTML:
+        setArticleMode(ARTICLEMODE_ORDINARY);
+        break;
+      default:
+        return;
+    }
+  }
 
   public class JreepadNodeEnumeration implements Enumeration
   {

@@ -87,7 +87,19 @@ public class JreepadView extends Box
   private JTree tree;
   private JScrollPane treeView;
   private JScrollPane articleView;
+
+  // editorPane is supposed to represent the pane currently displayed/edited - so it's the one
+  //    to refer to when you're doing GUI-related stuff
+  // It will be equal to one of the content-type-specific panes. Need to set the content of BOTH of these...
   private JEditorPane editorPane;
+  private JEditorPane editorPanePlainText;
+  private JEditorPane editorPaneHtml;
+  
+  public static final int ARTICLEMODE_ORDINARY = 1;
+  public static final int ARTICLEMODE_HTML = 2;
+//DELETEME  private int articleMode = JreepadNode.ARTICLEMODE_ORDINARY;
+
+
   private JSplitPane splitPane;
 
   private JreepadSearcher searcher;
@@ -220,8 +232,10 @@ public class JreepadView extends Box
     treeView.setViewportView(tree);
 
 
-    editorPane = new JEditorPane("text/plain", root.getContent());
+    editorPane = editorPanePlainText = new JEditorPane("text/plain", root.getContent());
+    editorPaneHtml = new JEditorPane("text/html", root.getContent());
     editorPane.setEditable(true);
+    editorPaneHtml.setEditable(true);
     setEditorPaneKit();
     // Add a listener to make sure the editorpane's content is always stored when it changes
     editorPane.addCaretListener(new CaretListener() {
@@ -246,8 +260,10 @@ public class JreepadView extends Box
     					{
     					  public void componentResized(ComponentEvent e)
     					  {
-    					    editorPane.setMaximumSize(new Dimension(articleView.getViewport().getWidth(), Integer.MAX_VALUE));
-    					    editorPane.setSize(articleView.getViewport().getViewSize());
+    					    editorPanePlainText.setMaximumSize(new Dimension(articleView.getViewport().getWidth(), Integer.MAX_VALUE));
+    					    editorPanePlainText.setSize(articleView.getViewport().getViewSize());
+    					    editorPaneHtml.setMaximumSize(new Dimension(articleView.getViewport().getWidth(), Integer.MAX_VALUE));
+    					    editorPaneHtml.setSize(articleView.getViewport().getViewSize());
     					  }
     					  public void componentMoved(ComponentEvent e){}
     					  public void componentHidden(ComponentEvent e){}
@@ -258,15 +274,18 @@ public class JreepadView extends Box
     					{
     					  public void stateChanged(ChangeEvent e)
     					  {
- 			     editorPane.setPreferredSize(articleView.getViewport().getExtentSize());
-    					    editorPane.setMaximumSize(new Dimension(articleView.getViewport().getWidth(), Integer.MAX_VALUE));
-    					    editorPane.setSize(articleView.getViewport().getViewSize());
+ 			     			editorPanePlainText.setPreferredSize(articleView.getViewport().getExtentSize());
+    					    editorPanePlainText.setMaximumSize(new Dimension(articleView.getViewport().getWidth(), Integer.MAX_VALUE));
+    					    editorPanePlainText.setSize(articleView.getViewport().getViewSize());
+ 			     			editorPaneHtml.setPreferredSize(articleView.getViewport().getExtentSize());
+    					    editorPaneHtml.setMaximumSize(new Dimension(articleView.getViewport().getWidth(), Integer.MAX_VALUE));
+    					    editorPaneHtml.setSize(articleView.getViewport().getViewSize());
     					  }
     					}
     					);
 
-    setViewBoth();
     setCurrentNode(root);
+    setViewBoth();
     tree.setSelectionRow(0);
   }
 
@@ -302,8 +321,10 @@ public class JreepadView extends Box
         return;
     }
       setSize(getSize());
-      editorPane.setPreferredSize(articleView.getViewport().getExtentSize());
-      editorPane.setSize(articleView.getViewport().getExtentSize());
+      editorPanePlainText.setPreferredSize(articleView.getViewport().getExtentSize());
+      editorPanePlainText.setSize(articleView.getViewport().getExtentSize());
+      editorPaneHtml.setPreferredSize(articleView.getViewport().getExtentSize());
+      editorPaneHtml.setSize(articleView.getViewport().getExtentSize());
       validate(); 
       repaint();
 //      System.out.println("editorPane size: " + editorPane.getSize());
@@ -315,9 +336,10 @@ public class JreepadView extends Box
 
   private void setViewBoth()
   {   
-      splitPane.setLeftComponent(treeView);
-      splitPane.setRightComponent(articleView);
-      this.add(splitPane);
+    ensureCorrectArticleRenderMode();
+    splitPane.setLeftComponent(treeView);
+    splitPane.setRightComponent(articleView);
+    this.add(splitPane);
 //      editorPane.setSize(articleView.getSize());
 //      editorPane.setSize(articleView.getViewport().getViewSize());
   }
@@ -329,10 +351,11 @@ public class JreepadView extends Box
   }
   private void setViewArticleOnly()
   {
-       this.remove(splitPane);
-       this.remove(treeView);
-       this.add(articleView); 
-       articleView.setSize(getSize());   
+     this.remove(splitPane);
+     this.remove(treeView);
+     ensureCorrectArticleRenderMode();
+     this.add(articleView); 
+     articleView.setSize(getSize());   
   }
   /*
   private void setCurrentNode(DefaultMutableTreeNode node)
@@ -348,7 +371,9 @@ public class JreepadView extends Box
       currentNode.setContent(editorPane.getText());
     }
     currentNode = n;
-    editorPane.setText(n.getContent());
+    editorPanePlainText.setText(n.getContent());
+    editorPaneHtml.setText(n.getContent());
+    ensureCorrectArticleRenderMode();
     copyEditorPaneContentToNodeContent = true; // Reactivate the caret listener
   }
 
@@ -497,7 +522,9 @@ public class JreepadView extends Box
     int here = editorPane.getCaretPosition();
     try
     {
-      editorPane.setText(doc.getText(0, here) + theDate + 
+      editorPanePlainText.setText(doc.getText(0, here) + theDate + 
+                              doc.getText(here, doc.getLength() - here)); 
+      editorPaneHtml.setText(doc.getText(0, here) + theDate + 
                               doc.getText(here, doc.getLength() - here)); 
       editorPane.setCaretPosition(here + theDate.length()); 
     }
@@ -878,7 +905,8 @@ public class JreepadView extends Box
     // Set the correct selection and expanded paths
     tree.setSelectionPath(oldSelectedPath); // I hope this ends up firing the setCurrentNode() function...
 
-    editorPane.setText(currentNode.getContent());
+    editorPanePlainText.setText(currentNode.getContent());
+    editorPaneHtml.setText(currentNode.getContent());
     repaint();
   }
   public boolean canWeUndo()
@@ -1219,17 +1247,63 @@ System.out.println(err);
   {
     storeForUndo();
     currentNode.wrapContentToCharWidth(charWidth);
-    editorPane.setText(currentNode.getContent());
+    editorPanePlainText.setText(currentNode.getContent());
+    editorPaneHtml.setText(currentNode.getContent());
     setWarnAboutUnsaved(true);
   }
   public void stripAllTags()
   {
     storeForUndo();
     currentNode.stripAllTags();
-    editorPane.setText(currentNode.getContent());
+    editorPanePlainText.setText(currentNode.getContent());
+    editorPaneHtml.setText(currentNode.getContent());
     setWarnAboutUnsaved(true);
   }
 
+
+  public void setArticleMode(int newMode)
+  {
+  
+    currentNode.setArticleMode(newMode);
+  /*
+    switch(newMode)
+    {
+      case JreepadNode.ARTICLEMODE_ORDINARY:
+        editorPane = editorPanePlainText;
+        break;
+      case JreepadNode.ARTICLEMODE_HTML:
+        editorPane = editorPaneHtml;
+        break;
+      default:
+        return;
+    }
+  */
+    ensureCorrectArticleRenderMode();
+  }
+  public void toggleArticleMode()
+  {
+  
+    currentNode.toggleArticleMode();
+    ensureCorrectArticleRenderMode();
+  }
+
+  public void ensureCorrectArticleRenderMode()
+  {
+    switch(currentNode.getArticleMode())
+    {
+      case JreepadNode.ARTICLEMODE_ORDINARY:
+        editorPane = editorPanePlainText;
+        break;
+      case JreepadNode.ARTICLEMODE_HTML:
+        editorPane = editorPaneHtml;
+        break;
+      default:
+        System.err.println("JreepadNode.getArticleMode() returned an unrecognised value");
+        return;
+    }
+
+    articleView.setViewportView(editorPane);
+  }
 
   class JreepadTreeModelListener implements TreeModelListener
   {

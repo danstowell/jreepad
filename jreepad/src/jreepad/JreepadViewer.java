@@ -156,6 +156,7 @@ public class JreepadViewer extends JFrame
   private JMenuItem viewTreeMenuItem;
   private JMenuItem viewArticleMenuItem;
   private JCheckBoxMenuItem viewToolbarMenuItem;
+  private JMenuItem renderHtmlMenuItem;
   private JMenu optionsMenu;
   private JMenuItem autoSaveMenuItem;
   private JMenuItem prefsMenuItem;
@@ -211,14 +212,6 @@ public class JreepadViewer extends JFrame
     content = getContentPane();
 
     theJreepad = new JreepadView();
-/*
-    try
-    {
-      File inFile = new File("/Users/dan/javaTestArea/Jreepad/__tasks__.hjt");
-      theJreepad = new JreepadView(new JreepadNode(new FileInputStream(inFile)));
-    }
-    catch(IOException e)    {      e.printStackTrace();    }
-*/
 
     
     // Create the menu bar
@@ -381,6 +374,12 @@ public class JreepadViewer extends JFrame
     viewToolbarMenuItem = new JCheckBoxMenuItem("Toolbar", true);
     viewToolbarMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { setViewToolbar(viewToolbarMenuItem.isSelected()); }});
     viewMenu.add(viewToolbarMenuItem);
+    viewMenu.add(new JSeparator());
+    renderHtmlMenuItem = new JMenuItem("Toggle HTML view for this article");
+    renderHtmlMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { 
+              theJreepad.toggleArticleMode();
+                     }});
+    viewMenu.add(renderHtmlMenuItem);
     viewMenu.add(new JSeparator());
     thisNodesUrlMenuItem = new JMenuItem("\"node://\" address for current node");
     thisNodesUrlMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { getTreepadNodeUrl(); }});
