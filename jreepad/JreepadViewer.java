@@ -728,11 +728,17 @@ public class JreepadViewer extends JFrame
     content.add(theJreepad);
 
     // Load the file - if it has been specified, and if it can be found, and if it's a valid HJT file
+    File firstTimeFile = null;
     if(fileNameToLoad != "")
+      firstTimeFile = new File(fileNameToLoad);
+    else if(getPrefs().loadLastFileOnOpen && getPrefs().saveLocation != null)
+      firstTimeFile = getPrefs().saveLocation;
+
+    if(firstTimeFile != null && firstTimeFile.isFile())
     {
       try
       {
-        getPrefs().openLocation = new File(fileNameToLoad);
+        getPrefs().openLocation = firstTimeFile;
         content.remove(theJreepad);
         theJreepad = new JreepadView(new JreepadNode(new FileInputStream(getPrefs().openLocation)));
         getPrefs().saveLocation = getPrefs().exportLocation = getPrefs().importLocation = getPrefs().openLocation;
