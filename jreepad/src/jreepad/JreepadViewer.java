@@ -29,6 +29,7 @@ import java.awt.event.*;
 import java.io.*;
 import java.util.*;
 import java.net.URL;
+import java.awt.datatransfer.*;
 
 //import javax.swing.plaf.metal.MetalIconFactory; // For icons
 
@@ -52,6 +53,8 @@ public class JreepadViewer extends JFrame
   private JFileChooser fileChooser;
   
   private String windowTitle;
+  
+  protected Clipboard systemClipboard;
   
   private JButton addAboveButton;
   private JButton addBelowButton;
@@ -86,8 +89,8 @@ public class JreepadViewer extends JFrame
 
   private JDialog autoSaveDialog;
   private JCheckBox autoSaveCheckBox;
-//  private JSpinner autoSavePeriodSpinner;
-  private DSpinner autoSavePeriodSpinner;
+  private JSpinner autoSavePeriodSpinner;
+//  private DSpinner autoSavePeriodSpinner;
   private JButton autoSaveOkButton;
   private JButton autoSaveCancelButton;
   
@@ -102,8 +105,8 @@ public class JreepadViewer extends JFrame
 //    private JComboBox treeFontSizeSelector;
 //    private JComboBox articleFontFamilySelector;
 //    private JComboBox articleFontSizeSelector;
-//  private JSpinner wrapWidthSpinner;
-  private DSpinner wrapWidthSpinner;
+  private JSpinner wrapWidthSpinner;
+//  private DSpinner wrapWidthSpinner;
   private Box webSearchPrefsBox;
     private JComboBox defaultSearchModeSelector;
     private JTextField webSearchNameField;
@@ -120,8 +123,8 @@ public class JreepadViewer extends JFrame
   private JComboBox searchCombinatorSelector;
   private JCheckBox searchCaseCheckBox;
   private JComboBox searchWhereSelector;
-//  private JSpinner searchMaxNumSpinner;
-  private DSpinner searchMaxNumSpinner;
+  private JSpinner searchMaxNumSpinner;
+//  private DSpinner searchMaxNumSpinner;
   private JButton searchGoButton;
   private JButton searchCloseButton;
   private JLabel searchResultsLabel;
@@ -157,6 +160,7 @@ public class JreepadViewer extends JFrame
     private JMenuItem exportSubtreeTextMenuItem;
   private JMenuItem quitMenuItem;
   private JMenu editMenu;
+  private JMenuItem newFromClipboardMenuItem;
   private JMenuItem undoMenuItem;
   private JMenuItem editNodeTitleMenuItem;
   private JMenuItem addAboveMenuItem;
@@ -224,7 +228,7 @@ public class JreepadViewer extends JFrame
 
     Toolkit theToolkit = getToolkit();
     Dimension wndSize = theToolkit.getScreenSize();
-
+    systemClipboard = theToolkit.getSystemClipboard();
 
     // Check if a preferences file exists - and if so, load it
     try
@@ -466,6 +470,10 @@ public class JreepadViewer extends JFrame
     addChildMenuItem = new JMenuItem("Add child");
     addChildMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { theJreepad.addNode(); /* theJreepad.returnFocusToTree(); */ setWarnAboutUnsaved(true);updateWindowTitle(); }});
     editMenu.add(addChildMenuItem);
+    editMenu.add(new JSeparator());
+    newFromClipboardMenuItem = new JMenuItem("New node from clipboard");
+    newFromClipboardMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { systemClipboardToNewNode(); }});
+    editMenu.add(newFromClipboardMenuItem);
     editMenu.add(new JSeparator());
     editNodeTitleMenuItem = new JMenuItem("Edit node title");
     editNodeTitleMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { theJreepad.editNodeTitleAction(); }});
@@ -934,14 +942,17 @@ public class JreepadViewer extends JFrame
 	toolBarIconic.add(newIconButton);
 	toolBarIconic.add(openIconButton);
 	toolBarIconic.add(saveIconButton);
+	toolBarIconic.add(new JSeparator());
 	toolBarIconic.add(addAboveIconButton);
 	toolBarIconic.add(addBelowIconButton);
 	toolBarIconic.add(addIconButton);
 	toolBarIconic.add(removeIconButton);
+	toolBarIconic.add(new JSeparator());
 	toolBarIconic.add(upIconButton);
 	toolBarIconic.add(downIconButton);
 	toolBarIconic.add(outdentIconButton);
 	toolBarIconic.add(indentIconButton);
+	toolBarIconic.add(new JSeparator());
     toolBarIconic.add(viewSelectorIconic);
     toolBarIconic.add(Box.createGlue());
   }
@@ -1022,10 +1033,14 @@ public class JreepadViewer extends JFrame
     hBox.add(Box.createGlue());
     vBox.add(hBox);
     //
-    searchMaxNumSpinner = new DSpinner(1,1000,getPrefs().searchMaxNum);
-    searchMaxNumSpinner.addCaretListener(new CaretListener(){ public void caretUpdate(CaretEvent e){
+//    searchMaxNumSpinner = new DSpinner(1,1000,getPrefs().searchMaxNum);
+    searchMaxNumSpinner = new JSpinner(new SpinnerNumberModel(getPrefs().searchMaxNum,1,1000,1));
+/*    searchMaxNumSpinner.addCaretListener(new CaretListener(){ public void caretUpdate(CaretEvent e){
                                            doTheSearch();}});
     searchMaxNumSpinner.addActionListener(new ActionListener(){ public void actionPerformed(ActionEvent e){
+                                           doTheSearch();}});
+*/
+    searchMaxNumSpinner.getModel().addChangeListener(new ChangeListener(){ public void stateChanged(ChangeEvent e){
                                            doTheSearch();}});
     hBox = Box.createHorizontalBox();
     hBox.add(Box.createGlue());
@@ -1194,9 +1209,9 @@ public class JreepadViewer extends JFrame
 //    genPrefVBox.add(hBox);
     hBox = Box.createHorizontalBox();
     hBox.add(new JLabel("Column width to use for hard-wrap action:"));
-//    hBox.add(wrapWidthSpinner = new JSpinner(new SpinnerNumberModel(getPrefs().characterWrapWidth,1,1000,1)));
     hBox.add(Box.createGlue());
-    hBox.add(wrapWidthSpinner = new DSpinner(1,1000,getPrefs().characterWrapWidth));
+    hBox.add(wrapWidthSpinner = new JSpinner(new SpinnerNumberModel(getPrefs().characterWrapWidth,1,1000,1)));
+//    hBox.add(wrapWidthSpinner = new DSpinner(1,1000,getPrefs().characterWrapWidth));
     hBox.add(Box.createGlue());
     genPrefVBox.add(hBox);
     genPanel.add(genPrefVBox);
@@ -1288,8 +1303,8 @@ public class JreepadViewer extends JFrame
 									getPrefs().defaultSearchMode = defaultSearchModeSelector.getSelectedIndex();
 									getPrefs().fileEncoding = fileEncodingSelector.getSelectedIndex();
 									getPrefs().mainFileType = fileFormatSelector.getSelectedIndex();
-//									getPrefs().characterWrapWidth = ((Integer)(wrapWidthSpinner.getValue())).intValue();
-									getPrefs().characterWrapWidth = wrapWidthSpinner.getValue();
+									getPrefs().characterWrapWidth = ((Integer)(wrapWidthSpinner.getValue())).intValue();
+//									getPrefs().characterWrapWidth = wrapWidthSpinner.getValue();
                                     characterWrapArticleMenuItem.setText("Hard-wrap current article to " + getPrefs().characterWrapWidth + " columns");
 							//		setFontsFromPrefsBox();
 //									getPrefs().wrapToWindow = wrapToWindowCheckBox.isSelected();
@@ -1319,7 +1334,8 @@ public class JreepadViewer extends JFrame
     vBox.add(Box.createGlue());
     hBox = Box.createHorizontalBox();
     hBox.add(autoSaveCheckBox = new JCheckBox("Autosave every ", getPrefs().autoSave));
-    hBox.add(autoSavePeriodSpinner = new DSpinner(1, 1000, getPrefs().autoSavePeriod));
+//DSpinner version:    hBox.add(autoSavePeriodSpinner = new DSpinner(1, 1000, getPrefs().autoSavePeriod));
+    hBox.add(autoSavePeriodSpinner = new JSpinner(new SpinnerNumberModel(getPrefs().autoSavePeriod, 1, 1000, 1)));
     hBox.add(new JLabel(" minutes"));
     vBox.add(hBox);
     vBox.add(Box.createGlue());
@@ -1327,8 +1343,8 @@ public class JreepadViewer extends JFrame
     hBox.add(autoSaveOkButton = new JButton("OK"));
     hBox.add(autoSaveCancelButton = new JButton("Cancel"));
     autoSaveOkButton.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e){
-//									getPrefs().autoSavePeriod = ((Integer)(autoSavePeriodSpinner.getValue())).intValue();
-									getPrefs().autoSavePeriod = autoSavePeriodSpinner.getValue();
+									getPrefs().autoSavePeriod = ((Integer)(autoSavePeriodSpinner.getValue())).intValue();
+//									getPrefs().autoSavePeriod = autoSavePeriodSpinner.getValue();
 									getPrefs().autoSave = autoSaveCheckBox.isSelected();
                                     autoSaveDialog.setVisible(false);
 									if(getPrefs().autoSave && !(autoSaveThread.isAlive()))
@@ -1427,7 +1443,7 @@ public class JreepadViewer extends JFrame
       openHjtFile(fileChooser.getSelectedFile());
     }
   } // End of: openAction()
-  private void openHjtFile(File f)
+  protected void openHjtFile(File f)
   {
       try
       {
@@ -1455,7 +1471,7 @@ public class JreepadViewer extends JFrame
   
   private boolean saveAction()
   {
-    if(getPrefs().saveLocation==null)
+    if(getPrefs().saveLocation==null || (getPrefs().saveLocation.isFile() && !getPrefs().saveLocation.canWrite()))
     {
       return saveAsAction();
     }
@@ -1499,6 +1515,12 @@ public class JreepadViewer extends JFrame
                    (getPrefs().mainFileType==JreepadPrefs.FILETYPE_XML?".jree":".hjt")       ));
       if(fileChooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION && checkOverwrite(fileChooser.getSelectedFile()))
       {
+        if(fileChooser.getSelectedFile().isFile() && !fileChooser.getSelectedFile().canWrite())
+        {
+          JOptionPane.showMessageDialog(this, "The file is not writeable (e.g. marked as \"Read-only\"). Please choose another location for save.", "Not writeable" , JOptionPane.ERROR_MESSAGE);
+          return saveAsAction();
+        }
+        
         setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
         getPrefs().saveLocation = fileChooser.getSelectedFile();
         
@@ -1915,8 +1937,8 @@ public class JreepadViewer extends JFrame
   {
     // The autosave simply launches a background thread which periodically triggers saveAction if saveLocation != null
     autoSaveCheckBox.setSelected(getPrefs().autoSave);
- //   autoSavePeriodSpinner.getModel().setValue(new Integer(getPrefs().autoSavePeriod));
-    autoSavePeriodSpinner.setValue(getPrefs().autoSavePeriod);
+    autoSavePeriodSpinner.getModel().setValue(new Integer(getPrefs().autoSavePeriod));
+ //   autoSavePeriodSpinner.setValue(getPrefs().autoSavePeriod);
     autoSaveDialog.setVisible(true);
     autoSaveDialog.toFront();
   }
@@ -2185,13 +2207,62 @@ public class JreepadViewer extends JFrame
 
   public void doTheSearch()
   {
-	 getPrefs().searchMaxNum = searchMaxNumSpinner.getValue();
+	 getPrefs().searchMaxNum = ((Integer)searchMaxNumSpinner.getValue()).intValue();
+//DSpinner version	 getPrefs().searchMaxNum = searchMaxNumSpinner.getValue();
 
 	 performSearch(nodeSearchField.getText(), nodeSearchField.getText(), // articleSearchField.getText(), 
 	 searchWhereSelector.getSelectedIndex(), true /* searchCombinatorSelector.getSelectedIndex()==0 */,
 	 searchCaseCheckBox.isSelected(), 
 	 getPrefs().searchMaxNum
 	 );
+  }
+  
+  protected void systemClipboardToNewNode()
+  {
+    Transferable cont = systemClipboard.getContents(this);
+
+/*
+    DataFlavor[] flavs = cont.getTransferDataFlavors();
+    System.out.println("Data flavors supported by contents:\n");
+    for(int i=0; i<flavs.length; i++)
+      System.out.println("  " + flavs[i].getHumanPresentableName() + "\n"
+                              + flavs[i].getMimeType() + "\n");
+*/    
+
+    if(cont == null)
+    {
+      JOptionPane.showMessageDialog(this, "No content found in clipboard.", "No content" , JOptionPane.ERROR_MESSAGE);
+      return;
+    }
+    try
+    {
+//      Reader readIt = DataFlavor.getTextPlainUnicodeFlavor().getReaderForText(cont);
+      Reader readIt = DataFlavor.stringFlavor.getReaderForText(cont);
+      char[] theStuff = new char[64];
+      int numRead;
+      StringBuffer theStuffBuf = new StringBuffer();
+      while((numRead = readIt.read(theStuff)) != -1)
+      {
+        theStuffBuf.append(theStuff, 0, numRead);
+      }
+
+      String contStr = theStuffBuf.toString();
+      String titStr;
+      int newlinePos = contStr.indexOf("\n");
+      if(newlinePos == -1)
+      {
+        titStr = contStr;
+        contStr = "";
+      }
+      else
+        titStr = contStr.substring(0, newlinePos-1);
+      theJreepad.addChild(new JreepadNode(titStr, contStr, theJreepad.getCurrentNode()));
+    }
+    catch(Exception err)
+    {
+      JOptionPane.showMessageDialog(this, "Unable to interpret clipboard contents as text.", "Error while pasting" , JOptionPane.ERROR_MESSAGE);
+      return;
+    }
   }
   
   public void keyboardHelp()
@@ -2337,7 +2408,7 @@ public class JreepadViewer extends JFrame
               JOptionPane.INFORMATION_MESSAGE); 
   }
 
-
+/*
   // Replacement for the "JSpinner" which is not available in Java 1.3 or 1.2
   static class DSpinner extends Box
   {
@@ -2398,6 +2469,7 @@ public class JreepadViewer extends JFrame
     }
     
   } // End of class DSpinner
+*/
 
   static class ColouredStrip extends JPanel
   {
@@ -2409,6 +2481,7 @@ public class JreepadViewer extends JFrame
       setBackground(col);
 //      this.col = col;
     }
+
 //    public void paint(Graphics gggg)
 //    {
 //      Graphics2D g = (Graphics2D)gggg;

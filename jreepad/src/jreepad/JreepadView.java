@@ -612,7 +612,7 @@ public class JreepadView extends Box implements TableModelListener
       return null;
     }
 
-    if(tree.getSelectionpath()==null)
+    if(tree.getSelectionPath()==null)
       return null;
     storeForUndo();
     TreePath parentPath = tree.getSelectionPath().getParentPath();
@@ -634,7 +634,7 @@ public class JreepadView extends Box implements TableModelListener
       return null;
     }
 
-    if(tree.getSelectionpath()==null)
+    if(tree.getSelectionPath()==null)
       return null;
     storeForUndo();
     TreePath parentPath = tree.getSelectionPath().getParentPath();
