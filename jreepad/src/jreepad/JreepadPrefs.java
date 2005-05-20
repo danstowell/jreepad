@@ -145,7 +145,7 @@ public class JreepadPrefs implements Serializable
     
     loadLastFileOnOpen = true;
 
-    webSearchName = "Google search for highlighted text";
+    webSearchName = JreepadViewer.lang.getString("PREFS_DEFAULT_SEARCH_TEXT"); //"Google search for highlighted text";
     webSearchPrefix = "www.google.co.uk/search?q=";
     webSearchPostfix = "&hl=en";
     

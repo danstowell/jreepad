@@ -1090,7 +1090,7 @@ public class JreepadViewer extends JFrame
             case 2:
               return "";
             case 1:
-              return (nodeSearchField.getText()=="" ? lang.getString("SEARCH_BEFORERESULTS") : lang.getString("SEARCH_NORESULTS"));
+              return (nodeSearchField.getText()=="" ? lang.getString("SEARCH_TBL_BEFORERESULTS") : lang.getString("SEARCH_TBL_NORESULTS"));
             default:
               return "";
           }
@@ -2018,12 +2018,8 @@ public class JreepadViewer extends JFrame
   private void aboutAction()
   {
               JOptionPane.showMessageDialog(this, 
-              "Jreepad is an open-source Java program\n" +
-              "designed to provide the functionality\n" +
-              "(including file interoperability) of\n" +
-              "a Windows program called \"Treepad Lite\",\n" +
-              "part of the \"Treepad\" suite of software \n" +
-              "written by Henk Hagedoorn.\n" +
+              lang.getString("HELP_ABOUT") +
+              "\n" +
               "\nJreepad \u00A9 2004 Dan Stowell" +
               "\n" +
               "\nJreepad project website:" +
@@ -2086,22 +2082,7 @@ public class JreepadViewer extends JFrame
   public void showLicense()
   {
               JOptionPane.showMessageDialog(this, 
-"           Jreepad - personal information manager.\n" +
-"           Copyright \u00A9 2004 Dan Stowell\n" +
-"\n" +
-"This program is free software; you can redistribute it and/or\n" +
-"modify it under the terms of the GNU General Public License\n" +
-"as published by the Free Software Foundation; either version 2\n" +
-"of the License, or (at your option) any later version.\n" +
-"\n" +
-"This program is distributed in the hope that it will be useful,\n" +
-"but WITHOUT ANY WARRANTY; without even the implied warranty of\n" +
-"MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n" +
-"GNU General Public License for more details.\n" +
-"\n" +
-"The full license can be read online here:\n" +
-"\n" +
-"           http://www.gnu.org/copyleft/gpl.html\n" +
+lang.getString("HELP_LICENSE") + "\n\n           http://www.gnu.org/copyleft/gpl.html\n" +
              "\n"
               ,
               lang.getString("MENUITEM_LICENSE"), 

@@ -409,7 +409,7 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
 
   public static final String[] getHtmlExportArticleTypes()
   {
-    return new String[]{"Ordinary text", "Preformatted text", "HTML markup"};
+    return new String[]{JreepadViewer.lang.getString("PREFS_EXPORTTYPE_TEXT"),JreepadViewer.lang.getString("PREFS_EXPORTTYPE_PREFORMATTED"),JreepadViewer.lang.getString("PREFS_EXPORTTYPE_HTML")};
   }
   public static final String[] getHtmlExportAnchorLinkTypes()
   {
