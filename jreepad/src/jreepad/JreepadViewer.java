@@ -43,7 +43,8 @@ public class JreepadViewer extends JFrame
   private Box toolBar, toolBarIconic;
   private JreepadView theJreepad;
   private Container content;
-  private static final File prefsFile = new File(System.getProperty("user.home"), ".jreepref");
+  private File prefsFile = new File(System.getProperty("user.home"), ".jreepref");
+  protected static ResourceBundle lang = ResourceBundle.getBundle("jreepad.lang.JreepadStrings");
 
 //  private static final String[] fonts = GraphicsEnvironment.getLocalGraphicsEnvironment().getAvailableFontFamilyNames(null);  
 //  private static final String[] fontSizes = new String[] {"8","9","10","11","12","13","14","16","18","20","24","30","36"};
@@ -114,6 +115,7 @@ public class JreepadViewer extends JFrame
     private JTextField webSearchPostfixField;
   private JCheckBox wrapToWindowCheckBox;
   private JCheckBox quoteCsvCheckBox;
+  private JCheckBox showGreenStripCheckBox;
   private JButton prefsOkButton;
   private JButton prefsCancelButton;
   
@@ -206,6 +208,8 @@ public class JreepadViewer extends JFrame
   private JMenuItem aboutMenuItem;
   private JMenuItem licenseMenuItem;
   
+  private ColouredStrip funkyGreenStrip;
+  
   // private boolean htmlExportOkChecker = false; // Just used to check whether OK or Cancel has been pressed in a certain dialogue box
   
   // Check whether we are on Mac OS X.  This is crucial to loading and using the OSXAdapter class.
@@ -220,6 +224,10 @@ public class JreepadViewer extends JFrame
   }
   public JreepadViewer(String fileNameToLoad)
   {
+    this(fileNameToLoad, null);
+  }
+  public JreepadViewer(String fileNameToLoad, String prefFilename)
+  {
 // THIS DOESN'T SEEM TO HAVE ANY EFFECT, ON MAC OSX - I'd be interested to know if it does its job on other OSs
 // Apparently it does work on Windows. So I'll leave it in place!
     ClassLoader loader = this.getClass().getClassLoader(); // Used for loading icon
@@ -231,6 +239,8 @@ public class JreepadViewer extends JFrame
     systemClipboard = theToolkit.getSystemClipboard();
 
     // Check if a preferences file exists - and if so, load it
+    if(prefFilename!=null)
+      prefsFile = new File(prefFilename);
     try
     {
       if(prefsFile.exists() && prefsFile.isFile())
@@ -290,7 +300,7 @@ public class JreepadViewer extends JFrame
     // Finished establishing the autosave thread
     
     content.setLayout(new BoxLayout(content, BoxLayout.Y_AXIS));
-    content.add(new ColouredStrip(new Color(0.09f, 0.4f, 0.12f), wndSize.width, 10));
+    content.add(funkyGreenStrip = new ColouredStrip(new Color(0.09f, 0.4f, 0.12f), wndSize.width, 10) );
     content.add(toolBar);
     content.add(toolBarIconic);
     setToolbarMode(getPrefs().toolbarMode);
@@ -318,7 +328,7 @@ public class JreepadViewer extends JFrame
       }
       catch(IOException err)
       {
-        JOptionPane.showMessageDialog(this, err, "Sorry - failed to load requested file." , JOptionPane.ERROR_MESSAGE);
+        JOptionPane.showMessageDialog(this, err, lang.getString("MSG_LOAD_FILE_FAILED") , JOptionPane.ERROR_MESSAGE);
         content.remove(theJreepad);
         theJreepad = new JreepadView(new JreepadNode());
         content.add(theJreepad);
@@ -370,191 +380,191 @@ public class JreepadViewer extends JFrame
     // Create the menu bar
     menuBar = new JMenuBar();
     //
-    fileMenu = new JMenu("File");
-    editMenu = new JMenu("Edit");
-    searchMenu = new JMenu("Actions");
-    viewMenu = new JMenu("View");
-    optionsMenu = new JMenu("Options");
-    helpMenu = new JMenu("Help");
+    fileMenu = new JMenu(lang.getString("MENU_FILE")); //"File");
+    editMenu = new JMenu(lang.getString("MENU_EDIT")); //"Edit");
+    searchMenu = new JMenu(lang.getString("MENU_ACTIONS")); //"Actions");
+    viewMenu = new JMenu(lang.getString("MENU_VIEW")); //"View");
+    optionsMenu = new JMenu(lang.getString("MENU_OPTIONS")); //"Options");
+    helpMenu = new JMenu(lang.getString("MENU_HELP")); //"Help");
     //
-    newMenuItem = new JMenuItem("New");
+    newMenuItem = new JMenuItem(lang.getString("MENUITEM_NEW")); //"New");
     newMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { newAction();}});
     fileMenu.add(newMenuItem);
 //    newWindowMenuItem = new JMenuItem("New window");
 //    newWindowMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { new JreepadViewer();}});
 //    fileMenu.add(newWindowMenuItem);
-    openMenuItem = new JMenuItem("Open");
+    openMenuItem = new JMenuItem(lang.getString("MENUITEM_OPEN")); //"Open");
     openMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {openAction();}});
     fileMenu.add(openMenuItem);
-      openRecentMenu = new JMenu("Open recent");
+      openRecentMenu = new JMenu(lang.getString("MENUITEM_OPENRECENT")); //"Open recent");
       updateOpenRecentMenu();
       fileMenu.add(openRecentMenu);
-    saveMenuItem = new JMenuItem("Save");
+    saveMenuItem = new JMenuItem(lang.getString("MENUITEM_SAVE")); //"Save");
     saveMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {saveAction();}});
     fileMenu.add(saveMenuItem);
-    saveAsMenuItem = new JMenuItem("Save as...");
+    saveAsMenuItem = new JMenuItem(lang.getString("MENUITEM_SAVEAS")); //"Save as...");
     saveAsMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {saveAsAction();}});
     fileMenu.add(saveAsMenuItem);
-    backupToMenuItem = new JMenuItem("Backup to...");
+    backupToMenuItem = new JMenuItem(lang.getString("MENUITEM_BACKUPTO")); //"Backup to...");
     backupToMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {backupToAction();}});
     fileMenu.add(backupToMenuItem);
 	fileMenu.add(new JSeparator());
 
-	printSubtreeMenuItem = new JMenuItem("Print subtree");
+	printSubtreeMenuItem = new JMenuItem(lang.getString("MENUITEM_PRINTSUBTREE")); //"Print subtree");
 	printSubtreeMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {toBrowserForPrintAction();}});
 	fileMenu.add(printSubtreeMenuItem);
-	printArticleMenuItem = new JMenuItem("Print article");
+	printArticleMenuItem = new JMenuItem(lang.getString("MENUITEM_PRINTARTICLE")); //"Print article");
 	printArticleMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {articleToBrowserForPrintAction();}});
 	fileMenu.add(printArticleMenuItem);
 
     fileMenu.add(new JSeparator());
-      importMenu = new JMenu("Import...");
+      importMenu = new JMenu(lang.getString("MENUITEM_IMPORT")); //"Import...");
       fileMenu.add(importMenu);
-      importHjtMenuItem = new JMenuItem("...Treepad file as subtree");
+      importHjtMenuItem = new JMenuItem(lang.getString("MENUITEM_IMPORT_HJT")); //"...Treepad file as subtree");
       importHjtMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {importAction(FILE_FORMAT_HJT);}});
       importMenu.add(importHjtMenuItem);
-      importTextMenuItem = new JMenuItem("...text file(s) as child node(s)");
+      importTextMenuItem = new JMenuItem(lang.getString("MENUITEM_IMPORT_TEXTFILES")); //"...text file(s) as child node(s)");
       importTextMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {importAction(FILE_FORMAT_TEXT);}});
       importMenu.add(importTextMenuItem);
-      importTextAsListMenuItem = new JMenuItem("...text list file, one-child-per-line");
+      importTextAsListMenuItem = new JMenuItem(lang.getString("MENUITEM_IMPORT_TEXTLIST")); //"...text list file, one-child-per-line");
       importTextAsListMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {importAction(FILE_FORMAT_TEXTASLIST);}});
       importMenu.add(importTextAsListMenuItem);
       //
-      exportMenu = new JMenu("Export selected...");
+      exportMenu = new JMenu(lang.getString("MENUITEM_EXPORT")); //"Export selected...");
       fileMenu.add(exportMenu);
-      exportHjtMenuItem = new JMenuItem("...subtree to Treepad HJT file");
+      exportHjtMenuItem = new JMenuItem(lang.getString("MENUITEM_EXPORT_HJT")); //"...subtree to Treepad HJT file");
       exportHjtMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {exportAction(FILE_FORMAT_HJT);}});
       exportMenu.add(exportHjtMenuItem);
-      exportHtmlMenuItem = new JMenuItem("...subtree to HTML");
+      exportHtmlMenuItem = new JMenuItem(lang.getString("MENUITEM_EXPORT_HTML")); //"...subtree to HTML");
       exportHtmlMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {
      //DELETE             		    htmlExportOkChecker = false;
      //DELETE             		    htmlExportDialog.setVisible(true);
      //DELETE             		    if(htmlExportOkChecker)
                   		      exportAction(FILE_FORMAT_HTML);}});
       exportMenu.add(exportHtmlMenuItem);
-      exportSimpleXmlMenuItem = new JMenuItem("...subtree to XML");
+      exportSimpleXmlMenuItem = new JMenuItem(lang.getString("MENUITEM_EXPORT_XML")); //"...subtree to XML");
       exportSimpleXmlMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {exportAction(FILE_FORMAT_XML);}});
       exportMenu.add(exportSimpleXmlMenuItem);
-      exportListMenuItem = new JMenuItem("...subtree to text list (node titles only)");
+      exportListMenuItem = new JMenuItem(lang.getString("MENUITEM_EXPORT_TEXTLIST")); //"...subtree to text list (node titles only)");
       exportListMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {exportAction(FILE_FORMAT_TEXTASLIST);}});
       exportMenu.add(exportListMenuItem);
       exportMenu.add(new JSeparator());
-      exportTextMenuItem = new JMenuItem("...article to text file");
+      exportTextMenuItem = new JMenuItem(lang.getString("MENUITEM_EXPORT_ARTICLE")); //"...article to text file");
       exportTextMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {exportAction(FILE_FORMAT_TEXT);}});
       exportMenu.add(exportTextMenuItem);
-      exportSubtreeTextMenuItem = new JMenuItem("...subtree articles to text file");
+      exportSubtreeTextMenuItem = new JMenuItem(lang.getString("MENUITEM_EXPORT_ARTICLES")); //"...subtree articles to text file");
       exportSubtreeTextMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {exportAction(FILE_FORMAT_ARTICLESTOTEXT);}});
       exportMenu.add(exportSubtreeTextMenuItem);
     fileMenu.add(new JSeparator());
     if(!MAC_OS_X)
     {
-      quitMenuItem = new JMenuItem("Quit");
+      quitMenuItem = new JMenuItem(lang.getString("MENUITEM_QUIT")); //"Quit");
       quitMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { quitAction(); }});
       fileMenu.add(quitMenuItem);
       quitMenuItem.setMnemonic('Q');
       quitMenuItem.setAccelerator(KeyStroke.getKeyStroke('Q', MENU_MASK));
     }
     //
-    undoMenuItem = new JMenuItem("Undo");
+    undoMenuItem = new JMenuItem(lang.getString("MENUITEM_UNDO")); //"Undo");
     undoMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { undoAction();}});
 // Fairly sensibly, someone suggested removing the Undo button since it behaves oddly and because there's no "Redo".
 // So I've removed it from the menu - will leave it in the code, though, in the optimistic hope that we can fix it later...
 //    editMenu.add(undoMenuItem);
     editMenu.add(new JSeparator());
-    addAboveMenuItem = new JMenuItem("Add sibling above");
+    addAboveMenuItem = new JMenuItem(lang.getString("MENUITEM_ADDABOVE")); //"Add sibling above");
     addAboveMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { theJreepad.addNodeAbove(); /* theJreepad.returnFocusToTree(); */ setWarnAboutUnsaved(true); updateWindowTitle();}});
     editMenu.add(addAboveMenuItem);
-    addBelowMenuItem = new JMenuItem("Add sibling below");
+    addBelowMenuItem = new JMenuItem(lang.getString("MENUITEM_ADDBELOW")); //"Add sibling below");
     addBelowMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { theJreepad.addNodeBelow(); /* theJreepad.returnFocusToTree(); */ setWarnAboutUnsaved(true); updateWindowTitle();}});
     editMenu.add(addBelowMenuItem);
-    addChildMenuItem = new JMenuItem("Add child");
+    addChildMenuItem = new JMenuItem(lang.getString("MENUITEM_ADDCHILD")); //"Add child");
     addChildMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { theJreepad.addNode(); /* theJreepad.returnFocusToTree(); */ setWarnAboutUnsaved(true);updateWindowTitle(); }});
     editMenu.add(addChildMenuItem);
     editMenu.add(new JSeparator());
-    newFromClipboardMenuItem = new JMenuItem("New node from clipboard");
+    newFromClipboardMenuItem = new JMenuItem(lang.getString("MENUITEM_NEWFROMCLIPBOARD")); //"New node from clipboard");
     newFromClipboardMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { systemClipboardToNewNode(); }});
     editMenu.add(newFromClipboardMenuItem);
     editMenu.add(new JSeparator());
-    editNodeTitleMenuItem = new JMenuItem("Edit node title");
+    editNodeTitleMenuItem = new JMenuItem(lang.getString("MENUITEM_EDITNODETITLE")); //"Edit node title");
     editNodeTitleMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { theJreepad.editNodeTitleAction(); }});
     editMenu.add(editNodeTitleMenuItem);
     editMenu.add(new JSeparator());
-    deleteMenuItem = new JMenuItem("Delete node");
+    deleteMenuItem = new JMenuItem(lang.getString("MENUITEM_DELETENODE")); //"Delete node");
     deleteMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { deleteNodeAction(); }});
     editMenu.add(deleteMenuItem);
     editMenu.add(new JSeparator());
-    upMenuItem = new JMenuItem("Move node up");
+    upMenuItem = new JMenuItem(lang.getString("MENUITEM_MOVEUP")); //"Move node up");
     upMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { theJreepad.moveCurrentNodeUp(); theJreepad.returnFocusToTree(); setWarnAboutUnsaved(true);updateWindowTitle(); }});
     editMenu.add(upMenuItem);
-    downMenuItem = new JMenuItem("Move node down");
+    downMenuItem = new JMenuItem(lang.getString("MENUITEM_MOVEDOWN")); //"Move node down");
     downMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { theJreepad.moveCurrentNodeDown(); theJreepad.returnFocusToTree(); setWarnAboutUnsaved(true);updateWindowTitle(); }});
     editMenu.add(downMenuItem);
     editMenu.add(new JSeparator());
-    indentMenuItem = new JMenuItem("Indent node (demote)");
+    indentMenuItem = new JMenuItem(lang.getString("MENUITEM_MOVEIN")); //"Indent node (demote)");
     indentMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { theJreepad.indentCurrentNode(); theJreepad.returnFocusToTree(); setWarnAboutUnsaved(true);updateWindowTitle(); }});
     editMenu.add(indentMenuItem);
-    outdentMenuItem = new JMenuItem("Outdent node (promote)");
+    outdentMenuItem = new JMenuItem(lang.getString("MENUITEM_MOVEOUT")); //"Outdent node (promote)");
     outdentMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { theJreepad.outdentCurrentNode(); theJreepad.returnFocusToTree(); setWarnAboutUnsaved(true);updateWindowTitle(); }});
     editMenu.add(outdentMenuItem);
     editMenu.add(new JSeparator());
-    expandAllMenuItem = new JMenuItem("Expand subtree");
+    expandAllMenuItem = new JMenuItem(lang.getString("MENUITEM_EXPAND")); //"Expand subtree");
     expandAllMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { theJreepad.expandAllCurrentNode(); }});
     editMenu.add(expandAllMenuItem);
-    collapseAllMenuItem = new JMenuItem("Collapse subtree");
+    collapseAllMenuItem = new JMenuItem(lang.getString("MENUITEM_COLLAPSE")); //"Collapse subtree");
     collapseAllMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { theJreepad.collapseAllCurrentNode(); }});
     editMenu.add(collapseAllMenuItem);
     //
-    searchMenuItem = new JMenuItem("Search");
+    searchMenuItem = new JMenuItem(lang.getString("MENUITEM_SEARCH")); //"Search");
     searchMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { openSearchDialog(); }});
     searchMenu.add(searchMenuItem);
-    launchUrlMenuItem = new JMenuItem("Follow highlighted link");
+    launchUrlMenuItem = new JMenuItem(lang.getString("MENUITEM_FOLLOWLINK")); //"Follow highlighted link");
     launchUrlMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { theJreepad.openURLSelectedInArticle(); }});
     searchMenu.add(launchUrlMenuItem);
     webSearchMenuItem = new JMenuItem(getPrefs().webSearchName);
     webSearchMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { theJreepad.webSearchTextSelectedInArticle(); }});
     searchMenu.add(webSearchMenuItem);
     searchMenu.add(new JSeparator());
-    characterWrapArticleMenuItem = new JMenuItem("Hard-wrap current article to " + getPrefs().characterWrapWidth + " columns");
+    characterWrapArticleMenuItem = new JMenuItem(lang.getString("MENUITEM_HARDWRAP1") + getPrefs().characterWrapWidth + lang.getString("MENUITEM_HARDWRAP2")); //);
     characterWrapArticleMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { wrapContentToCharWidth(); }});
     searchMenu.add(characterWrapArticleMenuItem);
-    stripTagsMenuItem = new JMenuItem("Strip <tags> from article");
+    stripTagsMenuItem = new JMenuItem(lang.getString("MENUITEM_STRIPTAGS")); //"Strip <tags> from article");
     stripTagsMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { stripAllTags(); }});
     searchMenu.add(stripTagsMenuItem);
-    insertDateMenuItem = new JMenuItem("Insert date");
+    insertDateMenuItem = new JMenuItem(lang.getString("MENUITEM_INSERTDATE")); //"Insert date");
     insertDateMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { insertDate(); }});
     searchMenu.add(insertDateMenuItem);
     searchMenu.add(new JSeparator());
-    sortMenuItem = new JMenuItem("Sort children (one level)");
+    sortMenuItem = new JMenuItem(lang.getString("MENUITEM_SORTONELEVEL")); //"Sort children (one level)");
     sortMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { theJreepad.sortChildren(); setWarnAboutUnsaved(true);updateWindowTitle(); }});
     searchMenu.add(sortMenuItem);
-    sortRecursiveMenuItem = new JMenuItem("Sort children (all levels)");
+    sortRecursiveMenuItem = new JMenuItem(lang.getString("MENUITEM_SORTALLLEVELS")); //"Sort children (all levels)");
     sortRecursiveMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { theJreepad.sortChildrenRecursive(); setWarnAboutUnsaved(true);updateWindowTitle(); }});
     searchMenu.add(sortRecursiveMenuItem);
     //
-    viewBothMenuItem = new JMenuItem("Both tree and article");
+    viewBothMenuItem = new JMenuItem(lang.getString("MENUITEM_VIEWBOTH")); //"Both tree and article");
     viewBothMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { setViewMode(JreepadPrefs.VIEW_BOTH); }});
     viewMenu.add(viewBothMenuItem);
-    viewTreeMenuItem = new JMenuItem("Tree");
+    viewTreeMenuItem = new JMenuItem(lang.getString("MENUITEM_VIEWTREE")); //"Tree");
     viewTreeMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { setViewMode(JreepadPrefs.VIEW_TREE); }});
     viewMenu.add(viewTreeMenuItem);
-    viewArticleMenuItem = new JMenuItem("Article");
+    viewArticleMenuItem = new JMenuItem(lang.getString("MENUITEM_VIEWARTICLE")); //"Article");
     viewArticleMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { setViewMode(JreepadPrefs.VIEW_ARTICLE); }});
     viewMenu.add(viewArticleMenuItem);
     viewMenu.add(new JSeparator());
 
-    viewToolbarMenu = new JMenu("Toolbar");
+    viewToolbarMenu = new JMenu(lang.getString("MENUITEM_TOOLBAR")); //"Toolbar");
     viewMenu.add(viewToolbarMenu);
-	  viewToolbarIconsMenuItem = new JCheckBoxMenuItem("Icons", true);
+	  viewToolbarIconsMenuItem = new JCheckBoxMenuItem(lang.getString("MENUITEM_TOOLBAR_ICONS")); //"Icons", true);
 	  viewToolbarIconsMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { 
 	                                              setToolbarMode(JreepadPrefs.TOOLBAR_ICON);
 	                                              }});
 	  viewToolbarMenu.add(viewToolbarIconsMenuItem);
-	  viewToolbarTextMenuItem = new JCheckBoxMenuItem("Text", true);
+	  viewToolbarTextMenuItem = new JCheckBoxMenuItem(lang.getString("MENUITEM_TOOLBAR_TEXT")); //"Text", true);
 	  viewToolbarTextMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { 
 	                                              setToolbarMode(JreepadPrefs.TOOLBAR_TEXT);
 	                                              }});
 	  viewToolbarMenu.add(viewToolbarTextMenuItem);
-	  viewToolbarOffMenuItem = new JCheckBoxMenuItem("Off", true);
+	  viewToolbarOffMenuItem = new JCheckBoxMenuItem(lang.getString("MENUITEM_TOOLBAR_OFF")); //"Off", true);
 	  viewToolbarOffMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { 
 	                                              setToolbarMode(JreepadPrefs.TOOLBAR_OFF);
 	                                              }});
@@ -564,18 +574,18 @@ public class JreepadViewer extends JFrame
 
     viewMenu.add(new JSeparator());
 
-    articleViewModeMenuItem = new JMenu("View this article as...");
-	  articleViewModeTextMenuItem = new JMenuItem("Text");
+    articleViewModeMenuItem = new JMenu(lang.getString("MENUITEM_ARTICLEFORMAT")); //"View this article as...");
+	  articleViewModeTextMenuItem = new JMenuItem(lang.getString("MENUITEM_ARTICLEFORMAT_TEXT")); //"Text");
 	  articleViewModeTextMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { 
 				theJreepad.setArticleMode(JreepadNode.ARTICLEMODE_ORDINARY);
 					   }});
 	  articleViewModeMenuItem.add(articleViewModeTextMenuItem);
-	  articleViewModeHtmlMenuItem = new JMenuItem("HTML");
+	  articleViewModeHtmlMenuItem = new JMenuItem(lang.getString("MENUITEM_ARTICLEFORMAT_HTML")); //"HTML");
 	  articleViewModeHtmlMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { 
 				theJreepad.setArticleMode(JreepadNode.ARTICLEMODE_HTML);
 					   }});
 	  articleViewModeMenuItem.add(articleViewModeHtmlMenuItem);
-	  articleViewModeCsvMenuItem = new JMenuItem("Table (comma-separated data)");
+	  articleViewModeCsvMenuItem = new JMenuItem(lang.getString("MENUITEM_ARTICLEFORMAT_CSV")); //"Table (comma-separated data)");
 	  articleViewModeCsvMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { 
 				theJreepad.setArticleMode(JreepadNode.ARTICLEMODE_CSV);
 					   }});
@@ -584,30 +594,30 @@ public class JreepadViewer extends JFrame
 
 
     viewMenu.add(new JSeparator());
-    thisNodesUrlMenuItem = new JMenuItem("\"node://\" address for current node");
+    thisNodesUrlMenuItem = new JMenuItem(lang.getString("MENUITEM_NODEADDRESS")); //"\"node://\" address for current node");
     thisNodesUrlMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { getTreepadNodeUrl(); }});
     viewMenu.add(thisNodesUrlMenuItem);
     //
-    autoSaveMenuItem = new JMenuItem("Autosave...");
+    autoSaveMenuItem = new JMenuItem(lang.getString("MENUITEM_AUTOSAVE_PREFS")); //"Autosave...");
     autoSaveMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { showAutoSaveDialog(); }});
     optionsMenu.add(autoSaveMenuItem);
-    prefsMenuItem = new JMenuItem("Preferences");
+    prefsMenuItem = new JMenuItem(lang.getString("MENUITEM_PREFS")); //"Preferences");
     prefsMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { 
                                             // updateFontsInPrefsBox(); 
                                             showPrefsDialog(); }});
     optionsMenu.add(prefsMenuItem);
     //
-    keyboardHelpMenuItem = new JMenuItem("Keyboard shortcuts");
+    keyboardHelpMenuItem = new JMenuItem(lang.getString("MENUITEM_KEYBOARDSHORTCUTS")); //"Keyboard shortcuts");
     keyboardHelpMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e)
     		{ keyboardHelp();
     		}});
     helpMenu.add(keyboardHelpMenuItem);
-    linksHelpMenuItem = new JMenuItem("Help with links");
+    linksHelpMenuItem = new JMenuItem(lang.getString("MENUITEM_LINKSHELP")); //"Help with links");
     linksHelpMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e)
     		{ linksHelp();
     		}});
     helpMenu.add(linksHelpMenuItem);
-    dragDropHelpMenuItem = new JMenuItem("Help with drag-and-drop");
+    dragDropHelpMenuItem = new JMenuItem(lang.getString("MENUITEM_DRAGDROPHELP")); //"Help with drag-and-drop");
     dragDropHelpMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e)
     		{ dragDropHelp();
     		}});
@@ -615,7 +625,7 @@ public class JreepadViewer extends JFrame
     helpMenu.add(new JSeparator());
     if(!MAC_OS_X)
     {
-      aboutMenuItem = new JMenuItem("About Jreepad");
+      aboutMenuItem = new JMenuItem(lang.getString("MENUITEM_ABOUT")); //"About Jreepad");
       aboutMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e)
             {
               aboutAction();
@@ -623,7 +633,7 @@ public class JreepadViewer extends JFrame
       aboutMenuItem.setMnemonic('a');
       helpMenu.add(aboutMenuItem);
     }
-    licenseMenuItem = new JMenuItem("License");
+    licenseMenuItem = new JMenuItem(lang.getString("MENUITEM_LICENSE")); //"License");
     licenseMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e)
             {
               showLicense();
@@ -729,17 +739,16 @@ public class JreepadViewer extends JFrame
     // Add the toolbar buttons
     toolBar = Box.createHorizontalBox();
     toolBarIconic = Box.createHorizontalBox();
-
     //
-    addAboveButton = new JButton("Add above");
-    addBelowButton = new JButton("Add below");
-    addButton = new JButton("Add child");
-    removeButton = new JButton("Del");
+    addAboveButton = new JButton(lang.getString("TOOLBAR_ADDABOVE"));
+    addBelowButton = new JButton(lang.getString("TOOLBAR_ADDBELOW"));
+    addButton = new JButton(lang.getString("TOOLBAR_ADDCHILD"));
+    removeButton = new JButton(lang.getString("TOOLBAR_DELETE"));
     //
-    upButton = new JButton("Up");
-    downButton = new JButton("Down");
-    indentButton = new JButton("In");
-    outdentButton = new JButton("Out");
+    upButton = new JButton(lang.getString("TOOLBAR_UP"));
+    downButton = new JButton(lang.getString("TOOLBAR_DOWN"));
+    indentButton = new JButton(lang.getString("TOOLBAR_IN"));
+    outdentButton = new JButton(lang.getString("TOOLBAR_OUT"));
     //
     // Now the mnemonics...
     addAboveButton.setMnemonic('a');
@@ -751,7 +760,7 @@ public class JreepadViewer extends JFrame
     outdentButton.setMnemonic('o');
     removeButton.setMnemonic('k');
     //
-    viewSelector = new JComboBox(new String[]{"Tree+Article","Tree","Article"});
+    viewSelector = new JComboBox(new String[]{lang.getString("TOOLBAR_VIEWBOTH"),lang.getString("TOOLBAR_VIEWTREE"),lang.getString("TOOLBAR_VIEWARTICLE")});
     viewSelector.setEditable(false);
     viewSelector.setSelectedIndex(0);
     viewSelector.addActionListener(new ActionListener(){
@@ -766,7 +775,7 @@ public class JreepadViewer extends JFrame
                                    setViewMode(JreepadPrefs.VIEW_BOTH); break;
                                }
                                } });
-    viewSelectorIconic = new JComboBox(new String[]{"Tree+Article","Tree","Article"});
+    viewSelectorIconic = new JComboBox(new String[]{lang.getString("TOOLBAR_VIEWBOTH"),lang.getString("TOOLBAR_VIEWTREE"),lang.getString("TOOLBAR_VIEWARTICLE")});
     viewSelectorIconic.setEditable(false);
     viewSelectorIconic.setSelectedIndex(0);
     viewSelectorIconic.addActionListener(new ActionListener(){
@@ -810,32 +819,32 @@ public class JreepadViewer extends JFrame
     // Now establish the iconic buttons (code contributed by Coen Schalkwijk)
         // New file
         newIconButton = new JButton();
-        newIconButton.setToolTipText("New");
+        newIconButton.setToolTipText(lang.getString("TOOLBAR_NEW"));
         newIconButton.setBorderPainted(false);
         newIconButton.setIcon(this.getIcon("New16.gif"));
         
         // Open existing
 		openIconButton = new JButton();
-		openIconButton.setToolTipText("Open");
+		openIconButton.setToolTipText(lang.getString("TOOLBAR_OPEN"));
 		openIconButton.setBorderPainted(false);
 		openIconButton.setIcon(this.getIcon("Open16.gif"));
 				
 		// Save current
 	    saveIconButton = new JButton();
-	    saveIconButton.setToolTipText("Save");
+	    saveIconButton.setToolTipText(lang.getString("TOOLBAR_SAVE"));
 	    saveIconButton.setBorderPainted(false);
 	    saveIconButton.setIcon(this.getIcon("Save16.gif"));
 		
 		// Insert node before
-	    addAboveIconButton = new JButton("Add above");
+	    addAboveIconButton = new JButton(lang.getString("TOOLBAR_ADDABOVE"));
 //	    addAboveIconButton = new JButton();
-	    addAboveIconButton.setToolTipText("Add above");
+//	    addAboveIconButton.setToolTipText(lang.getString("TOOLBAR_"));
 //	    addAboveIconButton.setBorderPainted(false);
 //	    addAboveIconButton.setMnemonic('a');
 //	    addAboveIconButton.setIcon(this.getIcon("InsertBefore16.gif"));
 	    
 	    // Insert node after
-	    addBelowIconButton = new JButton("Add below");
+	    addBelowIconButton = new JButton(lang.getString("TOOLBAR_ADDBELOW"));
 //	    addBelowIconButton = new JButton();
 	    addBelowIconButton.setMnemonic('b');
 //	    addBelowIconButton.setToolTipText("Add below");
@@ -845,42 +854,42 @@ public class JreepadViewer extends JFrame
 		// Add child node
 		addIconButton = new JButton();
 		addIconButton.setMnemonic('c');
-		addIconButton.setToolTipText("Add child");
+		addIconButton.setToolTipText(lang.getString("TOOLBAR_ADDCHILD"));
 		addIconButton.setBorderPainted(false);
 		addIconButton.setIcon(this.getIcon("Add16.gif"));
     
     	// Remove node
 	    removeIconButton = new JButton();
 	    removeIconButton.setMnemonic('k');
-	    removeIconButton.setToolTipText("Delete node");
+	    removeIconButton.setToolTipText(lang.getString("TOOLBAR_DELETE"));
 	    removeIconButton.setBorderPainted(false);
 	    removeIconButton.setIcon(this.getIcon("Remove16.gif"));
 		    
 	    // Move node up
 	    upIconButton = new JButton();
 	    upIconButton.setMnemonic('u');
-	    upIconButton.setToolTipText("Move up");
+	    upIconButton.setToolTipText(lang.getString("TOOLBAR_UP"));
 	    upIconButton.setBorderPainted(false);
 	    upIconButton.setIcon(this.getIcon("Up16.gif"));
 	    
 	    // Move node down
 	    downIconButton = new JButton();
 	    downIconButton.setMnemonic('d');
-	    downIconButton.setToolTipText("Move down");
+	    downIconButton.setToolTipText(lang.getString("TOOLBAR_DOWN"));
 	    downIconButton.setBorderPainted(false);
 	    downIconButton.setIcon(this.getIcon("Down16.gif"));
     
 	    // Move node from current
 	    outdentIconButton = new JButton();
 	    outdentIconButton.setMnemonic('i');
-	    outdentIconButton.setToolTipText("Indent");
+	    outdentIconButton.setToolTipText(lang.getString("TOOLBAR_IN"));
 	    outdentIconButton.setBorderPainted(false);
 	    outdentIconButton.setIcon(this.getIcon("Back16.gif"));
     
 	    // Move node to previous
 	    indentIconButton = new JButton();
 	    indentIconButton.setMnemonic('o');
-	    indentIconButton.setToolTipText("Outdent");
+	    indentIconButton.setToolTipText(lang.getString("TOOLBAR_OUT"));
 	    indentIconButton.setBorderPainted(false);
 	    indentIconButton.setIcon(this.getIcon("Forward16.gif"));
 	    
@@ -942,17 +951,23 @@ public class JreepadViewer extends JFrame
 	toolBarIconic.add(newIconButton);
 	toolBarIconic.add(openIconButton);
 	toolBarIconic.add(saveIconButton);
-	toolBarIconic.add(new JSeparator());
+//	if(!MAC_OS_X) // The separators look RUBBISH on OSX
+//	  toolBarIconic.add(new JSeparator(JSeparator.VERTICAL));
+//	  toolBarIconic.add(Box.createHorizontalStrut(16));
 	toolBarIconic.add(addAboveIconButton);
 	toolBarIconic.add(addBelowIconButton);
 	toolBarIconic.add(addIconButton);
 	toolBarIconic.add(removeIconButton);
-	toolBarIconic.add(new JSeparator());
+//	if(!MAC_OS_X) // The separators look RUBBISH on OSX
+//	  toolBarIconic.add(new JSeparator(JSeparator.VERTICAL));
+//	  toolBarIconic.add(Box.createHorizontalStrut(16));
 	toolBarIconic.add(upIconButton);
 	toolBarIconic.add(downIconButton);
 	toolBarIconic.add(outdentIconButton);
 	toolBarIconic.add(indentIconButton);
-	toolBarIconic.add(new JSeparator());
+//	if(!MAC_OS_X) // The separators look RUBBISH on OSX
+//	  toolBarIconic.add(new JSeparator(JSeparator.VERTICAL));
+//	  toolBarIconic.add(Box.createHorizontalStrut(16));
     toolBarIconic.add(viewSelectorIconic);
     toolBarIconic.add(Box.createGlue());
   }
@@ -1003,13 +1018,13 @@ public class JreepadViewer extends JFrame
   private void establishSearchDialogue()
   {
     // Establish the search dialogue box - so that it can be called whenever wanted
-    searchDialog = new JDialog(this, "Search Jreepad", false);
+    searchDialog = new JDialog(this, lang.getString("SEARCH_WINDOWTITLE"), false);
     searchDialog.setVisible(false);
     Box vBox = Box.createVerticalBox();
     //
     Box hBox = Box.createHorizontalBox();
     nodeSearchField = new JTextField("");
-    vBox.add(new JLabel("Search for: "));
+    vBox.add(new JLabel(lang.getString("SEARCH_SEARCHFOR")));
     hBox.add(nodeSearchField);
     nodeSearchField.addActionListener(new ActionListener(){ public void actionPerformed(ActionEvent e){
                                            doTheSearch();}});
@@ -1017,17 +1032,17 @@ public class JreepadViewer extends JFrame
                                            doTheSearch();}});
     vBox.add(hBox);
     //
-    searchWhereSelector = new JComboBox(new String[]{"Selected node and its children", "Entire tree"});
+    searchWhereSelector = new JComboBox(new String[]{lang.getString("SEARCH_SELECTEDNODE"), lang.getString("SEARCH_WHOLETREE")});
     searchWhereSelector.setSelectedIndex(1);
     searchWhereSelector.setEditable(false);
     searchWhereSelector.addActionListener(new ActionListener(){ public void actionPerformed(ActionEvent e){
                                            doTheSearch();}});
     hBox = Box.createHorizontalBox();
     hBox.add(Box.createGlue());
-    hBox.add(new JLabel("Search where: "));
+    hBox.add(new JLabel(lang.getString("SEARCH_SEARCHWHERE")));
     hBox.add(searchWhereSelector);
     hBox.add(Box.createGlue());
-    hBox.add(searchCaseCheckBox = new JCheckBox("Case sensitive", false));
+    hBox.add(searchCaseCheckBox = new JCheckBox(lang.getString("SEARCH_CASESENSITIVE"), false));
     searchCaseCheckBox.addActionListener(new ActionListener(){ public void actionPerformed(ActionEvent e){
                                            doTheSearch();}});
     hBox.add(Box.createGlue());
@@ -1044,7 +1059,7 @@ public class JreepadViewer extends JFrame
                                            doTheSearch();}});
     hBox = Box.createHorizontalBox();
     hBox.add(Box.createGlue());
-    hBox.add(new JLabel("Max number of results: "));
+    hBox.add(new JLabel(lang.getString("SEARCH_MAXRESULTS")));
     hBox.add(searchMaxNumSpinner);
     hBox.add(Box.createGlue());
     vBox.add(hBox);
@@ -1052,7 +1067,7 @@ public class JreepadViewer extends JFrame
     // NOW FOR THE SEARCH RESULTS TABLE - COULD BE TRICKY!
     searchResultsTableModel = new AbstractTableModel()
     {
-      private final String[] columns = new String[]{"Node","Article text","Full path"};
+      private final String[] columns = new String[]{lang.getString("SEARCH_TBL_COL_NODE"),lang.getString("SEARCH_TBL_COL_ARTICLETEXT"),lang.getString("SEARCH_TBL_COL_FULLPATH")};
       public int getColumnCount() { return columns.length; }
       public String getColumnName(int index)
       {
@@ -1075,7 +1090,7 @@ public class JreepadViewer extends JFrame
             case 2:
               return "";
             case 1:
-              return (nodeSearchField.getText()=="" ? "Results will appear here..." : "No matches.");
+              return (nodeSearchField.getText()=="" ? lang.getString("SEARCH_BEFORERESULTS") : lang.getString("SEARCH_NORESULTS"));
             default:
               return "";
           }
@@ -1097,7 +1112,7 @@ public class JreepadViewer extends JFrame
     searchResultsTable.setRowSelectionAllowed(true);
     searchResultsTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
     searchResultsTableScrollPane = new JScrollPane(searchResultsTable);
-    vBox.add(searchResultsLabel = new JLabel("Search results:"));
+    vBox.add(searchResultsLabel = new JLabel(lang.getString("SEARCH_RESULTS")));
     vBox.add(searchResultsTableScrollPane);
     //
     // Add mouse listener
@@ -1163,59 +1178,87 @@ public class JreepadViewer extends JFrame
   {
     Box hBox, vBox;
     // Establish the prefs dialogue box
-    prefsDialog = new JDialog(this, "Preferences", true);
+    prefsDialog = new JDialog(this, lang.getString("PREFS_WINDOWTITLE"), true);
     prefsDialog.setVisible(false);
     vBox = Box.createVerticalBox();
+    vBox.setAlignmentX(Component.LEFT_ALIGNMENT);
     Box genPrefVBox = Box.createVerticalBox();
-    genPrefVBox.add(loadLastFileOnOpenCheckBox = new JCheckBox("When Jreepad starts, automatically load the last-saved file", getPrefs().loadLastFileOnOpen));
-    genPrefVBox.add(autoDateNodesCheckBox = new JCheckBox("Autodate nodes: whenever a new node is created, add the date into its article", getPrefs().autoDateInArticles));
-    genPrefVBox.add(autoDetectHtmlCheckBox = new JCheckBox("Detect HTML nodes and render them as formatted HTML", getPrefs().autoDetectHtmlArticles));
+    vBox.setAlignmentX(Component.LEFT_ALIGNMENT);
+    genPrefVBox.add(loadLastFileOnOpenCheckBox = new JCheckBox(lang.getString("PREFS_LOADLASTFILEONOPEN"), getPrefs().loadLastFileOnOpen));
+    loadLastFileOnOpenCheckBox.setHorizontalAlignment(SwingConstants.LEFT);
+    loadLastFileOnOpenCheckBox.setAlignmentX(Component.LEFT_ALIGNMENT);
+    genPrefVBox.add(autoDateNodesCheckBox = new JCheckBox(lang.getString("PREFS_AUTODATE_NODES"), getPrefs().autoDateInArticles));
+    autoDateNodesCheckBox.setHorizontalAlignment(SwingConstants.LEFT);
+    autoDateNodesCheckBox.setAlignmentX(Component.LEFT_ALIGNMENT);
+    genPrefVBox.add(autoDetectHtmlCheckBox = new JCheckBox(lang.getString("PREFS_AUTODETECT_HTML"), getPrefs().autoDetectHtmlArticles));
+    autoDetectHtmlCheckBox.setHorizontalAlignment(SwingConstants.LEFT);
+    autoDetectHtmlCheckBox.setAlignmentX(Component.LEFT_ALIGNMENT);
 
     hBox = Box.createHorizontalBox();
-    hBox.add(Box.createGlue());
-    hBox.add(new JLabel("Character encoding for load/save:"));
+    hBox.setAlignmentX(Component.LEFT_ALIGNMENT);
+//    hBox.add(Box.createGlue());
+    hBox.add(new JLabel(lang.getString("PREFS_CHAR_ENCODING"), SwingConstants.LEFT));
     hBox.add(fileEncodingSelector = new JComboBox(getPrefs().characterEncodings));
+    fileEncodingSelector.setAlignmentX(Component.LEFT_ALIGNMENT);
     hBox.add(Box.createGlue());
     genPrefVBox.add(hBox);
     fileEncodingSelector.setSelectedIndex(getPrefs().fileEncoding);
 
     hBox = Box.createHorizontalBox();
-    hBox.add(Box.createGlue());
-    hBox.add(new JLabel("Save files as:"));
+    hBox.setAlignmentX(Component.LEFT_ALIGNMENT);
+//    hBox.add(Box.createGlue());
+    hBox.add(new JLabel(lang.getString("PREFS_SAVE_FILETYPE"), SwingConstants.LEFT));
     hBox.add(fileFormatSelector = new JComboBox(getPrefs().mainFileTypes));
+    fileFormatSelector.setAlignmentX(Component.LEFT_ALIGNMENT);
     hBox.add(Box.createGlue());
     genPrefVBox.add(hBox);
     fileFormatSelector.setSelectedIndex(getPrefs().mainFileType);
 
+    genPrefVBox.add(quoteCsvCheckBox = new JCheckBox(lang.getString("PREFS_QUOTE_CSV"), getPrefs().addQuotesToCsvOutput));
+    quoteCsvCheckBox.setAlignmentX(Component.LEFT_ALIGNMENT);
+    quoteCsvCheckBox.setHorizontalAlignment(SwingConstants.LEFT);
+    genPrefVBox.add(showGreenStripCheckBox = new JCheckBox(lang.getString("PREFS_GREEN_STRIP"), getPrefs().showGreenStrip));
+    showGreenStripCheckBox.setAlignmentX(Component.LEFT_ALIGNMENT);
+    showGreenStripCheckBox.setHorizontalAlignment(SwingConstants.LEFT);
+
     JPanel genPanel = new JPanel();
+    genPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
     genPanel.add(genPrefVBox);
-    genPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), "General"));
+    genPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), lang.getString("PREFS_GENERAL")));
     vBox.add(genPanel);
 
     genPanel = new JPanel();
+    genPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
     hBox = Box.createHorizontalBox();
-    hBox.add(new JLabel("Default action to take with ordinary words/phrases:"));
-    hBox.add(defaultSearchModeSelector = new JComboBox(new String[]{"Web search","Search for node title"}));
+    hBox.setAlignmentX(Component.LEFT_ALIGNMENT);
+    hBox.add(new JLabel(lang.getString("PREFS_DEFAULT_LINK_ACTION"), SwingConstants.LEFT));
+    hBox.add(defaultSearchModeSelector = new JComboBox(new String[]{lang.getString("PREFS_DEFAULT_LINK_ACTION_WEBSEARCH"),lang.getString("PREFS_DEFAULT_LINK_ACTION_NODESEARCH")}));
+    hBox.add(Box.createGlue());
     defaultSearchModeSelector.setSelectedIndex(getPrefs().defaultSearchMode);
+    defaultSearchModeSelector.setAlignmentX(Component.LEFT_ALIGNMENT);
     genPanel.add(hBox);
-    genPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), "\"Follow selected link\" action"));
+    genPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), lang.getString("PREFS_LINK_ACTION_NAME")));
     vBox.add(genPanel);
 
     genPanel = new JPanel();
+    genPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
     genPrefVBox = Box.createVerticalBox();
 //    hBox = Box.createHorizontalBox();
 //    hBox.add(wrapToWindowCheckBox = new JCheckBox("Wrap article to window width", getPrefs().wrapToWindow));
 //    hBox.add(new JLabel("(won't take effect until you restart Jreepad)"));
 //    genPrefVBox.add(hBox);
     hBox = Box.createHorizontalBox();
-    hBox.add(new JLabel("Column width to use for hard-wrap action:"));
-    hBox.add(Box.createGlue());
+    hBox.setAlignmentX(Component.LEFT_ALIGNMENT);
+    hBox.add(new JLabel(lang.getString("PREFS_HARDWRAP_WIDTH"), SwingConstants.LEFT));
     hBox.add(wrapWidthSpinner = new JSpinner(new SpinnerNumberModel(getPrefs().characterWrapWidth,1,1000,1)));
+    hBox.add(Box.createGlue());
+    wrapWidthSpinner.setAlignmentX(Component.LEFT_ALIGNMENT);
+    wrapWidthSpinner.getEditor().setAlignmentX(Component.LEFT_ALIGNMENT);
 //    hBox.add(wrapWidthSpinner = new DSpinner(1,1000,getPrefs().characterWrapWidth));
     hBox.add(Box.createGlue());
     genPrefVBox.add(hBox);
     genPanel.add(genPrefVBox);
-    genPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), "Wrapping article text"));
+    genPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), lang.getString("PREFS_HARDWRAP_NAME")));
     vBox.add(genPanel);
 
 //    fontsPrefsBox = Box.createHorizontalBox();
@@ -1236,30 +1279,41 @@ public class JreepadViewer extends JFrame
  //   vBox.add(fontsPrefsBox);
 
     webSearchPrefsBox = Box.createVerticalBox();
+    webSearchPrefsBox.setAlignmentX(Component.LEFT_ALIGNMENT);
     hBox = Box.createHorizontalBox();
-    hBox.add(new JLabel("Web search is labelled \""));
+    hBox.setAlignmentX(Component.LEFT_ALIGNMENT);
+    hBox.add(new JLabel(lang.getString("PREFS_WEBSEARCH_LABEL1"), SwingConstants.LEFT));
     hBox.add(webSearchNameField = new JTextField(getPrefs().webSearchName));
-    hBox.add(new JLabel("\" and calls the following URL:"));
+    webSearchNameField.setAlignmentX(Component.LEFT_ALIGNMENT);
+    hBox.add(new JLabel(lang.getString("PREFS_WEBSEARCH_LABEL2"), SwingConstants.LEFT));
+    hBox.add(Box.createGlue());
     webSearchPrefsBox.add(hBox);
     hBox = Box.createHorizontalBox();
-    hBox.add(new JLabel("http://"));
+    hBox.add(new JLabel("http://", SwingConstants.LEFT));
     hBox.add(webSearchPrefixField = new JTextField(getPrefs().webSearchPrefix));
-    hBox.add(new JLabel("[SELECTED TEXT]"));
+    webSearchPrefixField.setAlignmentX(Component.LEFT_ALIGNMENT);
+    hBox.add(new JLabel(lang.getString("PREFS_SELECTEDTEXT_PLACEHOLDER"), SwingConstants.LEFT));
     hBox.add(webSearchPostfixField = new JTextField(getPrefs().webSearchPostfix));
+    webSearchPostfixField.setAlignmentX(Component.LEFT_ALIGNMENT);
     webSearchPrefsBox.add(hBox);
     JPanel webSearchPanel = new JPanel();
+    webSearchPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
     webSearchPanel.add(webSearchPrefsBox);
-    webSearchPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), "Web search"));
+    webSearchPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), lang.getString("PREFS_WEBSEARCH_NAME")));
     vBox.add(webSearchPanel);
 
     // Now the HTML export options
     genPanel = new JPanel();
-    genPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), "HTML export preferences (also used for printing)"));
+    genPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
+    genPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), lang.getString("PREFS_HTML_NAME")));
     Box htmlVBox = Box.createVerticalBox();
+    htmlVBox.setAlignmentX(Component.LEFT_ALIGNMENT);
     hBox = Box.createHorizontalBox();
-    hBox.add(Box.createGlue());
-    hBox.add(new JLabel("Treat text in plain-text articles as:"));
+    hBox.setAlignmentX(Component.LEFT_ALIGNMENT);
+//    hBox.add(Box.createGlue());
+    hBox.add(new JLabel(lang.getString("PREFS_HTML_TREATTEXTAS"), SwingConstants.LEFT));
     htmlExportModeSelector = new JComboBox(JreepadNode.getHtmlExportArticleTypes());
+    htmlExportModeSelector.setAlignmentX(Component.LEFT_ALIGNMENT);
     htmlExportModeSelector.setSelectedIndex(getPrefs().htmlExportArticleType);
     htmlExportModeSelector.addActionListener(new ActionListener(){
                                public void actionPerformed(ActionEvent e){ 
@@ -1277,22 +1331,28 @@ public class JreepadViewer extends JFrame
     hBox.add(htmlExportModeSelector);
     hBox.add(Box.createGlue());
     htmlVBox.add(hBox);
-    htmlVBox.add(urlsToLinksCheckBox = new JCheckBox("Convert URLs to links", getPrefs().htmlExportUrlsToLinks));
+    htmlVBox.add(urlsToLinksCheckBox = new JCheckBox(lang.getString("PREFS_HTML_AUTOLINK"), getPrefs().htmlExportUrlsToLinks));
+    urlsToLinksCheckBox.setAlignmentX(Component.LEFT_ALIGNMENT);
+    urlsToLinksCheckBox.setHorizontalAlignment(SwingConstants.LEFT);
     hBox = Box.createHorizontalBox();
-    hBox.add(Box.createGlue());
-    hBox.add(new JLabel("Which type of 'internal' link to detect:"));
+    hBox.setAlignmentX(Component.LEFT_ALIGNMENT);
+  //  hBox.add(Box.createGlue());
+    hBox.add(new JLabel(lang.getString("PREFS_HTML_INTERNALLINKS"), SwingConstants.LEFT));
     htmlExportAnchorTypeSelector = new JComboBox(JreepadNode.getHtmlExportAnchorLinkTypes());
     htmlExportAnchorTypeSelector.setSelectedIndex(getPrefs().htmlExportAnchorLinkType);
+    htmlExportAnchorTypeSelector.setAlignmentX(Component.LEFT_ALIGNMENT);
     hBox.add(htmlExportAnchorTypeSelector);
     hBox.add(Box.createGlue());
     htmlVBox.add(hBox);
     genPanel.add(htmlVBox);
     vBox.add(genPanel);
-    vBox.add(quoteCsvCheckBox = new JCheckBox("Add quote marks when converting tables to CSV", getPrefs().addQuotesToCsvOutput));
 
+    genPanel = new JPanel();
+    genPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
     hBox = Box.createHorizontalBox();
-    hBox.add(prefsOkButton = new JButton("OK"));
-    hBox.add(prefsCancelButton = new JButton("Cancel"));
+    hBox.setAlignmentX(Component.CENTER_ALIGNMENT);
+    hBox.add(prefsOkButton = new JButton(lang.getString("OK")));
+    hBox.add(prefsCancelButton = new JButton(lang.getString("CANCEL")));
     prefsOkButton.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e){
 									getPrefs().loadLastFileOnOpen = loadLastFileOnOpenCheckBox.isSelected();
 									getPrefs().autoDateInArticles = autoDateNodesCheckBox.isSelected();
@@ -1305,13 +1365,15 @@ public class JreepadViewer extends JFrame
 									getPrefs().mainFileType = fileFormatSelector.getSelectedIndex();
 									getPrefs().characterWrapWidth = ((Integer)(wrapWidthSpinner.getValue())).intValue();
 //									getPrefs().characterWrapWidth = wrapWidthSpinner.getValue();
-                                    characterWrapArticleMenuItem.setText("Hard-wrap current article to " + getPrefs().characterWrapWidth + " columns");
+                                    characterWrapArticleMenuItem.setText(lang.getString("MENUITEM_HARDWRAP1") + getPrefs().characterWrapWidth + lang.getString("MENUITEM_HARDWRAP2"));
 							//		setFontsFromPrefsBox();
 //									getPrefs().wrapToWindow = wrapToWindowCheckBox.isSelected();
 //							        theJreepad.setEditorPaneKit();
                                     getPrefs().htmlExportArticleType = htmlExportModeSelector.getSelectedIndex();
                                     getPrefs().htmlExportAnchorLinkType = htmlExportAnchorTypeSelector.getSelectedIndex();
                                     getPrefs().addQuotesToCsvOutput = quoteCsvCheckBox.isSelected();
+                                    getPrefs().showGreenStrip = showGreenStripCheckBox.isSelected();
+                                    funkyGreenStrip.setVisible(getPrefs().showGreenStrip);
 
                                     // If exporting as HTML then we ignore this checkbox
                                     if(htmlExportModeSelector.getSelectedIndex()!=2)
@@ -1319,7 +1381,8 @@ public class JreepadViewer extends JFrame
 									prefsDialog.setVisible(false);
                                    }});
     prefsCancelButton.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e){prefsDialog.setVisible(false);}});
-    vBox.add(hBox);
+    genPanel.add(hBox);
+    vBox.add(genPanel);
     prefsDialog.getContentPane().add(vBox);
     // Finished establishing the prefs dialogue box
   }
@@ -1328,20 +1391,20 @@ public class JreepadViewer extends JFrame
   {
     Box vBox, hBox;
     // Establish the autosave dialogue box
-    autoSaveDialog = new JDialog(this, "Autosave", true);
+    autoSaveDialog = new JDialog(this, lang.getString("AUTOSAVE"), true);
     autoSaveDialog.setVisible(false);
     vBox = Box.createVerticalBox();
     vBox.add(Box.createGlue());
     hBox = Box.createHorizontalBox();
-    hBox.add(autoSaveCheckBox = new JCheckBox("Autosave every ", getPrefs().autoSave));
+    hBox.add(autoSaveCheckBox = new JCheckBox(lang.getString("AUTOSAVE_EVERY"), getPrefs().autoSave));
 //DSpinner version:    hBox.add(autoSavePeriodSpinner = new DSpinner(1, 1000, getPrefs().autoSavePeriod));
     hBox.add(autoSavePeriodSpinner = new JSpinner(new SpinnerNumberModel(getPrefs().autoSavePeriod, 1, 1000, 1)));
-    hBox.add(new JLabel(" minutes"));
+    hBox.add(new JLabel(lang.getString("AUTOSAVE_MINUTES")));
     vBox.add(hBox);
     vBox.add(Box.createGlue());
     hBox = Box.createHorizontalBox();
-    hBox.add(autoSaveOkButton = new JButton("OK"));
-    hBox.add(autoSaveCancelButton = new JButton("Cancel"));
+    hBox.add(autoSaveOkButton = new JButton(lang.getString("OK")));
+    hBox.add(autoSaveCancelButton = new JButton(lang.getString("CANCEL")));
     autoSaveOkButton.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e){
 									getPrefs().autoSavePeriod = ((Integer)(autoSavePeriodSpinner.getValue())).intValue();
 //									getPrefs().autoSavePeriod = autoSavePeriodSpinner.getValue();
@@ -1363,7 +1426,7 @@ public class JreepadViewer extends JFrame
   
   public void autoSaveWarningMessage()
   {
-	  JOptionPane.showMessageDialog(this, "Autosave turned on. It will stay on until you deactivate it (even if you quit and re-start Jreepad).", "Autosave is ON" , JOptionPane.INFORMATION_MESSAGE);
+	  JOptionPane.showMessageDialog(this, lang.getString("AUTOSAVE_ACTIVE_LONG"), lang.getString("AUTOSAVE_ACTIVE") , JOptionPane.INFORMATION_MESSAGE);
   }
   
   public void establishNodeUrlDisplayDialogue()
@@ -1373,10 +1436,10 @@ public class JreepadViewer extends JFrame
     nodeUrlDisplayDialog = new JDialog(this, "Node URL", true);
     nodeUrlDisplayDialog.setVisible(false);
     vBox = Box.createVerticalBox();
-    vBox.add(new JLabel("Current node's address:"));
+    vBox.add(new JLabel(lang.getString("MSG_NODEURL1")));
     vBox.add(nodeUrlDisplayField = new JTextField("node://its/a/secret"));
-    vBox.add(new JLabel("(You can copy-and-paste this into an article)"));
-    vBox.add(nodeUrlDisplayOkButton = new JButton("OK"));
+    vBox.add(new JLabel(lang.getString("MSG_NODEURL2")));
+    vBox.add(nodeUrlDisplayOkButton = new JButton(lang.getString("OK")));
     nodeUrlDisplayOkButton.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e){
 									nodeUrlDisplayDialog.setVisible(false);
                                    }});
@@ -1393,19 +1456,59 @@ public class JreepadViewer extends JFrame
     } catch (Exception e)
     {}
 
+    String launchFilename="", launchPrefsFilename=null;
+    
+    int ARGMODE_FILE = 0;
+    int ARGMODE_PREF = 1;
+    int argMode = ARGMODE_FILE;
+
+    for(int i=0; i<args.length; i++)
+    {
+      if(args[i].startsWith("-h") || args[i].startsWith("--h"))
+      {
+        System.out.println("Jreepad command-line arguments:");
+        System.out.println("  -p [prefsfile]    Load/save preferences from named location instead of default");
+        System.out.println("  [filename]        Jreepad/treepad file to load on startup");
+        System.out.println("  ");
+        System.out.println("For example:");
+        System.out.println("  java -jar Jreepad.jar -p /Users/jo/Library/jreeprefs.dat /Users/jo/Documents/mynotes.hjt");
+        System.exit(1);
+      }
+      else if(args[i].equals("-p"))
+        argMode = ARGMODE_PREF;
+      else if(argMode == ARGMODE_PREF && launchPrefsFilename==null)
+      {
+        launchPrefsFilename=args[i];
+        argMode = ARGMODE_FILE;
+      }
+      else if(argMode == ARGMODE_FILE && launchFilename.equals(""))
+      {
+        launchFilename=args[i];
+      }
+    }
+
+//    System.out.println("Launching using prefs file \"" + launchPrefsFilename + "\" and loadfile \"" + launchFilename + "\"\n");
+
+    new JreepadViewer(launchFilename, launchPrefsFilename);
+    
+    /*
+    The old way of handling the arguments
+    
     if(args.length==0)
-      /* theApp = */ new JreepadViewer();
+      new JreepadViewer();
     else if(args.length==1)
-      /* theApp = */ new JreepadViewer(args[0]);
+      new JreepadViewer(args[0]);
     else
       System.err.println("Only one (optional) argument can be passed - the name of the HJT file to load.");
+    */
+    
   }
   
   private void newAction()
   {
     if(warnAboutUnsaved())
     {
-	  int answer = JOptionPane.showConfirmDialog(this, "Save current file before starting a new one?", 
+	  int answer = JOptionPane.showConfirmDialog(this, lang.getString("PROMPT_SAVE_BEFORE_NEW"), 
 	                   "Save?" , JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE);
       if(answer == JOptionPane.CANCEL_OPTION)
         return;
@@ -1428,7 +1531,7 @@ public class JreepadViewer extends JFrame
   {
     if(warnAboutUnsaved())
     {
-	  int answer = JOptionPane.showConfirmDialog(this, "Save current file before opening a new one?", 
+	  int answer = JOptionPane.showConfirmDialog(this, lang.getString("PROMPT_SAVE_BEFORE_OPEN"), 
 	                   "Save?" , JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE);
       if(answer == JOptionPane.CANCEL_OPTION)
         return;
@@ -1464,7 +1567,7 @@ public class JreepadViewer extends JFrame
       catch(IOException err)
       {
         setCursor(Cursor.getDefaultCursor());
-        JOptionPane.showMessageDialog(this, err, "File input error" , JOptionPane.ERROR_MESSAGE);
+        JOptionPane.showMessageDialog(this, err, lang.getString("TITLE_FILE_ERROR") , JOptionPane.ERROR_MESSAGE);
       }
   } // End of: openHjtFile()
   
@@ -1502,7 +1605,7 @@ public class JreepadViewer extends JFrame
     catch(IOException err)
     {
       setCursor(Cursor.getDefaultCursor());
-      JOptionPane.showMessageDialog(this, err, "File error during Save" , JOptionPane.ERROR_MESSAGE);
+      JOptionPane.showMessageDialog(this, err, lang.getString("TITLE_FILE_ERROR") , JOptionPane.ERROR_MESSAGE);
     }
     return false;
   }
@@ -1517,7 +1620,7 @@ public class JreepadViewer extends JFrame
       {
         if(fileChooser.getSelectedFile().isFile() && !fileChooser.getSelectedFile().canWrite())
         {
-          JOptionPane.showMessageDialog(this, "The file is not writeable (e.g. marked as \"Read-only\"). Please choose another location for save.", "Not writeable" , JOptionPane.ERROR_MESSAGE);
+          JOptionPane.showMessageDialog(this, lang.getString("MSG_FILE_NOT_WRITEABLE"), lang.getString("TITLE_FILE_ERROR") , JOptionPane.ERROR_MESSAGE);
           return saveAsAction();
         }
         
@@ -1550,7 +1653,7 @@ public class JreepadViewer extends JFrame
     catch(IOException err)
     {
       setCursor(Cursor.getDefaultCursor());
-      JOptionPane.showMessageDialog(this, err, "File error during Save As" , JOptionPane.ERROR_MESSAGE);
+      JOptionPane.showMessageDialog(this, err, lang.getString("TITLE_FILE_ERROR") , JOptionPane.ERROR_MESSAGE);
     }
     return false;
   } // End of: saveAsAction()
@@ -1579,7 +1682,7 @@ public class JreepadViewer extends JFrame
     catch(IOException err)
     {
       setCursor(Cursor.getDefaultCursor());
-      JOptionPane.showMessageDialog(this, err, "File error during Backup" , JOptionPane.ERROR_MESSAGE);
+      JOptionPane.showMessageDialog(this, err, lang.getString("TITLE_FILE_ERROR") , JOptionPane.ERROR_MESSAGE);
     }
     return false;
   } // End of: backupToAction()
@@ -1600,10 +1703,10 @@ public class JreepadViewer extends JFrame
     if(!ret)
     {
       // JOptionPane.showMessageDialog(searchDialog, "Found nothing.", "Search result..." , JOptionPane.INFORMATION_MESSAGE);
-      searchResultsLabel.setText("Search results: ");
+      searchResultsLabel.setText(lang.getString("SEARCH_RESULTS"));
     }
     else
-      searchResultsLabel.setText("Search results: " + theJreepad.getSearchResults().length + " nodes matched");
+      searchResultsLabel.setText(lang.getString("SEARCH_RESULTS") + theJreepad.getSearchResults().length + lang.getString("SEARCH_NODES_MATCHED"));
     searchResultsTableModel.fireTableStructureChanged();
 //    searchResultsTable.repaint();
     return ret;
@@ -1620,7 +1723,7 @@ public class JreepadViewer extends JFrame
 
   private void updateWindowTitle()
   {
-    setTitle(windowTitle + (warnAboutUnsaved()?"*":"") + (getPrefs().autoSave?" [Autosave on]":""));
+    setTitle(windowTitle + (warnAboutUnsaved()?"*":"") + (getPrefs().autoSave?" ["+lang.getString("AUTOSAVE_ACTIVE")+"]":""));
   }
   
   private static final int FILE_FORMAT_HJT=1;
@@ -1660,7 +1763,7 @@ public class JreepadViewer extends JFrame
 			break;
 		  default:
             setCursor(Cursor.getDefaultCursor());
-			JOptionPane.showMessageDialog(this, "Unknown which format to import - coding error! Oops!", "Error" , JOptionPane.ERROR_MESSAGE);
+			JOptionPane.showMessageDialog(this,  "Unknown which format to import - coding error! Oops!",lang.getString("TITLE_MISC_ERROR") , JOptionPane.ERROR_MESSAGE);
 			return;
 		}
 	    setWarnAboutUnsaved(true);
@@ -1672,7 +1775,7 @@ public class JreepadViewer extends JFrame
     catch(IOException err)
     {
       setCursor(Cursor.getDefaultCursor());
-      JOptionPane.showMessageDialog(this, err, "File error during Import" , JOptionPane.ERROR_MESSAGE);
+      JOptionPane.showMessageDialog(this, err, lang.getString("TITLE_MISC_ERROR") , JOptionPane.ERROR_MESSAGE);
     }
   } // End of: importAction()
 
@@ -1727,14 +1830,14 @@ public class JreepadViewer extends JFrame
 			output = theJreepad.getCurrentNode().exportTitlesAsList();
 			break;
 		  case FILE_FORMAT_ARTICLESTOTEXT:
-            int answer = JOptionPane.showConfirmDialog(this, "Include articles' titles in output?", 
-	                   "Include titles?" , JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+            int answer = JOptionPane.showConfirmDialog(this, lang.getString("PROMPT_INCLUDE_TITLES"), 
+	                   lang.getString("TITLE_INCLUDE_TITLES") , JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
 		    boolean titlesToo = (answer == JOptionPane.YES_OPTION);
 			output = theJreepad.getCurrentNode().exportArticlesToText(titlesToo);
 			break;
 		  default:
             setCursor(Cursor.getDefaultCursor());
-			JOptionPane.showMessageDialog(this, "Unknown which format to export - coding error! Oops!", "Error" , JOptionPane.ERROR_MESSAGE);
+			JOptionPane.showMessageDialog(this,  "Unknown which format to export - coding error! Oops!",lang.getString("TITLE_MISC_ERROR") , JOptionPane.ERROR_MESSAGE);
 			return;
 		}
 
@@ -1752,7 +1855,7 @@ public class JreepadViewer extends JFrame
     catch(IOException err)
     {
       setCursor(Cursor.getDefaultCursor());
-      JOptionPane.showMessageDialog(this, err, "File error during Export" , JOptionPane.ERROR_MESSAGE);
+      JOptionPane.showMessageDialog(this, err, lang.getString("TITLE_FILE_ERROR") , JOptionPane.ERROR_MESSAGE);
     }
   } // End of: exportAction()
 
@@ -1783,14 +1886,14 @@ public class JreepadViewer extends JFrame
 		}
 		catch(IOException err)
 		{
-		  JOptionPane.showMessageDialog(this, "I/O error while opening URL:\n"+tempToBrowserFile.toURL()+"\n\nThe \"BrowserLauncher\" used to open a URL is an open-source Java library \nseparate from Jreepad itself - i.e. a separate Sourceforge project. \nIt may be a good idea to submit a bug report to\nhttp://sourceforge.net/projects/browserlauncher\n\nIf you do, please remember to supply information about the operating system\nyou are using - which type, and which version.", "Error" , JOptionPane.ERROR_MESSAGE);
+		  JOptionPane.showMessageDialog(this, "I/O error while opening URL:\n"+tempToBrowserFile.toURL()+"\n\nThe \"BrowserLauncher\" used to open a URL is an open-source Java library \nseparate from Jreepad itself - i.e. a separate Sourceforge project. \nIt may be a good idea to submit a bug report to\nhttp://sourceforge.net/projects/browserlauncher\n\nIf you do, please remember to supply information about the operating system\nyou are using - which type, and which version.", lang.getString("TITLE_MISC_ERROR") , JOptionPane.ERROR_MESSAGE);
 		}
                 
     }
     catch(IOException err)
     {
       setCursor(Cursor.getDefaultCursor());
-      JOptionPane.showMessageDialog(this, err, "File error during send-to-browser" , JOptionPane.ERROR_MESSAGE);
+      JOptionPane.showMessageDialog(this, err, lang.getString("TITLE_FILE_ERROR") , JOptionPane.ERROR_MESSAGE);
     }
   } // End of: toBrowserForPrintAction()
 
@@ -1821,14 +1924,14 @@ public class JreepadViewer extends JFrame
 		}
 		catch(IOException err)
 		{
-		  JOptionPane.showMessageDialog(this, "I/O error while opening URL:\n"+tempToBrowserFile.toURL()+"\n\nThe \"BrowserLauncher\" used to open a URL is an open-source Java library \nseparate from Jreepad itself - i.e. a separate Sourceforge project. \nIt may be a good idea to submit a bug report to\nhttp://sourceforge.net/projects/browserlauncher\n\nIf you do, please remember to supply information about the operating system\nyou are using - which type, and which version.", "Error" , JOptionPane.ERROR_MESSAGE);
+		  JOptionPane.showMessageDialog(this, "I/O error while opening URL:\n"+tempToBrowserFile.toURL()+"\n\nThe \"BrowserLauncher\" used to open a URL is an open-source Java library \nseparate from Jreepad itself - i.e. a separate Sourceforge project. \nIt may be a good idea to submit a bug report to\nhttp://sourceforge.net/projects/browserlauncher\n\nIf you do, please remember to supply information about the operating system\nyou are using - which type, and which version.", lang.getString("TITLE_MISC_ERROR") , JOptionPane.ERROR_MESSAGE);
 		}
                 
     }
     catch(IOException err)
     {
       setCursor(Cursor.getDefaultCursor());
-      JOptionPane.showMessageDialog(this, err, "File error during send-to-browser" , JOptionPane.ERROR_MESSAGE);
+      JOptionPane.showMessageDialog(this, err, lang.getString("TITLE_FILE_ERROR") , JOptionPane.ERROR_MESSAGE);
     }
   } // End of: articleToBrowserForPrintAction()
 
@@ -1847,8 +1950,8 @@ public class JreepadViewer extends JFrame
 
     if(warnAboutUnsaved())
     {
-	  int answer = JOptionPane.showConfirmDialog(this, "Save current file before quitting?", 
-	                   "Save before quit?" , JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE);
+	  int answer = JOptionPane.showConfirmDialog(this, lang.getString("PROMPT_SAVE_BEFORE_QUIT"), 
+	                   lang.getString("TITLE_SAVEPROMPT") , JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE);
       if(answer == JOptionPane.CANCEL_OPTION)
         return;
       else if(answer == JOptionPane.YES_OPTION)
@@ -1908,7 +2011,7 @@ public class JreepadViewer extends JFrame
     if(theJreepad.canWeUndo())
       theJreepad.undoAction();
     else
-	  JOptionPane.showMessageDialog(this, "Nothing to undo!", "No change" , JOptionPane.INFORMATION_MESSAGE);
+	  JOptionPane.showMessageDialog(this, lang.getString("MSG_NOTHING_TO_UNDO"), "No change" , JOptionPane.INFORMATION_MESSAGE);
     updateWindowTitle();
   }
   
@@ -1955,7 +2058,7 @@ public class JreepadViewer extends JFrame
 
   private void deleteNodeAction()
   {
-    if(JOptionPane.showConfirmDialog(this, "Delete node:\n"+theJreepad.getCurrentNode().getTitle(), "Confirm delete", 
+    if(JOptionPane.showConfirmDialog(this, lang.getString("PROMPT_CONFIRM_DELETE")+":\n"+theJreepad.getCurrentNode().getTitle(), lang.getString("TITLE_CONFIRM_DELETE"), 
                JOptionPane.YES_NO_OPTION) != JOptionPane.YES_OPTION) return; 
     theJreepad.removeNode();
     theJreepad.returnFocusToTree();
@@ -1975,8 +2078,8 @@ public class JreepadViewer extends JFrame
     // If file doesn't already exist then fine
     if(!theFile.isFile()) return true;
     // Else we need to confirm
-    return (JOptionPane.showConfirmDialog(this, "The file "+theFile.getName()+" already exists.\nAre you sure you want to overwrite it?", 
-                "Overwrite file?", 
+    return (JOptionPane.showConfirmDialog(this, lang.getString("PROMPT_CONFIRM_OVERWRITE1")+theFile.getName()+lang.getString("PROMPT_CONFIRM_OVERWRITE2"), 
+                lang.getString("TITLE_CONFIRM_OVERWRITE"), 
                 JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION); 
   }
 
@@ -2001,7 +2104,7 @@ public class JreepadViewer extends JFrame
 "           http://www.gnu.org/copyleft/gpl.html\n" +
              "\n"
               ,
-              "Licence", 
+              lang.getString("MENUITEM_LICENSE"), 
               JOptionPane.INFORMATION_MESSAGE); 
   }
   
@@ -2020,8 +2123,8 @@ public class JreepadViewer extends JFrame
   }
   public void stripAllTags()
   {
-    if(JOptionPane.showConfirmDialog(this, "Stripping tags will remove all the article content which\nis wrapped in HTML-style <angle brackets> from\nthe current article. Are you sure this is what you want?", 
-                "Strip all tags?", 
+    if(JOptionPane.showConfirmDialog(this, lang.getString("PROMPT_CONFIRM_STRIPTAGS"), 
+                lang.getString("TITLE_CONFIRM_STRIPTAGS"), 
                 JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION)
       theJreepad.stripAllTags();
   }
@@ -2231,7 +2334,7 @@ public class JreepadViewer extends JFrame
 
     if(cont == null)
     {
-      JOptionPane.showMessageDialog(this, "No content found in clipboard.", "No content" , JOptionPane.ERROR_MESSAGE);
+      JOptionPane.showMessageDialog(this, lang.getString("MSG_CLIPBOARD_EMPTY"), lang.getString("TITLE_CLIPBOARD_EMPTY") , JOptionPane.ERROR_MESSAGE);
       return;
     }
     try
@@ -2260,7 +2363,7 @@ public class JreepadViewer extends JFrame
     }
     catch(Exception err)
     {
-      JOptionPane.showMessageDialog(this, "Unable to interpret clipboard contents as text.", "Error while pasting" , JOptionPane.ERROR_MESSAGE);
+      JOptionPane.showMessageDialog(this, lang.getString("MSG_CLIPBOARD_TEXTERROR"), lang.getString("TITLE_CLIPBOARD_ERROR") , JOptionPane.ERROR_MESSAGE);
       return;
     }
   }
@@ -2309,8 +2412,8 @@ public class JreepadViewer extends JFrame
               "\n - The copy/paste functions are included automatically" +
               "\n    by the Mac OSX runtime. I can't guarantee they exist" +
               "\n    for you if you're using a different operating system!" +
-/*
-              "\n" +
+ /*
+             "\n" +
               "\n" +
               "\n" +
               "\n" +
@@ -2319,16 +2422,18 @@ public class JreepadViewer extends JFrame
               "\n" +
               "\n[] " +
               "\n" +
-*/
-              ""
+ */
+             ""
               ,
-              "Jreepad keyboard shortcuts", 
+              lang.getString("HELP_KEYBOARD_TITLE"),
               JOptionPane.INFORMATION_MESSAGE); 
   }
   
   public void linksHelp()
   {
               JOptionPane.showMessageDialog(this, 
+              lang.getString("HELP_LINKS")
+/*
               "\nSelect any piece of text in an article," +
               "\nthen choose \"Actions > Follow link in article\"." +
               "\n" +
@@ -2357,7 +2462,6 @@ public class JreepadViewer extends JFrame
               "\n" +
               "\n" +
               "\n" +
-/*
               "\n" +
               "\n" +
               "\n" +
@@ -2367,16 +2471,18 @@ public class JreepadViewer extends JFrame
               "\n" +
               "\n[] " +
               "\n" +
-*/
               ""
+*/
               ,
-              "Links in Jreepad", 
+              lang.getString("HELP_LINKS_TITLE"),
               JOptionPane.INFORMATION_MESSAGE); 
   }
   
   public void dragDropHelp()
   {
               JOptionPane.showMessageDialog(this, 
+              lang.getString("HELP_DRAGDROP")
+/*
               "\nDRAG-AND-DROP:" +
               "\n" +
               "\nOne of the easiest ways to manage the structure" +
@@ -2391,7 +2497,6 @@ public class JreepadViewer extends JFrame
               "\n" +
               "\n" +
               "\n" +
-/*
               "\n" +
               "\n" +
               "\n" +
@@ -2401,10 +2506,10 @@ public class JreepadViewer extends JFrame
               "\n" +
               "\n[] " +
               "\n" +
-*/
               ""
+*/
               ,
-              "Drag-and-drop", 
+              lang.getString("HELP_DRAGDROP_TITLE"),
               JOptionPane.INFORMATION_MESSAGE); 
   }
 

@@ -126,6 +126,8 @@ public class JreepadPrefs implements Serializable
   static final int TOOLBAR_OFF = 2;
   int toolbarMode;
   
+  boolean showGreenStrip;
+  
   JreepadPrefs(Dimension wndSize)
   {
     openLocation = new File(System.getProperty("user.home"));
@@ -195,6 +197,8 @@ public class JreepadPrefs implements Serializable
     mainFileType = FILETYPE_HJT;
     
     toolbarMode = TOOLBAR_ICON;
+    
+    showGreenStrip = true;
   }
   
   // We override the serialization routines so that different versions of our class can read 
@@ -263,6 +267,8 @@ public class JreepadPrefs implements Serializable
     out.writeInt(mainFileType);
     
     out.writeInt(toolbarMode);
+    
+    out.writeBoolean(showGreenStrip);
   }
   private void readObject(java.io.ObjectInputStream in)
      throws IOException, ClassNotFoundException
@@ -330,6 +336,8 @@ public class JreepadPrefs implements Serializable
     mainFileType = in.readInt();
     
     toolbarMode = in.readInt();
+    
+    showGreenStrip = in.readBoolean();
    }
    catch(IOException e)
    {

@@ -142,7 +142,15 @@ public class JreepadView extends Box implements TableModelListener
     treeModel = new JreepadTreeModel(root);
     treeModel.addTreeModelListener(new JreepadTreeModelListener());
 
-    tree = new JTree(treeModel);
+    tree = new JTree(treeModel){
+				  public void cancelEditing()
+				  {
+					super.cancelEditing(); // if we can override this perhaps we can prevent blank nodes...?
+					JreepadNode lastEditedNode = (JreepadNode)(tree.getSelectionPath().getLastPathComponent());
+					if(lastEditedNode.getTitle().equals(""))
+					  lastEditedNode.setTitle("<Untitled node>");
+				  }
+    };
     tree.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
     tree.setExpandsSelectedPaths(true);
     tree.setInvokesStopCellEditing(true);
@@ -390,6 +398,17 @@ public class JreepadView extends Box implements TableModelListener
   */
   private void setCurrentNode(JreepadNode n)
   {
+    boolean isSame = currentNode!=null && n.equals(currentNode);
+         //System.out.println("setCurrentNode() activated: sameness test = "+isSame);
+    //
+    //    This "isSame" test should stop the caret jumping to the end of the text when we press Save.
+    //
+    if(isSame)
+    {
+      currentNode.setContent(getEditorPaneText());
+      return;      
+    }
+
     copyEditorPaneContentToNodeContent = false; // Deactivate the caret-listener, effectively
     if(currentNode != null)
     {
@@ -557,7 +576,7 @@ public class JreepadView extends Box implements TableModelListener
     // FIXME: If there are no child nodes, assume the user needs some advice about adding nodes
     if(root.isLeaf())
       JOptionPane.showMessageDialog(this, 
-       "You can only perform this operation on child nodes.\nPlease choose \"Add child\" to add nodes to the root node,\nand then this option will become more meaningful.", "Root node is selected" , 
+       JreepadViewer.lang.getString("MSG_ONLY_ON_CHILDNODES"), JreepadViewer.lang.getString("TITLE_ONLY_ON_CHILDNODES") , 
          JOptionPane.INFORMATION_MESSAGE);
     else 
       return;
@@ -1026,7 +1045,10 @@ System.out.println(err);
     if(url.startsWith("node://"))
     {
       if(!followTreepadInternalLink(url))
-	    JOptionPane.showMessageDialog(this, "No node found in the current file\nto match that path.", "Not found" , JOptionPane.ERROR_MESSAGE);
+	    JOptionPane.showMessageDialog(this, 
+	            JreepadViewer.lang.getString("MSG_NODE_NOT_FOUND"), 
+	            JreepadViewer.lang.getString("TITLE_NODE_NOT_FOUND"),
+	            JOptionPane.ERROR_MESSAGE);
       return;
     }
     
@@ -1119,7 +1141,7 @@ System.out.println(err);
     TreePath tp = findNearestNodeTitled(text);
     if(tp == null)
     {
-	  if(noNeedToConfirm || JOptionPane.showConfirmDialog(this, "No node named \n\"" + text + "\"\nwas found. Create it?", "Not found" , JOptionPane.YES_NO_OPTION, JOptionPane.ERROR_MESSAGE)
+	  if(noNeedToConfirm || JOptionPane.showConfirmDialog(this, JreepadViewer.lang.getString("TITLE_NODE_NOT_FOUND_PROMPT_CREATE"), JreepadViewer.lang.getString("MSG_NODE_NOT_FOUND") , JOptionPane.YES_NO_OPTION, JOptionPane.ERROR_MESSAGE)
 	             == JOptionPane.YES_OPTION)
 	  {
         JreepadNode newNode;
