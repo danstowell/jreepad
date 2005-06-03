@@ -32,6 +32,7 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
 //  private int childrenCount=0;
   private JreepadNode parentNode, softLinkTarget;
   private OurSortComparator ourSortComparator;
+  protected transient javax.swing.table.TableColumnModel tblColModel;
 
 //  private String lineSeparator = System.getProperty("line.separator");
 

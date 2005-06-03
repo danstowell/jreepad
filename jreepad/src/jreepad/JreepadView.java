@@ -21,6 +21,7 @@ package jreepad;
 
 import javax.swing.*;
 import javax.swing.tree.*;
+import javax.swing.table.*;
 import javax.swing.event.*;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.*;
@@ -262,7 +263,7 @@ public class JreepadView extends Box implements TableModelListener
     editorPanePlainText.setEditable(true);
     editorPaneHtml = new JEditorPane("text/html", root.getContent());
     editorPaneHtml.setEditable(false);
-    editorPaneCsv = new JTable();
+    editorPaneCsv = new JTable(new ArticleTableModel());
     editorPaneCsv.getModel().addTableModelListener(this);
 
     setEditorPaneKit();
@@ -405,14 +406,18 @@ public class JreepadView extends Box implements TableModelListener
     //
     if(isSame)
     {
-      currentNode.setContent(getEditorPaneText());
+      // Only update the node's stored content if it's a plaintext node
+      if(currentNode.getArticleMode() == JreepadNode.ARTICLEMODE_ORDINARY)
+        currentNode.setContent(getEditorPaneText());
       return;      
     }
 
     copyEditorPaneContentToNodeContent = false; // Deactivate the caret-listener, effectively
     if(currentNode != null)
     {
-      currentNode.setContent(getEditorPaneText());
+      // Only update the node's stored content if it's a plaintext node
+      if(currentNode.getArticleMode() == JreepadNode.ARTICLEMODE_ORDINARY)
+        currentNode.setContent(getEditorPaneText());
     }
     currentNode = n;
     setEditorPaneText(n.getContent());
@@ -1241,6 +1246,11 @@ System.out.println(err);
 
   public void setArticleMode(int newMode)
   {
+//    System.out.println("\n\n\nnode content : " + currentNode.getContent() 
+//          + "\neditorPanePlainText contains: " + editorPanePlainText.getText());
+    
+    currentNode.setContent(editorPanePlainText.getText());
+/*
     switch(currentNode.getArticleMode())
     {
       case JreepadNode.ARTICLEMODE_ORDINARY:
@@ -1255,9 +1265,11 @@ System.out.println(err);
       default:
         return;
     }
+*/
     switch(newMode)
     {
       case JreepadNode.ARTICLEMODE_ORDINARY:
+        // DELETEME - PLAINTEXT SHOULD NOT BE AFFECTED BY OTHERS 
         editorPanePlainText.setText(currentNode.getContent());
         break;
       case JreepadNode.ARTICLEMODE_HTML:
@@ -1300,7 +1312,11 @@ System.out.println(err);
 
   private void initJTable(String[][] rowData, String[] columnNames)
   {
-    editorPaneCsv = new JTable(rowData, columnNames);
+    editorPaneCsv = new JTable(new ArticleTableModel(rowData, columnNames));
+//    editorPaneCsv = new JTable(new ArticleTableModel(rowData, columnNames), 
+//             (getCurrentNode().tblColModel==null ? new ArticleTableColumnModel(): getCurrentNode().tblColModel));
+//    editorPaneCsv = new JTable(rowData, columnNames);
+//    editorPaneCsv.setModel(new ArticleTableModel());
     editorPaneCsv.getModel().addTableModelListener(this);
     editorPaneCsv.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
     editorPaneCsv.setGridColor(Color.GRAY);
@@ -1345,6 +1361,22 @@ System.out.println(err);
   }
   void setEditorPaneText(String s)
   {
+    editorPanePlainText.setText(s);
+    switch(currentNode.getArticleMode())
+    {
+      case JreepadNode.ARTICLEMODE_ORDINARY:
+        break;
+      case JreepadNode.ARTICLEMODE_HTML:
+	    editorPaneHtml.setText(s);
+        break;
+      case JreepadNode.ARTICLEMODE_CSV:
+        articleToJTable(s);
+        break;
+      default:
+        System.err.println("setEditorPaneText() says: JreepadNode.getArticleMode() returned an unrecognised value");
+        return;
+    }
+ /*
     switch(currentNode.getArticleMode())
     {
       case JreepadNode.ARTICLEMODE_ORDINARY:
@@ -1360,6 +1392,7 @@ System.out.println(err);
         System.err.println("setEditorPaneText() says: JreepadNode.getArticleMode() returned an unrecognised value");
         return;
     }
+*/
   }
   // End of: functions which should allow us to switch between JEditorPane and JTable
 
@@ -1446,6 +1479,45 @@ System.out.println(err);
   } // End of: class JreepadTreeModelListener
 
 
-    
+  class ArticleTableModel extends DefaultTableModel {
+   public ArticleTableModel(Object[][] data,  Object[] columnNames){
+     super(data, columnNames);
+   }
+   public ArticleTableModel(){
+     super();
+   }
+   
+   
+   public boolean isCellEditable(int row, int col) {
+     return false;
+   }
+  } // End of: class ArticleTableModel
+
+/*
+  class ArticleTableColumnModel extends DefaultTableColumnModel {
+   public ArticleTableColumnModel(){
+     super();
+     initColListener();
+   }
+   
+   private void initColListener(){
+     addColumnModelListener(new TableColumnModelListener()
+            {
+              public void columnAdded(TableColumnModelEvent e){ storeColumnModel();           }
+              public void columnMarginChanged(ChangeEvent e){ storeColumnModel();             }
+              public void columnMoved(TableColumnModelEvent e){ storeColumnModel();           }
+              public void columnRemoved(TableColumnModelEvent e){ storeColumnModel();         }
+              public void columnSelectionChanged(ListSelectionEvent e){ storeColumnModel();}
+            });
+   }
+   
+   private void storeColumnModel()
+   {
+     // Simply store the TableColumnModel in the node, for future reference
+     getCurrentNode().tblColModel = this;
+   }
+   
+  } // End of: class ArticleTableColumnModel
+*/
 
 }

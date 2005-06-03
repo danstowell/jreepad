@@ -1214,9 +1214,9 @@ public class JreepadViewer extends JFrame
     genPrefVBox.add(hBox);
     fileFormatSelector.setSelectedIndex(getPrefs().mainFileType);
 
-    genPrefVBox.add(quoteCsvCheckBox = new JCheckBox(lang.getString("PREFS_QUOTE_CSV"), getPrefs().addQuotesToCsvOutput));
-    quoteCsvCheckBox.setAlignmentX(Component.LEFT_ALIGNMENT);
-    quoteCsvCheckBox.setHorizontalAlignment(SwingConstants.LEFT);
+//    genPrefVBox.add(quoteCsvCheckBox = new JCheckBox(lang.getString("PREFS_QUOTE_CSV"), getPrefs().addQuotesToCsvOutput));
+//    quoteCsvCheckBox.setAlignmentX(Component.LEFT_ALIGNMENT);
+//    quoteCsvCheckBox.setHorizontalAlignment(SwingConstants.LEFT);
     genPrefVBox.add(showGreenStripCheckBox = new JCheckBox(lang.getString("PREFS_GREEN_STRIP"), getPrefs().showGreenStrip));
     showGreenStripCheckBox.setAlignmentX(Component.LEFT_ALIGNMENT);
     showGreenStripCheckBox.setHorizontalAlignment(SwingConstants.LEFT);
@@ -1371,7 +1371,7 @@ public class JreepadViewer extends JFrame
 //							        theJreepad.setEditorPaneKit();
                                     getPrefs().htmlExportArticleType = htmlExportModeSelector.getSelectedIndex();
                                     getPrefs().htmlExportAnchorLinkType = htmlExportAnchorTypeSelector.getSelectedIndex();
-                                    getPrefs().addQuotesToCsvOutput = quoteCsvCheckBox.isSelected();
+//                                    getPrefs().addQuotesToCsvOutput = quoteCsvCheckBox.isSelected();
                                     getPrefs().showGreenStrip = showGreenStripCheckBox.isSelected();
                                     funkyGreenStrip.setVisible(getPrefs().showGreenStrip);
 
