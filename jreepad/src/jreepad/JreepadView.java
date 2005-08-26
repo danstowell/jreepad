@@ -259,9 +259,9 @@ public class JreepadView extends Box implements TableModelListener
     treeView.setViewportView(tree);
 
 
-    editorPanePlainText = new JEditorPane("text/plain", root.getContent());
+    editorPanePlainText = new JEditorPanePlus("text/plain", root.getContent());
     editorPanePlainText.setEditable(true);
-    editorPaneHtml = new JEditorPane("text/html", root.getContent());
+    editorPaneHtml = new JEditorPanePlus("text/html", root.getContent());
     editorPaneHtml.setEditable(false);
     editorPaneCsv = new JTable(new ArticleTableModel());
     editorPaneCsv.getModel().addTableModelListener(this);
@@ -678,6 +678,7 @@ public class JreepadView extends Box implements TableModelListener
     treeModel.nodesWereInserted(currentNode, new int[]{currentNode.getIndex(ret)});
     
 //    tree.setSelectionPath(nodePath.pathByAddingChild(ret));
+    tree.scrollPathToVisible(nodePath.pathByAddingChild(ret));
     tree.startEditingAtPath(nodePath.pathByAddingChild(ret));
     return ret;
   }
@@ -1492,6 +1493,23 @@ System.out.println(err);
      return false;
    }
   } // End of: class ArticleTableModel
+
+
+  class JEditorPanePlus extends JEditorPane implements DocumentListener {
+    JEditorPanePlus(String type, String text) {
+      super(type, text);
+    }
+    public void changedUpdate(DocumentEvent e){
+      setWarnAboutUnsaved(true);
+    }
+    public void insertUpdate(DocumentEvent e){
+      setWarnAboutUnsaved(true);
+    }
+    public void removeUpdate(DocumentEvent e){
+      setWarnAboutUnsaved(true);
+    }
+  } // End of class JEditorPanePlus
+
 
 /*
   class ArticleTableColumnModel extends DefaultTableColumnModel {

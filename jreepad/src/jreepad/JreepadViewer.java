@@ -470,7 +470,7 @@ public class JreepadViewer extends JFrame
 // Fairly sensibly, someone suggested removing the Undo button since it behaves oddly and because there's no "Redo".
 // So I've removed it from the menu - will leave it in the code, though, in the optimistic hope that we can fix it later...
 //    editMenu.add(undoMenuItem);
-    editMenu.add(new JSeparator());
+//    editMenu.add(new JSeparator());
     addAboveMenuItem = new JMenuItem(lang.getString("MENUITEM_ADDABOVE")); //"Add sibling above");
     addAboveMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { theJreepad.addNodeAbove(); /* theJreepad.returnFocusToTree(); */ setWarnAboutUnsaved(true); updateWindowTitle();}});
     editMenu.add(addAboveMenuItem);
@@ -680,6 +680,7 @@ public class JreepadViewer extends JFrame
     addBelowMenuItem.setAccelerator(KeyStroke.getKeyStroke('B', MENU_MASK));
     addChildMenuItem.setMnemonic('c');
     addChildMenuItem.setAccelerator(KeyStroke.getKeyStroke('\\', MENU_MASK));
+    newFromClipboardMenuItem.setAccelerator(KeyStroke.getKeyStroke('M', MENU_MASK));
     upMenuItem.setMnemonic('u');
     upMenuItem.setAccelerator(KeyStroke.getKeyStroke('U', MENU_MASK));
     downMenuItem.setMnemonic('d');
@@ -1691,6 +1692,7 @@ public class JreepadViewer extends JFrame
   {
     searchDialog.setVisible(true);
     nodeSearchField.requestFocus();
+    nodeSearchField.setSelectionStart(0);
   } // End of: openSearchDialog()
   
   private boolean performSearch(String inNodes, String inArticles, int searchWhat /* 0=selected, 1=all */, 
