@@ -1,60 +1,31 @@
-<Treepad version 2.7>
-dt=Text
-<node>
-Jreepad manual
-0
-
+<?xml version="1.0" encoding="UTF-8"?>
+<node xmlns="http://jreepad.sourceforge.net/formats" title="Jreepad manual" type="text/plain">
 _______________________________
 
 Jreepad (C) 2004 Dan Stowell
 http://jreepad.sourceforge.net/
 
 Jreepad is open-source software. 
-See "Help > License" in the menu 
+See &quot;Help &gt; License&quot; in the menu 
 for more detail.
 
 This manual written in Jreepad 1.0 
 by Dan Stowell 
  - with inspiration taken liberally 
-from the "Treepad Lite" manual!
+from the &quot;Treepad Lite&quot; manual!
 
 _______________________________
 
 
-
-
-
-
-
-
-
-
-
-<end node> 5P9i0s8y19Z
-dt=Text
-<node>
-How to read this manual
-1
-This manual was written using Jreepad 1.0 and consists of numerous articles linked in a tree structure. 
+<node title="How to read this manual" type="text/plain">This manual was written using Jreepad 1.0 and consists of numerous articles linked in a tree structure. 
 
 The tree, in the left pane of the program, consists of 'tree nodes'. Each 'node' has 
 an 'article' of text associated with it - click on the node's title to view the associated article in this pane.
 
-If a node has 'children' then you'll see a symbol (such as a plus-sign or minus sign, or a little triangle) to indicate that its subtree can be opened or closed. Double-click on a node's title to expand/collapse the subtree (or click on the plus/minus/triangle/whatever symbol!).
-<end node> 5P9i0s8y19Z
-dt=Text
-<node>
-Using Jreepad
-1
-Open up this node to see a set of nodes containing information about using the main features of Jreepad....
+If a node has 'children' then you'll see a symbol (such as a plus-sign or minus sign, or a little triangle) to indicate that its subtree can be opened or closed. Double-click on a node's title to expand/collapse the subtree (or click on the plus/minus/triangle/whatever symbol!).</node>
+<node title="Using Jreepad" type="text/plain">Open up this node to see a set of nodes containing information about using the main features of Jreepad....
 
-(How to "open" the node? The easiest way is to double-click on the title, over on the left side of the screen - "Using Jreepad".)
-<end node> 5P9i0s8y19Z
-dt=Text
-<node>
-Overview
-2
-The main Jreepad window consists of the Tree part on the left, and the Article part on the right. The Tree and the Article part can both be resized by dragging the vertical separation line between the two parts.
+(How to &quot;open&quot; the node? The easiest way is to double-click on the title, over on the left side of the screen - &quot;Using Jreepad&quot;.)<node title="Overview" type="text/plain">The main Jreepad window consists of the Tree part on the left, and the Article part on the right. The Tree and the Article part can both be resized by dragging the vertical separation line between the two parts.
 
 The tree part consists of 'nodes', which can be considered leafs of the tree. Nodes can be connected to each other in a hierarchical fashion.
 
@@ -62,34 +33,18 @@ Every node can itself be associated with an article. An article contains the inf
 
 Jreepad is a simple to use utility.
 Tree nodes can be moved, deleted, inserted and edited in the standard tree-based way which will be familiar to anyone who has used some of the common graphical file-management utilities. The articles can be edited like in a normal text-editor. 
-Although the program is easy-to-use and conforms to the standard behaviour of Java GUI interfaces, actions like moving nodes and editing are explained in full detail below.
-<end node> 5P9i0s8y19Z
-dt=Text
-<node>
-Tree
-2
-The tree is the left part of the screen. If it's empty you can load a file into it, or you can add a node into the empty tree (see "Adding/deleting nodes" below).
+Although the program is easy-to-use and conforms to the standard behaviour of Java GUI interfaces, actions like moving nodes and editing are explained in full detail below.</node>
+<node title="Tree" type="text/plain">The tree is the left part of the screen. If it's empty you can load a file into it, or you can add a node into the empty tree (see &quot;Adding/deleting nodes&quot; below).
 
-You can select one of the "nodes" in the tree just by clicking on it.
+You can select one of the &quot;nodes&quot; in the tree just by clicking on it.
 
-You can also use your cursor-keys to navigate your way around the tree - try it now!
-<end node> 5P9i0s8y19Z
-dt=Text
-<node>
-Opening/closing subtrees
-3
-If you're using the mouse, you can double-click on any node to 
+You can also use your cursor-keys to navigate your way around the tree - try it now!<node title="Opening/closing subtrees" type="text/plain">If you're using the mouse, you can double-click on any node to 
 open/close its subtree. (Of course, if the node doesn't have a subtree nothing will happen!) Similarly, you can use the little icon to the left of the node's title, which you can use to open/close a subtree with a single click.
 
-If you're using the keyboard, you can use the left/right cursor keys to respectively close/open the selected node. N.B.: This only works if the "tree" view is the one you're using at the time. If you're editing in the article view, the cursor keys will move you around in the article.
+If you're using the keyboard, you can use the left/right cursor keys to respectively close/open the selected node. N.B.: This only works if the &quot;tree&quot; view is the one you're using at the time. If you're editing in the article view, the cursor keys will move you around in the article.
 
-
-<end node> 5P9i0s8y19Z
-dt=Text
-<node>
-Adding/deleting nodes
-3
-When you have a node selected (such as this one titled "Adding/deleting nodes"), you have a choice of three places you can add a new node:
+</node>
+<node title="Adding/deleting nodes" type="text/plain">When you have a node selected (such as this one titled &quot;Adding/deleting nodes&quot;), you have a choice of three places you can add a new node:
 
 - Above the selected node
 - Below the selected node
@@ -97,13 +52,8 @@ When you have a node selected (such as this one titled "Adding/deleting nodes"),
 
 The first three buttons on the toolbar give you these three possibilities. (They're in the Edit menu too....)
 
-(The fourth button is obviously used to delete the selected node.)
-<end node> 5P9i0s8y19Z
-dt=Text
-<node>
-Arranging trees
-3
-The easiest way to rearrange the nodes on a tree is to click-and-drag to move them around. In this way you can move a node to a different place in the tree (so it has a different "parent").
+(The fourth button is obviously used to delete the selected node.)</node>
+<node title="Arranging trees" type="text/plain">The easiest way to rearrange the nodes on a tree is to click-and-drag to move them around. In this way you can move a node to a different place in the tree (so it has a different &quot;parent&quot;).
 
 You also have four buttons for moving nodes around, on the toolbar:
 
@@ -114,15 +64,9 @@ You also have four buttons for moving nodes around, on the toolbar:
 
 (They're also in the Edit menu!)
 
-"Up" and "Down" can move a node up and down relative to its siblings. "Out" will promote the node so that it becomes a sibling of the node that was previously its parent. "In" will demote the node so that it becomes a child of the sibling just above it (if there is one).
+&quot;Up&quot; and &quot;Down&quot; can move a node up and down relative to its siblings. &quot;Out&quot; will promote the node so that it becomes a sibling of the node that was previously its parent. &quot;In&quot; will demote the node so that it becomes a child of the sibling just above it (if there is one).
 
-
-<end node> 5P9i0s8y19Z
-dt=Text
-<node>
-Sorting the nodes in a tree
-4
-If you look at the "Action" menu you'll see there are two options for sorting nodes:
+<node title="Sorting the nodes in a tree" type="text/plain">If you look at the &quot;Action&quot; menu you'll see there are two options for sorting nodes:
 
 - Sort children (one level)
 - Sort children (all levels)
@@ -133,24 +77,16 @@ Whichever of these you choose, the child nodes of the currently-selected node wi
 And the children of the children of the child nodes. 
 And the children of the children of the children of the child nodes. 
 And....)
-
-<end node> 5P9i0s8y19Z
-dt=Text
-<node>
-Editing nodes' titles
-3
-Editing a node's title should work just like editing (for example) a filename. On my Mac OSX, I can select the node, wait a second, and click on it again, or I can select it and then press F2. Both methods put the node in a mode where I can edit the title.
+</node>
+</node>
+<node title="Editing nodes' titles" type="text/plain">Editing a node's title should work just like editing (for example) a filename. On my Mac OSX, I can select the node, wait a second, and click on it again, or I can select it and then press F2. Both methods put the node in a mode where I can edit the title.
 
 When you've edited the title, simply press Enter to commit the change.
 
 (On my computer, if I decide I don't want to make the change after all, I press Escape and the node title jumps back to what it was before!)
-
-<end node> 5P9i0s8y19Z
-dt=Text
-<node>
-Article
-2
-The article is on the right of the screen. You can type whatever you like in it...!
+</node>
+</node>
+<node title="Article" type="text/plain">The article is on the right of the screen. You can type whatever you like in it...!
 
 You can use the usual cut-and-paste options that you use in other 
 applications: select some text and press
@@ -159,71 +95,45 @@ applications: select some text and press
 - [Apple+X] to cut the text
 (N.B. These are of course the shortcuts for Mac users! Instead of the Apple key, use whatever you normally use on your own system....)
 
-Jreepad also has built-in web-search: so you can select some text in the article and then choose "Google search" from the "Actions" menu to launch a search in your web browser.
+Jreepad also has built-in web-search: so you can select some text in the article and then choose &quot;Google search&quot; from the &quot;Actions&quot; menu to launch a search in your web browser.
 
-(By the way: You can import text files into Jreepad - when you do this, the content of a file becomes the "article". Very handy!
-<end node> 5P9i0s8y19Z
-dt=Text
-<node>
-Searching within a tree
-2
-Go to the "Actions" menu and choose "Search" to open up the search window.
+(By the way: You can import text files into Jreepad - when you do this, the content of a file becomes the &quot;article&quot;. Very handy!</node>
+<node title="Searching within a tree" type="text/plain">Go to the &quot;Actions&quot; menu and choose &quot;Search&quot; to open up the search window.
 
 The search window has TWO boxes for you to type search text in: one box to search the node titles, and one box to search the article text. Type something into either one of the boxes - or into both if you have a 
 very specific requirement!
 
-Remember to choose the correct option in the "Search where" dropdown: you can search in the selected node and its children, or in the entire file.
+Remember to choose the correct option in the &quot;Search where&quot; dropdown: you can search in the selected node and its children, or in the entire file.
 
-Press "Search" and you'll see the table at the bottom of the window fill up with results. Double-click on any row in the results table, and you'll be taken to the appropriate node, in the main window.
+Press &quot;Search&quot; and you'll see the table at the bottom of the window fill up with results. Double-click on any row in the results table, and you'll be taken to the appropriate node, in the main window.
 
-
-<end node> 5P9i0s8y19Z
-dt=Text
-<node>
-Searching on the web
-2
-If you have some text highlighted in the article window, you can choose
-"Actions > Google search for highlighted text".
+</node>
+<node title="Searching on the web" type="text/plain">If you have some text highlighted in the article window, you can choose
+&quot;Actions &gt; Google search for highlighted text&quot;.
 
 This will launch a Google search in a web-browser window!
 
 You can customise the search to your own taste....
+<node title="Customising the web search" type="text/plain">If you choose &quot;Preferences&quot; from the &quot;Options&quot; menu, you'll see there's a section about the web search.
 
-<end node> 5P9i0s8y19Z
-dt=Text
-<node>
-Customising the web search
-3
-If you choose "Preferences" from the "Options" menu, you'll see there's a section about the web search.
+By default, the search is labelled &quot;Google search for highlighted text&quot; and searches www.google.co.uk.
 
-By default, the search is labelled "Google search for highlighted text" and searches www.google.co.uk.
+To search for (for example) the words &quot;make a cake&quot; on Google, we call the following URL:
 
-To search for (for example) the words "make a cake" on Google, we call the following URL:
+http://www.google.co.uk/search?q=make%20a%20cake&amp;hl=en
 
-http://www.google.co.uk/search?q=make%20a%20cake&hl=en
+The words we search for are &quot;wrapped&quot; in the rest of the URL. Similarly, for a Yahoo web search we can use the URL:
 
-The words we search for are "wrapped" in the rest of the URL. Similarly, for a Yahoo web search we can use the URL:
-
-http://uk.search.yahoo.com/search/ukie?p=make%20a%20cake&y=i
+http://uk.search.yahoo.com/search/ukie?p=make%20a%20cake&amp;y=i
 
 So to make Jreepad search on Yahoo instead of Google, we can take the 
 beginning of the URL (most of it!) and the end, and enter those into the appropriate boxes in the Preferences window.
 
-Customise it to use your favourite search engine!
-<end node> 5P9i0s8y19Z
-dt=Text
-<node>
-Hyperlinks
-2
-The basic idea: You can follow any link by choosing "Follow highlighted link" from the "Actions" menu.
+Customise it to use your favourite search engine!</node>
+</node>
+<node title="Hyperlinks" type="text/plain">The basic idea: You can follow any link by choosing &quot;Follow highlighted link&quot; from the &quot;Actions&quot; menu.
 
-Open up this node and read the articles contained within, for more about how to use this functionality!
-<end node> 5P9i0s8y19Z
-dt=Text
-<node>
-Normal hyperlinks - http:// , ftp:// , mailto:
-3
-Most of the standard forms of links should work as you expect. Try these examples - either select them, or just position the cursor somewhere inside them, then choose "Actions > Follow highlighted link" from the menu.
+Open up this node and read the articles contained within, for more about how to use this functionality!<node title="Normal hyperlinks - http:// , ftp:// , mailto:" type="text/plain">Most of the standard forms of links should work as you expect. Try these examples - either select them, or just position the cursor somewhere inside them, then choose &quot;Actions &gt; Follow highlighted link&quot; from the menu.
 
 Web link:
 http://jreepad.sourceforge.net/
@@ -234,48 +144,32 @@ ftp://ftp.compaq.com/pub/
 Email link:
 mailto:bgates@microsoft.com
 
+File link:
+file:///Users/harold/
+file:///Users/harold/Documents/stripes.jpg
 
+(&quot;File&quot; links might behave differently according to which operating system you're using. On Mac OSX, the first example will open &quot;harold&quot;'s home folder, if he exists, and the second will directly open a JPEG file in his Documents directory.)</node>
+<node title="Treepad internal hyperlinks - node://" type="text/plain">Treepad Lite uses a URI-like format for links to a specific node within the current file. 
 
-_________________________________________
+Try this one, for example - select the whole link and choose the menu option &quot;Actions &gt; Follow highlighted link&quot;.
 
-
-At the time of writing, "file://" links don't seem to work correctly - not on Mac OSX, at least. It's possible that they'll work on your operating system... who knows?
-<end node> 5P9i0s8y19Z
-dt=Text
-<node>
-Treepad internal hyperlinks - node://
-3
-Treepad Lite uses a URI-like format for links to a specific node within the current file. 
-
-Try this one, for example - select the whole link and choose the menu option "Actions > Follow highlighted link".
-
-"node://Jreepad manual/Using Jreepad/File import and export"
-<end node> 5P9i0s8y19Z
-dt=Text
-<node>
-WikiLikeBehaviour
-3
-If you've used a wiki before you'll know what this is about - but if not, fear not! The idea behind a Wiki is simply to make it easy to create an interconnected web of articles, just as easily as typing text.
+&quot;node://Jreepad manual/Using Jreepad/File import and export&quot;</node>
+<node title="WikiLikeBehaviour" type="text/plain">If you've used a wiki before you'll know what this is about - but if not, fear not! The idea behind a Wiki is simply to make it easy to create an interconnected web of articles, just as easily as typing text.
 
 Jreepad adapts some of the ideas from wiki. The key ingredient in a wiki is that if you type a WikiWord, which is any word which begins with a capital letter and has other capital letter(s) somewhere in the middle, the wiki converts this into a link to an article of that name. If the article exists, you can jump straight to it. If the article doesn't exist, it gets created and you can start to type text into it.
 
 You can also force a chunk of text to behave like a WikiWord by wrapping it in [[double square brackets]].
 
 Try selecting these wiki-links and choosing 
-"Actions > Follow highlighted link":
+&quot;Actions &gt; Follow highlighted link&quot;:
 
   DanStowell
 
   [[HTML]]
 
   WikiWikiWeb
-
-<end node> 5P9i0s8y19Z
-dt=Text
-<node>
-Choosing "Follow link" when you have a plain piece of text selected
-3
-If you choose "follow link" but you haven't actually selected something which is obviously a link (it doesn't begin with something like "http://", it isn't a WikiWord, etc etc), Jreepad will either:
+</node>
+<node title="Choosing &quot;Follow link&quot; when you have a plain piece of text selected" type="text/plain">If you choose &quot;follow link&quot; but you haven't actually selected something which is obviously a link (it doesn't begin with something like &quot;http://&quot;, it isn't a WikiWord, etc etc), Jreepad will either:
 
 - Assume it's a node title and search for a node of that title
 
@@ -283,38 +177,18 @@ If you choose "follow link" but you haven't actually selected something which is
 
 - Do a web-search for the text
 
-You can specify which of these you want to happen in the Options > Preferences panel.
-<end node> 5P9i0s8y19Z
-dt=Text
-<node>
-File import and export
-2
-Look in the "File" menu and see what options are available under the two submenus, "Import..." and "Export selected...". There are plenty of options!
+You can specify which of these you want to happen in the Options &gt; Preferences panel.</node>
+</node>
+<node title="File import and export" type="text/plain">Look in the &quot;File&quot; menu and see what options are available under the two submenus, &quot;Import...&quot; and &quot;Export selected...&quot;. There are plenty of options!
 
-The HTML export is particularly useful for exporting a chunk of your Jreepad file, either for emailing to a colleague who doesn't use Jreepad or Treepad, or for printing out.
-<end node> 5P9i0s8y19Z
-dt=Text
-<node>
-Importing / exporting a Treepad file
-3
-You can import one Treepad file into another - it'll become a subtree branching off the node currently selected.
+The HTML export is particularly useful for exporting a chunk of your Jreepad file, either for emailing to a colleague who doesn't use Jreepad or Treepad, or for printing out.<node title="Importing / exporting a Treepad file" type="text/plain">You can import one Treepad file into another - it'll become a subtree branching off the node currently selected.
 
-Similarly, you can export the selected subtree as a standalone Treepad file; for example, if you need to send a branch of Treepad information to a colleague.
-<end node> 5P9i0s8y19Z
-dt=Text
-<node>
-Text files
-3
-Jreepad can export the currently-selected article as a simple plain-text file.
+Similarly, you can export the selected subtree as a standalone Treepad file; for example, if you need to send a branch of Treepad information to a colleague.</node>
+<node title="Text files" type="text/plain">Jreepad can export the currently-selected article as a simple plain-text file.
 
 When *importing* plain-text, Jreepad can import multiple text files at the same time. Choose a selection of text files, and they'll be each imported as a new child 
-node (the node titles will match the filenames).
-<end node> 5P9i0s8y19Z
-dt=Text
-<node>
-Text lists
-3
-Often in a text file, you have a list - one line per entry.
+node (the node titles will match the filenames).</node>
+<node title="Text lists" type="text/plain">Often in a text file, you have a list - one line per entry.
 
 Jreepad lets you import a text list directly, so that if you have your shopping list as a text file, containing the text:
 
@@ -323,21 +197,10 @@ Milk
 Eggs
 
 then Jreepad will create three new nodes,
-entitled "Bread", "Milk", and "Eggs".
-<end node> 5P9i0s8y19Z
-dt=Text
-<node>
-HTML
-3
-Jreepad's HTML export creates a nice, human-readable output. The output includes a simple embedded CSS stylesheet which formats the HTML page quite neatly.
+entitled &quot;Bread&quot;, &quot;Milk&quot;, and &quot;Eggs&quot;.</node>
+<node title="HTML" type="text/plain">Jreepad's HTML export creates a nice, human-readable output. The output includes a simple embedded CSS stylesheet which formats the HTML page quite neatly.
 
-HTML export is very useful, for creating printouts or for sending an output of a Jreepad subtree to a colleague who may not use Jreepad or Treepad.ç
-<end node> 5P9i0s8y19Z
-dt=Text
-<node>
-HTML export options
-4
-When you choose to export HTML, you are presented with some options.
+HTML export is very useful, for creating printouts or for sending an output of a Jreepad subtree to a colleague who may not use Jreepad or Treepad.ï¿½<node title="HTML export options" type="text/plain">When you choose to export HTML, you are presented with some options.
 
 The most important one is: do you want your articles to be interpreted as
 
@@ -349,89 +212,47 @@ The most important one is: do you want your articles to be interpreted as
 
 
 
-You can also choose whether you want URLs within your articles to be automatically turned into links. This is only applicable for the first two options above.
-<end node> 5P9i0s8y19Z
-dt=Text
-<node>
-XML
-3
-The XML export creates an XML file with a very simple structure. It contains all of the information from the selected Jreepad subtree (node structure, titles, and 
+You can also choose whether you want URLs within your articles to be automatically turned into links. This is only applicable for the first two options above.</node>
+</node>
+<node title="XML" type="text/plain">The XML export creates an XML file with a very simple structure. It contains all of the information from the selected Jreepad subtree (node structure, titles, and 
 articles).
 
-It should be straightforward to use this data in an XML editor or in other applications.
-<end node> 5P9i0s8y19Z
-dt=Text
-<node>
-Character encodings
-2
-For maximum compatibility with Treepad Lite, we set the default text encoding to ISO-8859-1 (this is a standard text encoding used by Windows). ISO-8859-15 is apparently slightly better so that's another option, but not default.
+It should be straightforward to use this data in an XML editor or in other applications.</node>
+</node>
+<node title="Character encodings" type="text/plain">For maximum compatibility with Treepad Lite, we set the default text encoding to ISO-8859-1 (this is a standard text encoding used by Windows). ISO-8859-15 is apparently slightly better so that's another option, but not default.
 
 If you want to preserve accented characters and other special characters, you might prefer to use Unicode (UTF-8 or UTF-16).
 
 UTF-16 is a good one to use on Mac OSX, especially if you don't need to exchange Treepad files with Windows-Treepad users.
 
 Choose your preferred character encoding using the Preferences window!
-
-<end node> 5P9i0s8y19Z
-dt=Text
-<node>
-View options
-2
-Open up this node to see what the "View" menu lets you do...
-<end node> 5P9i0s8y19Z
-dt=Text
-<node>
-View the tree, the article, or both?
-3
-The first three options on the "View" menu are about whether you want to see the tree, the article, or both at the same time.
+</node>
+<node title="View options" type="text/plain">Open up this node to see what the &quot;View&quot; menu lets you do...<node title="View the tree, the article, or both?" type="text/plain">The first three options on the &quot;View&quot; menu are about whether you want to see the tree, the article, or both at the same time.
 
 I normally always view both at the same time, but sometimes I switch into viewing just the article, if there's a large body of text that I need to type/edit in a single node.
 
-N.B. Look on the menu to see the keyboard shortcuts for these three options - very handy shortcuts
-<end node> 5P9i0s8y19Z
-dt=Text
-<node>
-View the toolbar?
-3
-You can turn the toolbar on and off using the "View > Toolbar" option.
+N.B. Look on the menu to see the keyboard shortcuts for these three options - very handy shortcuts</node>
+<node title="View the toolbar?" type="text/plain">You can turn the toolbar on and off using the &quot;View &gt; Toolbar&quot; option.
 
-I normally leave the toolbar on all the time, as it doesn't do much harm!
-<end node> 5P9i0s8y19Z
-dt=Text
-<node>
-View "node://" address
-3
-Treepad uses links which begin with "node://" to crosslink within a file. If you want to use this method too, you can simply choose the 'View > "node://" address' menu option to see what a link to the current node would look like.
+I normally leave the toolbar on all the time, as it doesn't do much harm!</node>
+<node title="View &quot;node://&quot; address" type="text/plain">Treepad uses links which begin with &quot;node://&quot; to crosslink within a file. If you want to use this method too, you can simply choose the 'View &gt; &quot;node://&quot; address' menu option to see what a link to the current node would look like.
 
 (By the way, I prefer to use Jreepad's WikiLikeBehaviour, since this provides slightly more stable and convenient crosslinking. To see how it works, highlight the phrase WikiLikeBehaviour and then choose 
-"Actions > Follow highlighted link"!
-<end node> 5P9i0s8y19Z
-dt=Text
-<node>
-Additional information
-1
-
-<end node> 5P9i0s8y19Z
-dt=Text
-<node>
-Treepad
-2
-The concept for Jreepad is based on Treepad Lite. Treepad Lite is free software created by Henk Hagedoorn, primarily for Windows computers. The "Treepad" suite includes more feature-rich versions (these are not free!).
+&quot;Actions &gt; Follow highlighted link&quot;!</node>
+</node>
+</node>
+<node title="Additional information" type="text/plain"><node title="Treepad" type="text/plain">The concept for Jreepad is based on Treepad Lite. Treepad Lite is free software created by Henk Hagedoorn, primarily for Windows computers. The &quot;Treepad&quot; suite includes more feature-rich versions (these are not free!).
 
 Jreepad is only designed to be compatible with Treepad Lite files....
 
-See http://www.treepad.com/ for more about the Treepad suite of software.
-<end node> 5P9i0s8y19Z
-dt=Text
-<node>
-DanStowell
-2
-Dan Stowell is the author of Jreepad.
+See http://www.treepad.com/ for more about the Treepad suite of software.</node>
+<node title="DanStowell" type="text/plain">Dan Stowell is the author of Jreepad.
 His website is http://www.mcld.co.uk/
 
-(If you are wondering why this node exists, and why its title is "DanStowell" and not "Dan Stowell", then you haven't read the description of Jreepad's
+(If you are wondering why this node exists, and why its title is &quot;DanStowell&quot; and not &quot;Dan Stowell&quot;, then you haven't read the description of Jreepad's
 
 WikiLikeBehaviour
 
-Select the text on the line above, and choose "Follow highlighted link" from the Actions menu...!
-<end node> 5P9i0s8y19Z
+Select the text on the line above, and choose &quot;Follow highlighted link&quot; from the Actions menu...!</node>
+</node>
+</node>
