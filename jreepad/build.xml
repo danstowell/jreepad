@@ -14,22 +14,28 @@
 	<target name="init">
 		<tstamp />
 		<mkdir dir="${buildDir}" />
+		<mkdir dir="${buildDir}/jreepad/lang" />
 		<mkdir dir="${distDir}" />
 	</target>
 	<target name="compile" depends="init">
-		<javac srcdir="${srcDir}" destdir="${buildDir}" />
+		<javac srcdir="${srcDir}" destdir="${buildDir}"/>
+		<copy todir="${buildDir}/jreepad/lang">
+			<fileset dir="${srcDir}/jreepad/lang" includes="*.properties" />
+		</copy>
 	</target>
 	<target name="dist" depends="compile">
 		<copy todir="${imgTargetDir}">
 			<fileset dir="${imgDir}" />
 		</copy>
-		<jar destfile="${distDir}/jreepad-${DSTAMP}.jar" basedir="${buildDir}">
+		<jar destfile="${distDir}/Jreepad-${DSTAMP}.jar" basedir="${buildDir}">
 			<manifest>
 				<attribute name="Built-By" value="${user.name}" />
 				<attribute name="Main-Class" value="jreepad.JreepadViewer" />
 			</manifest>
 		</jar>
-		<jar destfile="${distDir}/jreepad-src-${DSTAMP}.jar" basedir="${srcDir}" />
+<!--		<jar destfile="${distDir}/Jreepad-src-${DSTAMP}.jar" basedir="${srcDir}" /> -->
+		<tar destfile="${distDir}/Jreepad-src-${DSTAMP}.tar.gz" basedir="${srcDir}" compression="gzip"/>
+		<copy file="manual/JreepadManual.hjt" todir="${distDir}" />
 	</target>
 	<target name="clean">
 		<delete dir="${buildDir}" />
