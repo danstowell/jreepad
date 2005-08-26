@@ -34,7 +34,7 @@
 			</manifest>
 		</jar>
 <!--		<jar destfile="${distDir}/Jreepad-src-${DSTAMP}.jar" basedir="${srcDir}" /> -->
-		<tar destfile="${distDir}/Jreepad-src-${DSTAMP}.tar.gz" basedir="${srcDir}" compression="gzip"/>
+		<tar destfile="${distDir}/Jreepad-${DSTAMP}-source.tar.gz" basedir="${srcDir}" compression="gzip"/>
 		<copy file="manual/JreepadManual.hjt" todir="${distDir}" />
 	</target>
 	<target name="clean">
@@ -42,9 +42,9 @@
 		<delete dir="${distDir}" />
 	</target>
 	<target name="runjreepad" depends="dist">
-		<java fork="yes" jar="${distDir}/jreepad-${DSTAMP}.jar" failonerror="true">
+		<java fork="yes" jar="${distDir}/Jreepad-${DSTAMP}.jar" failonerror="true">
 			<classpath>
-				<pathelement location="${distDir}/jreepad-${DSTAMP}.jar" />
+				<pathelement location="${distDir}/Jreepad-${DSTAMP}.jar" />
 				<pathelement path="" />
 				<pathelement path="${java.class.path}" />
 			</classpath>
