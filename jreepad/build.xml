@@ -3,19 +3,35 @@
 	<description>
 		Java treepad - personal information manager
 	</description>
+
+
+
+	<property name="curVersion" value="1.4.1" />
+
+
 	<property name="srcDir" location="src" />
 	<property name="imgDir" location="images" />
 	<property name="buildDir" location="build" />
 	<property name="imgTargetDir" location="${buildDir}/images" />
+	<property name="libDir" value="lib" />
 	<property name="distDir" location="dist" />
 	<property name="mainClass" location="jreepad.JreepadViewer" />
 	<property name="timeStamp" location="${DSTAMP}" />
 	<property name="packageName" location="jreepad" />
-	<target name="init">
+
+<!--    <taskdef name="jarbundler" 
+         classpath="${libDir}/jarbundler-1.5.jar"
+         classname="com.informagen.ant.tasks.jarbundler.JarBundler" /> -->
+    <taskdef name="jarbundler" 
+         classpath="${libDir}/jarbundler-1.4.jar"
+         classname="com.loomcom.ant.tasks.jarbundler.JarBundler" />
+
+    <target name="init">
 		<tstamp />
 		<mkdir dir="${buildDir}" />
 		<mkdir dir="${buildDir}/jreepad/lang" />
 		<mkdir dir="${distDir}" />
+		<mkdir dir="${distDir}/Jreepad-${curVersion}-OSX/" />
 	</target>
 	<target name="compile" depends="init">
 		<javac srcdir="${srcDir}" destdir="${buildDir}"/>
@@ -27,15 +43,39 @@
 		<copy todir="${imgTargetDir}">
 			<fileset dir="${imgDir}" />
 		</copy>
-		<jar destfile="${distDir}/Jreepad-${DSTAMP}.jar" basedir="${buildDir}">
+		<jar destfile="${distDir}/Jreepad-${curVersion}.jar" basedir="${buildDir}">
 			<manifest>
 				<attribute name="Built-By" value="${user.name}" />
 				<attribute name="Main-Class" value="jreepad.JreepadViewer" />
 			</manifest>
 		</jar>
-<!--		<jar destfile="${distDir}/Jreepad-src-${DSTAMP}.jar" basedir="${srcDir}" /> -->
-		<tar destfile="${distDir}/Jreepad-${DSTAMP}-source.tar.gz" basedir="${srcDir}" compression="gzip"/>
-		<copy file="manual/JreepadManual.hjt" todir="${distDir}" />
+        <jarbundler dir="${distDir}/Jreepad-${curVersion}-OSX"
+              name="Jreepad"
+              version="${curVersion}"
+              aboutmenuname="Jreepad"
+              icon="icons/jreepadlogo-01.icns"
+              infostring="Jreepad, compiled ${DSTAMP}"
+              mainclass="jreepad.JreepadViewer" 
+              bundleid="net.sf.jreepad"
+              jars="${distDir}/Jreepad-${curVersion}.jar" 
+              screenmenu="true"
+              signature="JREE"
+              jvmversion="1.4+"
+              />
+        <tar destfile="${distDir}/Jreepad-${curVersion}-source.tar.gz" basedir="${srcDir}" compression="gzip"/>
+		<copy file="manual/JreepadManual.hjt" tofile="${distDir}/JreepadManual-${curVersion}.hjt"  />
+		<copy file="manual/JreepadManual.hjt" tofile="${distDir}/Jreepad-${curVersion}-OSX/JreepadManual-${curVersion}.hjt" />
+		<copy file="${distDir}/Jreepad-${curVersion}-source.tar.gz" todir="${distDir}/Jreepad-${curVersion}-OSX/" />
+		<copy file="manual/osxreadme/Read me first.rtf" todir="${distDir}/Jreepad-${curVersion}-OSX/" />
+
+        <!-- OSX-only step - create the .DMG disk image -->
+        <exec dir="${distDir}" executable="hdiutil" os="Mac OS X">
+           <arg line="create -ov -srcfolder Jreepad-${curVersion}-OSX Jreepad-${curVersion}-OSX.dmg"/>
+        </exec>
+        <exec dir="${distDir}" executable="hdiutil" os="Mac OS X">
+           <arg line="internet-enable -yes Jreepad-${curVersion}-OSX.dmg"/>
+        </exec>
+
 	</target>
 	<target name="clean">
 		<delete dir="${buildDir}" />
