@@ -23,6 +23,7 @@ import javax.swing.*;
 import javax.swing.tree.*;
 import javax.swing.table.*;
 import javax.swing.event.*;
+import javax.swing.undo.*;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.*;
 import java.awt.*;
@@ -98,6 +99,9 @@ public class JreepadView extends Box implements TableModelListener
   private JTable editorPaneCsv;
   
 
+  // Undo features
+//  protected UndoManager undoMgr;
+
   private JSplitPane splitPane;
 
   private JreepadSearcher searcher;
@@ -108,9 +112,9 @@ public class JreepadView extends Box implements TableModelListener
   private boolean warnAboutUnsaved = false;
 
   // Things concerned with the "undo" function
-  private JreepadNode oldRootForUndo, oldCurrentNodeForUndo;
-  private TreePath[] oldExpandedPaths;
-  private TreePath oldSelectedPath;
+ //OLD ATTEMPT private JreepadNode oldRootForUndo, oldCurrentNodeForUndo;
+ //OLD ATTEMPT private TreePath[] oldExpandedPaths;
+ //OLD ATTEMPT private TreePath oldSelectedPath;
 
   public JreepadView()
   {
@@ -139,7 +143,7 @@ public class JreepadView extends Box implements TableModelListener
 					 );
 
     this.root = root;
-
+    
     treeModel = new JreepadTreeModel(root);
     treeModel.addTreeModelListener(new JreepadTreeModelListener());
 
@@ -167,6 +171,7 @@ public class JreepadView extends Box implements TableModelListener
 
     searcher = new JreepadSearcher(root);
 
+//    undoMgr = new UndoManager();
 
 
     //Listen for when the selection changes.
@@ -177,6 +182,11 @@ public class JreepadView extends Box implements TableModelListener
                         JreepadNode node = (JreepadNode)
                            tree.getLastSelectedPathComponent();
                         if (node == null) return;
+                        
+// UNDO DEVELOPMENT:
+//                        System.out.println("TreeSelectionListener:valueChanged");
+//                        undoMgr.discardAllEdits();
+                        
                         setCurrentNode(node);
                       }
                    }); 
@@ -321,6 +331,9 @@ public class JreepadView extends Box implements TableModelListener
 
     setViewBoth();
     tree.setSelectionRow(0);
+
+    editorPanePlainText.getDocument().addUndoableEditListener(new JreepadUndoableEditListener());
+
   }
 
   public void setEditorPaneKit()
@@ -412,7 +425,7 @@ public class JreepadView extends Box implements TableModelListener
       return;      
     }
 
-    copyEditorPaneContentToNodeContent = false; // Deactivate the caret-listener, effectively
+    copyEditorPaneContentToNodeContent = false; // Deactivate the caret-listener, effectively - ALSO DEACTIVATES UNDO-STORAGE
     if(currentNode != null)
     {
       // Only update the node's stored content if it's a plaintext node
@@ -424,7 +437,7 @@ public class JreepadView extends Box implements TableModelListener
 //    editorPanePlainText.setText(n.getContent());
 //    editorPaneHtml.setText(n.getContent());
     ensureCorrectArticleRenderMode();
-    copyEditorPaneContentToNodeContent = true; // Reactivate the caret listener
+    copyEditorPaneContentToNodeContent = true; // Reactivate the caret listener - ALSO REACTIVATES UNDO-STORAGE
   }
 
   public JTree getTree()
@@ -459,7 +472,7 @@ public class JreepadView extends Box implements TableModelListener
       return;
     }
     
-    storeForUndo();
+    //DEL storeForUndo();
     
     JreepadNode oldParent = node.getParentNode();
 
@@ -506,7 +519,7 @@ public class JreepadView extends Box implements TableModelListener
     int pos = currentNode.getIndex();
     if(pos<1) return;
     
-    storeForUndo();
+    //DEL storeForUndo();
     
     JreepadNode newParent = ((JreepadNode)currentNode.getParent().getChildAt(pos-1));
     
@@ -533,7 +546,7 @@ public class JreepadView extends Box implements TableModelListener
     TreePath parentParentPath = parentPath.getParentPath();
     if(parentParentPath==null) return;
 
-    storeForUndo();
+    //DEL storeForUndo();
 
     if(currentNode.outdent())
     {
@@ -555,7 +568,7 @@ public class JreepadView extends Box implements TableModelListener
       return;
     }
     
-    storeForUndo();
+    //DEL storeForUndo();
     currentNode.moveUp();
     treeModel.reload(currentNode.getParent());
     tree.setSelectionPath(nodePath);
@@ -570,7 +583,7 @@ public class JreepadView extends Box implements TableModelListener
       return;
     }
 
-    storeForUndo();
+    //DEL storeForUndo();
     currentNode.moveDown();
     treeModel.reload(currentNode.getParent());
     tree.setSelectionPath(nodePath);
@@ -609,7 +622,7 @@ public class JreepadView extends Box implements TableModelListener
     if(currentNode.getArticleMode() != JreepadNode.ARTICLEMODE_ORDINARY)
       return; // May want to fix this later - allow other modes to have the date inserted...
   
-    storeForUndo();
+    //DEL storeForUndo();
     String theDate = getCurrentDate();
     Document doc = editorPanePlainText.getDocument();
     int here = editorPanePlainText.getCaretPosition();
@@ -638,7 +651,7 @@ public class JreepadView extends Box implements TableModelListener
 
     if(tree.getSelectionPath()==null)
       return null;
-    storeForUndo();
+    //DEL storeForUndo();
     TreePath parentPath = tree.getSelectionPath().getParentPath();
     JreepadNode parent = currentNode.getParentNode();
     JreepadNode ret = parent.addChild(index);
@@ -660,7 +673,7 @@ public class JreepadView extends Box implements TableModelListener
 
     if(tree.getSelectionPath()==null)
       return null;
-    storeForUndo();
+    //DEL storeForUndo();
     TreePath parentPath = tree.getSelectionPath().getParentPath();
     JreepadNode parent = currentNode.getParentNode();
     JreepadNode ret = parent.addChild(index+1);
@@ -671,7 +684,7 @@ public class JreepadView extends Box implements TableModelListener
   }
   public JreepadNode addNode()
   {
-    storeForUndo();
+    //DEL storeForUndo();
     JreepadNode ret = currentNode.addChild();
     ret.setContent(getContentForNewNode());
     TreePath nodePath = tree.getSelectionPath();
@@ -688,7 +701,7 @@ public class JreepadView extends Box implements TableModelListener
     TreePath parentPath = tree.getSelectionPath().getParentPath();
     if(parent != null)
     {
-      storeForUndo();
+      //DEL storeForUndo();
       int index = parent.getIndex(currentNode);
       JreepadNode ret = parent.removeChild(index);
       setCurrentNode(parent);
@@ -705,14 +718,14 @@ public class JreepadView extends Box implements TableModelListener
 
   public void sortChildren()
   {
-    storeForUndo();
+    //DEL storeForUndo();
     currentNode.sortChildren();
     treeModel.reload(currentNode);
     // System.out.println(currentNode.toFullString());
   }
   public void sortChildrenRecursive()
   {
-    storeForUndo();
+    //DEL storeForUndo();
     currentNode.sortChildrenRecursive();
     treeModel.reload(currentNode);
     // System.out.println(currentNode.toFullString());
@@ -809,7 +822,7 @@ public class JreepadView extends Box implements TableModelListener
 
   public void addChildrenFromTextFiles(File[] inFiles) throws IOException
   {
-    storeForUndo();
+    //DEL storeForUndo();
 	for(int i=0; i<inFiles.length; i++)
       getCurrentNode().addChildFromTextFile(new InputStreamReader(new FileInputStream(inFiles[i]), getPrefs().getEncoding())
                          , inFiles[i].getName());
@@ -819,7 +832,7 @@ public class JreepadView extends Box implements TableModelListener
   
   public void addChild(JreepadNode newKid)
   {
-    storeForUndo();
+    //DEL storeForUndo();
 	getCurrentNode().addChild(newKid);
     treeModel.reload(currentNode);
     tree.expandPath(tree.getSelectionPath());
@@ -827,7 +840,7 @@ public class JreepadView extends Box implements TableModelListener
 
   public void addChildrenFromListTextFile(InputStreamReader inFile) throws IOException
   {
-    storeForUndo();
+    //DEL storeForUndo();
 
     BufferedReader bReader = new BufferedReader(inFile);
 
@@ -867,6 +880,13 @@ public class JreepadView extends Box implements TableModelListener
     prefs = thesePrefs;
   }
   
+
+/*
+
+    DEPRECATED - I wrote this before discovering Java's UndoManager.
+
+
+
   // Stuff concerned with undo
   public void undoAction()
   {
@@ -904,6 +924,10 @@ public class JreepadView extends Box implements TableModelListener
     oldRootForUndo = null;
   }
   // End of: stuff concerned with undo
+
+*/
+
+
 
   // Stuff concerned with linking
   public void webSearchTextSelectedInArticle()
@@ -1229,7 +1253,7 @@ System.out.println(err);
 
   public void wrapContentToCharWidth(int charWidth)
   {
-    storeForUndo();
+    //DEL storeForUndo();
     currentNode.wrapContentToCharWidth(charWidth);
     editorPanePlainText.setText(currentNode.getContent());
     editorPaneHtml.setText(currentNode.getContent());
@@ -1237,7 +1261,7 @@ System.out.println(err);
   }
   public void stripAllTags()
   {
-    storeForUndo();
+    //DEL storeForUndo();
     currentNode.stripAllTags();
     editorPanePlainText.setText(currentNode.getContent());
     editorPaneHtml.setText(currentNode.getContent());
@@ -1362,7 +1386,14 @@ System.out.println(err);
   }
   void setEditorPaneText(String s)
   {
-    editorPanePlainText.setText(s);
+    try{
+      editorPanePlainText.setText(s);
+    }catch(Exception ex){
+      // This shouldn't cause a problem. So this try-catch is only for debugging really.
+      System.err.println("setEditorPaneText(): Exception during editorPanePlainText.setText(s)");
+      System.err.println("String: " + s);
+      ex.printStackTrace();
+    }
     switch(currentNode.getArticleMode())
     {
       case JreepadNode.ARTICLEMODE_ORDINARY:
@@ -1509,6 +1540,39 @@ System.out.println(err);
       setWarnAboutUnsaved(true);
     }
   } // End of class JEditorPanePlus
+
+
+    //This one listens for edits that can be undone.
+    protected class JreepadUndoableEditListener
+                    implements UndoableEditListener {
+        public void undoableEditHappened(UndoableEditEvent e) {
+            
+            //System.out.println("Undoable event is " + (e.getEdit().isSignificant()?"":"NOT ") + "significant");
+            //System.out.println("Undoable event source: " + e.getEdit());
+
+            //Remember the edit and update the menus.
+            
+            if(copyEditorPaneContentToNodeContent){
+              System.out.println("Storing undoable event for node " + getCurrentNode().getTitle());
+              System.out.println("   Event is " + e.getEdit().getPresentationName() );
+              System.out.println("   Content: " + getCurrentNode().getContent());
+              //Thread.currentThread().dumpStack();
+              getCurrentNode().undoMgr.addEdit(e.getEdit());
+            }
+            
+            
+            
+            //undoAction.updateUndoState();
+            //redoAction.updateRedoState();
+        }
+    }
+
+
+
+
+
+
+
 
 
 /*

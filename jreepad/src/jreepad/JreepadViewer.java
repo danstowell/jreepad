@@ -24,6 +24,7 @@ import javax.swing.event.*;
 import javax.swing.table.*;
 import javax.swing.text.*;
 import javax.swing.text.html.*;
+import javax.swing.undo.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
@@ -164,6 +165,7 @@ public class JreepadViewer extends JFrame
   private JMenu editMenu;
   private JMenuItem newFromClipboardMenuItem;
   private JMenuItem undoMenuItem;
+  private JMenuItem redoMenuItem;
   private JMenuItem editNodeTitleMenuItem;
   private JMenuItem addAboveMenuItem;
   private JMenuItem addBelowMenuItem;
@@ -466,11 +468,16 @@ public class JreepadViewer extends JFrame
     }
     //
     undoMenuItem = new JMenuItem(lang.getString("MENUITEM_UNDO")); //"Undo");
-    undoMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { undoAction();}});
+    undoMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { 
+        undoAction();}});
+    redoMenuItem = new JMenuItem(lang.getString("MENUITEM_REDO")); //"Redo");
+    redoMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { 
+        redoAction();}});
 // Fairly sensibly, someone suggested removing the Undo button since it behaves oddly and because there's no "Redo".
 // So I've removed it from the menu - will leave it in the code, though, in the optimistic hope that we can fix it later...
-//    editMenu.add(undoMenuItem);
-//    editMenu.add(new JSeparator());
+    editMenu.add(undoMenuItem);
+    editMenu.add(redoMenuItem);
+    editMenu.add(new JSeparator());
     addAboveMenuItem = new JMenuItem(lang.getString("MENUITEM_ADDABOVE")); //"Add sibling above");
     addAboveMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { theJreepad.addNodeAbove(); /* theJreepad.returnFocusToTree(); */ setWarnAboutUnsaved(true); updateWindowTitle();}});
     editMenu.add(addAboveMenuItem);
@@ -674,27 +681,29 @@ public class JreepadViewer extends JFrame
     editMenu.setMnemonic('E');
     undoMenuItem.setMnemonic('u');
     undoMenuItem.setAccelerator(KeyStroke.getKeyStroke('Z', MENU_MASK));
+    redoMenuItem.setMnemonic('r');
+    redoMenuItem.setAccelerator(KeyStroke.getKeyStroke('Z', MENU_MASK | java.awt.event.InputEvent.SHIFT_MASK));
     addAboveMenuItem.setMnemonic('a');
     addAboveMenuItem.setAccelerator(KeyStroke.getKeyStroke('T', MENU_MASK));
     addBelowMenuItem.setMnemonic('b');
     addBelowMenuItem.setAccelerator(KeyStroke.getKeyStroke('B', MENU_MASK));
     addChildMenuItem.setMnemonic('c');
-    addChildMenuItem.setAccelerator(KeyStroke.getKeyStroke('\\', MENU_MASK));
+    addChildMenuItem.setAccelerator(KeyStroke.getKeyStroke('D', MENU_MASK));
     newFromClipboardMenuItem.setAccelerator(KeyStroke.getKeyStroke('M', MENU_MASK));
     upMenuItem.setMnemonic('u');
-    upMenuItem.setAccelerator(KeyStroke.getKeyStroke('U', MENU_MASK));
+    upMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_UP, MENU_MASK));
     downMenuItem.setMnemonic('d');
-    downMenuItem.setAccelerator(KeyStroke.getKeyStroke('D', MENU_MASK));
+    downMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_DOWN, MENU_MASK));
     indentMenuItem.setMnemonic('i');
-    indentMenuItem.setAccelerator(KeyStroke.getKeyStroke(']', MENU_MASK));
+    indentMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_RIGHT, MENU_MASK));
     outdentMenuItem.setMnemonic('o');
-    outdentMenuItem.setAccelerator(KeyStroke.getKeyStroke('[', MENU_MASK));
+    outdentMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_LEFT, MENU_MASK));
     expandAllMenuItem.setMnemonic('x');
     expandAllMenuItem.setAccelerator(KeyStroke.getKeyStroke('=', MENU_MASK));
     collapseAllMenuItem.setMnemonic('l');
     collapseAllMenuItem.setAccelerator(KeyStroke.getKeyStroke('-', MENU_MASK));
     deleteMenuItem.setMnemonic('k');
-    deleteMenuItem.setAccelerator(KeyStroke.getKeyStroke('K', MENU_MASK));
+    deleteMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_DELETE, 0));
     searchMenu.setMnemonic('t');
     searchMenuItem.setMnemonic('s');
     searchMenuItem.setAccelerator(KeyStroke.getKeyStroke('F', MENU_MASK));
@@ -1562,7 +1571,7 @@ public class JreepadViewer extends JFrame
         validate();
         repaint();
         setWarnAboutUnsaved(false);
-        theJreepad.clearUndoCache();
+//DEL        theJreepad.clearUndoCache();
         setCursor(Cursor.getDefaultCursor());
       }
       catch(IOException err)
@@ -2010,10 +2019,25 @@ public class JreepadViewer extends JFrame
   
   private void undoAction()
   {
+/*
     if(theJreepad.canWeUndo())
       theJreepad.undoAction();
     else
 	  JOptionPane.showMessageDialog(this, lang.getString("MSG_NOTHING_TO_UNDO"), "No change" , JOptionPane.INFORMATION_MESSAGE);
+*/
+    try{
+      theJreepad.getCurrentNode().undoMgr.undo();
+    }catch(CannotUndoException ex){
+//	  JOptionPane.showMessageDialog(this, lang.getString("MSG_NOTHING_TO_UNDO"), "No change" , JOptionPane.INFORMATION_MESSAGE);
+    }
+    updateWindowTitle();
+  }
+  private void redoAction(){
+    try{
+      theJreepad.getCurrentNode().undoMgr.redo();
+    }catch(CannotRedoException ex){
+//	  JOptionPane.showMessageDialog(this, lang.getString("MSG_NOTHING_TO_UNDO"), "No change" , JOptionPane.INFORMATION_MESSAGE);
+    }
     updateWindowTitle();
   }
   
@@ -2379,14 +2403,14 @@ lang.getString("HELP_LICENSE") + "\n\n           http://www.gnu.org/copyleft/gpl
               "\nADDING/DELETING NODES:" +
               "\n["+menuText+"+T] Add sibling node above current node" +
               "\n["+menuText+"+B] Add sibling node below current node" +
-              "\n["+menuText+"+\\] Add child node to current node" +
+              "\n["+menuText+"+D] Add child node to current node" +
               "\n["+menuText+"+K] Delete current node" +
               "\n" +
               "\nMOVING NODES:" +
-              "\n["+menuText+"+U] Move node up" +
-              "\n["+menuText+"+D] Move node down" +
-              "\n["+menuText+"+]] Indent node" +
-              "\n["+menuText+"+[] Outdent node" +
+              "\n["+menuText+"+up arrow] Move node up" +
+              "\n["+menuText+"+down arrow] Move node down" +
+              "\n["+menuText+"+right arrow] Indent node" +
+              "\n["+menuText+"+left arrow] Outdent node" +
               "\n" +
               "\nCOPYING AND PASTING:" +
               "\n["+menuText+"+X] Cut selected text" +

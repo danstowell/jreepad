@@ -23,6 +23,7 @@ import java.util.*;
 import java.io.*;
 import javax.swing.tree.*;
 import java.text.*;
+import javax.swing.undo.*;
 
 public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Comparable
 {
@@ -41,6 +42,9 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
   public static final int ARTICLEMODE_CSV = 3;
   public static final int ARTICLEMODE_SOFTLINK = 4;
   private int articleMode = ARTICLEMODE_ORDINARY;
+
+  // Undo features
+  protected UndoManager undoMgr;
 
   public JreepadNode()
   {
@@ -61,6 +65,7 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
     this.parentNode = parentNode;
     ourSortComparator = new OurSortComparator();
     children = new Vector();
+    undoMgr = new UndoManager();
   }
   public JreepadNode(InputStreamReader treeInputStream, boolean autoDetectHtmlArticles) throws IOException
   {
@@ -1436,5 +1441,22 @@ DELETEME
     public boolean hasMoreElements() { return i<getChildCount(); }
     public Object nextElement()      { return getChildAt(i++);   }
   } // This enumerator class is required by the TreeNode interface
+
+/*
+    // Listens for edits that can be undone.
+    protected class JreepadNodeUndoableEditListener
+                    implements UndoableEditListener {
+        public void undoableEditHappened(UndoableEditEvent e) {
+            
+            //System.out.println("Undoable event is " + (e.getEdit().isSignificant()?"":"NOT ") + "significant");
+            //System.out.println("Undoable event source: " + e.getEdit());
+    
+            //Remember the edit and update the menus.
+            undoMgr.addEdit(e.getEdit());
+            //undoAction.updateUndoState();
+            //redoAction.updateRedoState();
+        }
+    }
+*/
 }
 
