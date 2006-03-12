@@ -1274,6 +1274,8 @@ System.out.println(err);
 //    System.out.println("\n\n\nnode content : " + currentNode.getContent() 
 //          + "\neditorPanePlainText contains: " + editorPanePlainText.getText());
     
+    copyEditorPaneContentToNodeContent = false; // Disables store-for-undo
+    
     currentNode.setContent(editorPanePlainText.getText());
 /*
     switch(currentNode.getArticleMode())
@@ -1300,6 +1302,13 @@ System.out.println(err);
       case JreepadNode.ARTICLEMODE_HTML:
         editorPaneHtml.setText(currentNode.getContent());
         break;
+      case JreepadNode.ARTICLEMODE_TEXTILEHTML:
+        try{
+          editorPaneHtml.setText(JTextile.textile(currentNode.getContent()));
+        }catch(Exception e){
+          editorPaneHtml.setText(currentNode.getContent());
+        }
+        break;
       case JreepadNode.ARTICLEMODE_CSV:
         articleToJTable(currentNode.getContent());
         break;
@@ -1309,6 +1318,7 @@ System.out.println(err);
     currentNode.setArticleMode(newMode);
     ensureCorrectArticleRenderMode();
     getEditorPaneComponent().repaint();
+    copyEditorPaneContentToNodeContent = true; // Re-enables store-for-undo
   }
 
   public void ensureCorrectArticleRenderMode()
@@ -1361,6 +1371,7 @@ System.out.println(err);
       case JreepadNode.ARTICLEMODE_ORDINARY:
         return editorPanePlainText;
       case JreepadNode.ARTICLEMODE_HTML:
+      case JreepadNode.ARTICLEMODE_TEXTILEHTML:
         return editorPaneHtml;
       case JreepadNode.ARTICLEMODE_CSV:
         return editorPaneCsv;
@@ -1376,6 +1387,8 @@ System.out.println(err);
       case JreepadNode.ARTICLEMODE_ORDINARY:
         return editorPanePlainText.getText();
       case JreepadNode.ARTICLEMODE_HTML:
+        return editorPaneHtml.getText();
+      case JreepadNode.ARTICLEMODE_TEXTILEHTML:
         return editorPaneHtml.getText();
       case JreepadNode.ARTICLEMODE_CSV:
 		return jTableContentToCsv();
@@ -1399,6 +1412,9 @@ System.out.println(err);
       case JreepadNode.ARTICLEMODE_ORDINARY:
         break;
       case JreepadNode.ARTICLEMODE_HTML:
+	    editorPaneHtml.setText(s);
+        break;
+      case JreepadNode.ARTICLEMODE_TEXTILEHTML:
 	    editorPaneHtml.setText(s);
         break;
       case JreepadNode.ARTICLEMODE_CSV:
@@ -1553,9 +1569,13 @@ System.out.println(err);
             //Remember the edit and update the menus.
             
             if(copyEditorPaneContentToNodeContent){
-              System.out.println("Storing undoable event for node " + getCurrentNode().getTitle());
-              System.out.println("   Event is " + e.getEdit().getPresentationName() );
-              System.out.println("   Content: " + getCurrentNode().getContent());
+              //System.out.println("Storing undoable event for node " + getCurrentNode().getTitle());
+              //System.out.println("   Event is " + e.getEdit().getPresentationName() );
+              //if(getCurrentNode().lastEditStyle != e.getEdit().getPresentationName()){
+              //  System.out.println("   This is a SIGNIFICANT change.");
+              //}
+              //System.out.println("   Content: " + getCurrentNode().getContent());
+              //System.out.println("   Node undoMgr: " + getCurrentNode().undoMgr);
               //Thread.currentThread().dumpStack();
               getCurrentNode().undoMgr.addEdit(e.getEdit());
             }

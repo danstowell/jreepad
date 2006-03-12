@@ -201,6 +201,7 @@ public class JreepadViewer extends JFrame // implements ApplicationListener
     private JMenuItem articleViewModeTextMenuItem;
     private JMenuItem articleViewModeHtmlMenuItem;
     private JMenuItem articleViewModeCsvMenuItem;
+    private JMenuItem articleViewModeTextileMenuItem;
   private JMenu optionsMenu;
   private JMenuItem autoSaveMenuItem;
   private JMenuItem prefsMenuItem;
@@ -249,7 +250,6 @@ public class JreepadViewer extends JFrame // implements ApplicationListener
     }else{
       System.out.println("Icon image failed to load: images/jreepadlogo-01-iconsize.gif");
     }
-
 
     Toolkit theToolkit = getToolkit();
     Dimension wndSize = theToolkit.getScreenSize();
@@ -488,12 +488,12 @@ public class JreepadViewer extends JFrame // implements ApplicationListener
     //
     undoMenuItem = new JMenuItem(lang.getString("MENUITEM_UNDO")); //"Undo");
     undoMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { 
-        undoAction();}});
+        undoAction();
+        updateUndoRedoMenuState();}});
     redoMenuItem = new JMenuItem(lang.getString("MENUITEM_REDO")); //"Redo");
     redoMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { 
-        redoAction();}});
-// Fairly sensibly, someone suggested removing the Undo button since it behaves oddly and because there's no "Redo".
-// So I've removed it from the menu - will leave it in the code, though, in the optimistic hope that we can fix it later...
+        redoAction();
+        updateUndoRedoMenuState();}});
     editMenu.add(undoMenuItem);
     editMenu.add(redoMenuItem);
     editMenu.add(new JSeparator());
@@ -604,18 +604,27 @@ public class JreepadViewer extends JFrame // implements ApplicationListener
 	  articleViewModeTextMenuItem = new JMenuItem(lang.getString("MENUITEM_ARTICLEFORMAT_TEXT")); //"Text");
 	  articleViewModeTextMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { 
 				theJreepad.setArticleMode(JreepadNode.ARTICLEMODE_ORDINARY);
+				updateUndoRedoMenuState();
 					   }});
 	  articleViewModeMenuItem.add(articleViewModeTextMenuItem);
 	  articleViewModeHtmlMenuItem = new JMenuItem(lang.getString("MENUITEM_ARTICLEFORMAT_HTML")); //"HTML");
 	  articleViewModeHtmlMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { 
 				theJreepad.setArticleMode(JreepadNode.ARTICLEMODE_HTML);
+				updateUndoRedoMenuState();
 					   }});
 	  articleViewModeMenuItem.add(articleViewModeHtmlMenuItem);
 	  articleViewModeCsvMenuItem = new JMenuItem(lang.getString("MENUITEM_ARTICLEFORMAT_CSV")); //"Table (comma-separated data)");
 	  articleViewModeCsvMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { 
 				theJreepad.setArticleMode(JreepadNode.ARTICLEMODE_CSV);
+				updateUndoRedoMenuState();
 					   }});
 	  articleViewModeMenuItem.add(articleViewModeCsvMenuItem);
+	  articleViewModeTextileMenuItem = new JMenuItem(lang.getString("MENUITEM_ARTICLEFORMAT_TEXTILE"));
+	  articleViewModeTextileMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { 
+				theJreepad.setArticleMode(JreepadNode.ARTICLEMODE_TEXTILEHTML);
+				updateUndoRedoMenuState();
+					   }});
+	  articleViewModeMenuItem.add(articleViewModeTextileMenuItem);
     viewMenu.add(articleViewModeMenuItem);
 
 
@@ -750,6 +759,7 @@ public class JreepadViewer extends JFrame // implements ApplicationListener
     articleViewModeTextMenuItem.setAccelerator(KeyStroke.getKeyStroke('7', MENU_MASK));
     articleViewModeHtmlMenuItem.setAccelerator(KeyStroke.getKeyStroke('8', MENU_MASK));
     articleViewModeCsvMenuItem.setAccelerator(KeyStroke.getKeyStroke('9', MENU_MASK));
+    articleViewModeTextileMenuItem.setAccelerator(KeyStroke.getKeyStroke('0', MENU_MASK));
     viewToolbarMenu.setMnemonic('o');
     optionsMenu.setMnemonic('O');
     autoSaveMenuItem.setMnemonic('a');
@@ -1560,6 +1570,7 @@ public class JreepadViewer extends JFrame // implements ApplicationListener
 	validate();
 	repaint();
 	setWarnAboutUnsaved(false);
+	updateUndoRedoMenuState();
 //	theJreepad.clearUndoCache();
   }
   
@@ -1605,6 +1616,7 @@ public class JreepadViewer extends JFrame // implements ApplicationListener
         setCursor(Cursor.getDefaultCursor());
         JOptionPane.showMessageDialog(this, err, lang.getString("TITLE_FILE_ERROR") , JOptionPane.ERROR_MESSAGE);
       }
+	updateUndoRedoMenuState();
   } // End of: openHjtFile()
   
   
@@ -2032,15 +2044,19 @@ public class JreepadViewer extends JFrame // implements ApplicationListener
   {
     theJreepad.setViewMode(mode);
     // Update the dropdown menu
-    if(mode==JreepadPrefs.VIEW_ARTICLE)
+    if(mode==JreepadPrefs.VIEW_ARTICLE){
       viewSelector.setSelectedIndex(2);
-    else if(mode==JreepadPrefs.VIEW_TREE)
+    }else if(mode==JreepadPrefs.VIEW_TREE){
       viewSelector.setSelectedIndex(1);
-    else
+    }else{
       viewSelector.setSelectedIndex(0);
+    }
 
     // Update the preferences object
     getPrefs().viewWhich = mode;
+    
+    // Update the undo menus
+    updateUndoRedoMenuState();
   }
 
   private static JreepadPrefs getPrefs() { return JreepadView.getPrefs(); }
@@ -2059,20 +2075,62 @@ public class JreepadViewer extends JFrame // implements ApplicationListener
     else
 	  JOptionPane.showMessageDialog(this, lang.getString("MSG_NOTHING_TO_UNDO"), "No change" , JOptionPane.INFORMATION_MESSAGE);
 */
+    UndoManager undoMgr = theJreepad.getCurrentNode().undoMgr;
+    String undoStyle = undoMgr.getUndoPresentationName();
     try{
-      theJreepad.getCurrentNode().undoMgr.undo();
+      // This "while" should roll multiple adds or deletes into one.
+      //System.out.println(undoStyle);
+      //System.out.println(undoMgr.getUndoPresentationName());
+      while(undoStyle.equals(undoMgr.getUndoPresentationName()))
+        undoMgr.undo();
     }catch(CannotUndoException ex){
-//	  JOptionPane.showMessageDialog(this, lang.getString("MSG_NOTHING_TO_UNDO"), "No change" , JOptionPane.INFORMATION_MESSAGE);
+	  //JOptionPane.showMessageDialog(this, lang.getString("MSG_NOTHING_TO_UNDO"), "No change" , JOptionPane.INFORMATION_MESSAGE);
     }
     updateWindowTitle();
+	updateUndoRedoMenuState();
   }
   private void redoAction(){
+    UndoManager undoMgr = theJreepad.getCurrentNode().undoMgr;
+    String redoStyle = undoMgr.getRedoPresentationName();
     try{
-      theJreepad.getCurrentNode().undoMgr.redo();
+      while(redoStyle.equals(undoMgr.getRedoPresentationName()))
+        undoMgr.redo();
     }catch(CannotRedoException ex){
-//	  JOptionPane.showMessageDialog(this, lang.getString("MSG_NOTHING_TO_UNDO"), "No change" , JOptionPane.INFORMATION_MESSAGE);
+	  //JOptionPane.showMessageDialog(this, lang.getString("MSG_NOTHING_TO_UNDO"), "No change" , JOptionPane.INFORMATION_MESSAGE);
     }
     updateWindowTitle();
+	updateUndoRedoMenuState();
+  }
+  
+  public void updateUndoRedoMenuState(){
+    undoMenuItem.setEnabled(isArticleUndoPossible());
+    redoMenuItem.setEnabled(isArticleRedoPossible());
+  }
+  
+  public boolean isArticleUndoPossible(){
+    if(getPrefs().viewWhich == JreepadPrefs.VIEW_TREE)
+      return false;
+    
+    if(theJreepad.getCurrentNode().getArticleMode() != JreepadNode.ARTICLEMODE_ORDINARY)
+      return false;
+    
+    // Deactivated: since this class can't tell if text has been typed or not...
+    // if(!theJreepad.getCurrentNode().undoMgr.canUndo())
+    //   return false;
+    
+    return true;
+  }
+  public boolean isArticleRedoPossible(){
+    if(getPrefs().viewWhich == JreepadPrefs.VIEW_TREE)
+      return false;
+    
+    if(theJreepad.getCurrentNode().getArticleMode() != JreepadNode.ARTICLEMODE_ORDINARY)
+      return false;
+
+    if(!theJreepad.getCurrentNode().undoMgr.canRedo())
+      return false;
+    
+    return true;
   }
   
   private void aboutAction()

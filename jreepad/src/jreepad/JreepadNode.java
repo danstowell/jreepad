@@ -1,6 +1,6 @@
 /*
            Jreepad - personal information manager.
-           Copyright (C) 2004 Dan Stowell
+           Copyright (C) 2004-2006 Dan Stowell
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -16,6 +16,7 @@ The full license can be read online here:
 
            http://www.gnu.org/copyleft/gpl.html
 */
+
 
 package jreepad;
 
@@ -41,10 +42,12 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
   public static final int ARTICLEMODE_HTML = 2;
   public static final int ARTICLEMODE_CSV = 3;
   public static final int ARTICLEMODE_SOFTLINK = 4;
+  public static final int ARTICLEMODE_TEXTILEHTML = 5;
   private int articleMode = ARTICLEMODE_ORDINARY;
 
   // Undo features
-  protected UndoManager undoMgr;
+  protected transient UndoManager undoMgr;
+  protected transient String lastEditStyle = "";
 
   public JreepadNode()
   {
@@ -69,6 +72,7 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
   }
   public JreepadNode(InputStreamReader treeInputStream, boolean autoDetectHtmlArticles) throws IOException
   {
+    undoMgr = new UndoManager();
     constructFromInputStream(treeInputStream, autoDetectHtmlArticles);
   }
   private void constructFromInputStream(InputStreamReader treeInputStream, boolean autoDetectHtmlArticles) throws IOException
@@ -99,8 +103,8 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
           xmlEncoding = ""; // getPrefs().getEncoding();
         else
           xmlEncoding = xmlEncoding.substring(0, encPos);
-        System.out.println("Start of XML loading: decided on the following character encoding: " + xmlEncoding);
-        System.out.println("  ...but unfortunately can't do anything about that. Using encoding " + treeInputStream.getEncoding());
+        //System.out.println("Start of XML loading: decided on the following character encoding: " + xmlEncoding);
+        //System.out.println("  ...but unfortunately can't do anything about that. Using encoding " + treeInputStream.getEncoding());
         constructFromXmlInputStream(bReader);
       }
     }
@@ -177,6 +181,8 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
       this.articleMode = ARTICLEMODE_CSV;
     else if(typeString.equals("text/html"))
       this.articleMode = ARTICLEMODE_HTML;
+    else if(typeString.equals("text/textile"))
+      this.articleMode = ARTICLEMODE_TEXTILEHTML;
     else if(typeString.equals("application/x-jreepad-softlink"))
       this.articleMode = ARTICLEMODE_SOFTLINK;
     else
@@ -415,7 +421,10 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
 
   public static final String[] getHtmlExportArticleTypes()
   {
-    return new String[]{JreepadViewer.lang.getString("PREFS_EXPORTTYPE_TEXT"),JreepadViewer.lang.getString("PREFS_EXPORTTYPE_PREFORMATTED"),JreepadViewer.lang.getString("PREFS_EXPORTTYPE_HTML")};
+    return new String[]{JreepadViewer.lang.getString("PREFS_EXPORTTYPE_TEXT"),
+                JreepadViewer.lang.getString("PREFS_EXPORTTYPE_PREFORMATTED"),
+                        JreepadViewer.lang.getString("PREFS_EXPORTTYPE_HTML"),
+                 JreepadViewer.lang.getString("PREFS_EXPORTTYPE_TEXTILEHTML")};
   }
   public static final String[] getHtmlExportAnchorLinkTypes()
   {
@@ -424,6 +433,7 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
   public static final int EXPORT_HTML_NORMAL=0;
   public static final int EXPORT_HTML_PREFORMATTED=1;
   public static final int EXPORT_HTML_HTML=2;
+  public static final int EXPORT_HTML_TEXTILEHTML=3;
   public static final int EXPORT_HTML_ANCHORS_PATH=0;
   public static final int EXPORT_HTML_ANCHORS_WIKI=1;
   public String exportAsHtml(int exportMode, boolean urlsToLinks, int anchorType)
@@ -496,6 +506,12 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
         return softLinkTarget.getContent();
       case ARTICLEMODE_HTML:
         return getContent();
+      case ARTICLEMODE_TEXTILEHTML:
+        try{
+          return JTextile.textile(getContent());
+        }catch(Exception e){
+          return getContent();
+        }
       case ARTICLEMODE_CSV:
         String[][] csv = interpretContentAsCsv();
         StringBuffer csvHtml = new StringBuffer("\n  <table border='1' cellspacing='0' cellpadding='2'>");
@@ -518,6 +534,12 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
 			  + "</pre>";
 		  case EXPORT_HTML_HTML:
 			return getContent();
+		  case EXPORT_HTML_TEXTILEHTML:
+            try{
+              return JTextile.textile(getContent());
+            }catch(Exception e){
+              return getContent();
+            }
 		  case EXPORT_HTML_NORMAL:
 		  default:
 			return (urlsToLinks ? urlsToHtmlLinksAndHtmlSpecialChars(getContent(), anchorType) : htmlSpecialChars(getContent()) );
@@ -613,31 +635,6 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
 
     return out.toString();
   }
-/*
-
-DELETEME
-
-  public String exportAsSimpleXml()
-  {
-    return exportAsSimpleXml(true).toString();
-  }
-  public StringBuffer exportAsSimpleXml(boolean isRoot)
-  {
-    StringBuffer ret = new StringBuffer();
-    if(isRoot)
-    {
-      ret.append("<?xml version=\"1.0\" standalone=\"yes\" encoding=\"UTF-8\"?>");
-    }
-    ret.append("\n<node title=\">");
-    ret.append(getTitle());
-    ret.append("\">");
-    ret.append(getContent());
-    for(int i=0; i<children.size(); i++)
-      ret.append(((JreepadNode)getChildAt(i)).exportAsSimpleXml(false));
-    ret.append("</node>");
-    return ret;
-  }
-*/
 
   public String exportTitlesAsList()
   {
@@ -1152,6 +1149,7 @@ DELETEME
   //      System.out.println();
       case ARTICLEMODE_ORDINARY:
       case ARTICLEMODE_HTML:
+      case ARTICLEMODE_TEXTILEHTML:
       case ARTICLEMODE_SOFTLINK:  // FIXME: Do we need to do anything special for the softlink creation?
         articleMode = newMode;
         break;
@@ -1333,6 +1331,9 @@ DELETEME
     {
       case ARTICLEMODE_HTML:
         ret.append("text/html");
+        break;
+      case ARTICLEMODE_TEXTILEHTML:
+        ret.append("text/textile");
         break;
       case ARTICLEMODE_CSV:
         ret.append("text/csv");
