@@ -94,6 +94,7 @@ public class OSXAdapter extends ApplicationAdapter {
 	// Added by Dan
 	public void handleOpenFile(ApplicationEvent ae)
 	{
+	   //System.err.println("Jreepad.handleOpenFile() - ApplicationEvent is " + ae);
        mainApp.openHjtFile(new java.io.File(ae.getFilename()));
 	}
 	

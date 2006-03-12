@@ -19,9 +19,15 @@
 	<property name="timeStamp" location="${DSTAMP}" />
 	<property name="packageName" location="jreepad" />
 
+<!--    <taskdef name="jarbundler" 
+         classpath="${libDir}/jarbundler-1.6plus.jar"
+         classname="net.sourceforge.jarbundler.JarBundler" /> -->
     <taskdef name="jarbundler" 
+         classpath="${libDir}/jarbundler-1.6.1.jar"
+         classname="net.sourceforge.jarbundler.JarBundler" />
+<!--    <taskdef name="jarbundler" 
          classpath="${libDir}/jarbundler-1.5.jar"
-         classname="com.informagen.ant.tasks.jarbundler.JarBundler" />
+         classname="com.informagen.ant.tasks.jarbundler.JarBundler" /> -->
 <!--    <taskdef name="jarbundler" 
          classpath="${libDir}/jarbundler-1.4.jar"
          classname="com.loomcom.ant.tasks.jarbundler.JarBundler" /> -->
@@ -34,25 +40,44 @@
 		<mkdir dir="${distDir}/Jreepad-${curVersion}-OSX/" />
 	</target>
 	<target name="compile" depends="init">
-		<javac srcdir="${srcDir}" destdir="${buildDir}"/>
+		<javac srcdir="${srcDir}" destdir="${buildDir}" debug="on"/>
 		<copy todir="${buildDir}/jreepad/lang">
 			<fileset dir="${srcDir}/jreepad/lang" includes="*.properties" />
 		</copy>
-	</target>
-	<target name="dist" depends="clean,compile">
 		<copy todir="${imgTargetDir}">
 			<fileset dir="${imgDir}" />
 		</copy>
+	</target>
+	<target name="jar" depends="compile">
 		<jar destfile="${distDir}/Jreepad-${curVersion}.jar" basedir="${buildDir}">
 			<manifest>
 				<attribute name="Built-By" value="${user.name}" />
 				<attribute name="Main-Class" value="jreepad.JreepadViewer" />
 			</manifest>
 		</jar>
-<jarbundler dir="${distDir}/Jreepad-${curVersion}-OSX"
+	</target>
+	<target name="run" depends="compile">
+		<java fork="yes" dir="${buildDir}" classname="jreepad.JreepadViewer" failonerror="true">
+<!--			<classpath>
+				<pathelement location="${buildDir}" />
+				<pathelement path="" />
+				<pathelement path="${java.class.path}" />
+			</classpath> -->
+		</java>
+	</target>
+	<target name="runjar" depends="compile,jar">
+		<java fork="yes" jar="${distDir}/Jreepad-${curVersion}.jar" failonerror="true">
+			<classpath>
+				<pathelement location="${distDir}/Jreepad-${curVersion}.jar" />
+				<pathelement path="" />
+				<pathelement path="${java.class.path}" />
+			</classpath>
+		</java>
+	</target>
+	<target name="dist" depends="clean,compile,jar">
+        <jarbundler dir="${distDir}/Jreepad-${curVersion}-OSX"
               name="Jreepad"
               version="${curVersion}"
-              aboutmenuname="Jreepad"
               icon="icons/jreepadlogo-01.icns"
               infostring="Jreepad, compiled ${DSTAMP}"
               mainclass="jreepad.JreepadViewer" 
@@ -61,7 +86,18 @@
               screenmenu="true"
               signature="JREE"
               jvmversion="1.4+"
-              />
+              >
+           <documenttype extensions="jree" iconFile="icons/jree.icns" name="Jreepad tree document" role="Editor"/>
+           <documenttype extensions="hjt" iconFile="icons/hjt.icns" name="Treepad tree document" role="Editor"/>
+           <documenttype ostypes="JREE" iconFile="icons/jree.icns" name="Jreepad tree document" role="Editor"/>
+           <!-- <documenttype ostypes="****" iconFile="icons/jree.icns" name="Jreepad file" role="Editor"/>  -->
+           
+        </jarbundler>
+
+		<!-- Copying these icon files should NOT be needed if/when the jarbundler task includes doc file parameters -->
+<!--		<copy file="icons/jree.icns" tofile="${distDir}/Jreepad-${curVersion}-OSX/Jreepad.app/Contents/Resources/jree.icns"  />
+		<copy file="icons/hjt.icns"  tofile="${distDir}/Jreepad-${curVersion}-OSX/Jreepad.app/Contents/Resources/hjt.icns"  />
+ -->
         <tar destfile="${distDir}/Jreepad-${curVersion}-source.tar.gz" basedir="${srcDir}" compression="gzip"/>
 		<copy file="manual/JreepadManual.hjt" tofile="${distDir}/JreepadManual-${curVersion}.hjt"  />
 		<copy file="manual/JreepadManual.hjt" tofile="${distDir}/Jreepad-${curVersion}-OSX/JreepadManual-${curVersion}.hjt" />
@@ -80,23 +116,5 @@
 	<target name="clean">
 		<delete dir="${buildDir}" />
 		<delete dir="${distDir}" />
-	</target>
-	<target name="run" depends="compile">
-		<java fork="yes" dir="${buildDir}" classname="jreepad.JreepadViewer" failonerror="true">
-<!--			<classpath>
-				<pathelement location="${buildDir}" />
-				<pathelement path="" />
-				<pathelement path="${java.class.path}" />
-			</classpath> -->
-		</java>
-	</target>
-	<target name="runjar" depends="compile">
-		<java fork="yes" jar="${distDir}/Jreepad-${curVersion}.jar" failonerror="true">
-			<classpath>
-				<pathelement location="${distDir}/Jreepad-${curVersion}.jar" />
-				<pathelement path="" />
-				<pathelement path="${java.class.path}" />
-			</classpath>
-		</java>
 	</target>
 </project>

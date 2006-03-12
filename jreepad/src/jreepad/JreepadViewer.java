@@ -17,6 +17,7 @@ The full license can be read online here:
            http://www.gnu.org/copyleft/gpl.html
 */
 
+
 package jreepad;
 
 import javax.swing.*;
@@ -38,7 +39,7 @@ import java.awt.datatransfer.*;
 import com.apple.eawt.*;
 import java.lang.reflect.*;
 
-public class JreepadViewer extends JFrame
+public class JreepadViewer extends JFrame // implements ApplicationListener
 {
   private static Vector theApps = new Vector(1,1);
   private Box toolBar, toolBarIconic;
@@ -220,6 +221,15 @@ public class JreepadViewer extends JFrame
   // Ask AWT which menu modifier we should be using.
   final static int MENU_MASK = Toolkit.getDefaultToolkit().getMenuShortcutKeyMask(); 
 
+  /*
+  Note - The application code registered with Apple is:
+  JREEÊ (Hex) 4A524545
+  
+  In Apple's Java methods they require an integer, so 
+  presumably we use 0x4A524545
+  */
+  public static final int appleAppCode = 0x4A524545;
+
   public JreepadViewer()
   {
     this("");
@@ -234,7 +244,12 @@ public class JreepadViewer extends JFrame
 // Apparently it does work on Windows. So I'll leave it in place!
     ClassLoader loader = this.getClass().getClassLoader(); // Used for loading icon
     java.net.URL iconUrl = loader.getResource("images/jreepadlogo-01-iconsize.gif");
-    setIconImage(new ImageIcon(iconUrl).getImage());
+    if(iconUrl != null){
+      setIconImage(new ImageIcon(iconUrl).getImage());
+    }else{
+      System.out.println("Icon image failed to load: images/jreepadlogo-01-iconsize.gif");
+    }
+
 
     Toolkit theToolkit = getToolkit();
     Dimension wndSize = theToolkit.getScreenSize();
@@ -253,7 +268,7 @@ public class JreepadViewer extends JFrame
       }
       else
       {
-        showLicense(); // A very crude way of showing the license on first visit
+        showLicense(); // A crude way of showing the license on first visit
         setPrefs(new JreepadPrefs(wndSize));
       }
     }
@@ -370,7 +385,11 @@ public class JreepadViewer extends JFrame
 
     setVisible(true);
         // If loading the last-saved file, expand the nodes we last had open
-        if(fileNameToLoad == "" && getPrefs().loadLastFileOnOpen && getPrefs().saveLocation != null && getPrefs().treePathCollection.paths != null)
+        if(fileNameToLoad == "" 
+             && getPrefs().loadLastFileOnOpen 
+             && getPrefs().saveLocation != null 
+             && getPrefs().treePathCollection != null
+             && getPrefs().treePathCollection.paths != null)
         {
           theJreepad.expandPaths(getPrefs().treePathCollection.paths);
         }
@@ -988,9 +1007,10 @@ public class JreepadViewer extends JFrame
     try{
        // TODO create single funct for all img loading
        URL iconUrl = loader.getResource("images/"+name);
-       return new ImageIcon(iconUrl);
+         return new ImageIcon(iconUrl);
        }catch(Exception e){
-         e.printStackTrace();// Ignore, use default icon
+         System.err.println("Jreepad: Icon image failed to load: images/"+name);
+         // e.printStackTrace();// Ignore, use default icon
        }
      return null;
   }
@@ -1459,6 +1479,12 @@ public class JreepadViewer extends JFrame
   
   public static void main(String[] args)
   {
+  
+    // System.err.println("" + args.length + " input arguments provided.");
+    // for(int i=0; i<args.length; i++){
+    //   System.err.println(args[i]);
+    // }
+  
     try
     {
       UIManager.setLookAndFeel(
@@ -1497,7 +1523,7 @@ public class JreepadViewer extends JFrame
       }
     }
 
-//    System.out.println("Launching using prefs file \"" + launchPrefsFilename + "\" and loadfile \"" + launchFilename + "\"\n");
+    // System.err.println("Launching using prefs file \"" + launchPrefsFilename + "\" and loadfile \"" + launchFilename + "\"\n");
 
     new JreepadViewer(launchFilename, launchPrefsFilename);
     
@@ -1606,6 +1632,10 @@ public class JreepadViewer extends JFrame
       bO.close();
       dO.close();
       fO.close();
+      if(MAC_OS_X){
+        com.apple.eio.FileManager.setFileTypeAndCreator(getPrefs().saveLocation.toString(), 
+                appleAppCode, appleAppCode);
+      }
       setWarnAboutUnsaved(false);
       updateWindowTitle();
       savePreferencesFile();
@@ -1651,6 +1681,10 @@ public class JreepadViewer extends JFrame
         bO.close();
         dO.close();
         fO.close();
+        if(MAC_OS_X){
+          com.apple.eio.FileManager.setFileTypeAndCreator(getPrefs().saveLocation.toString(), 
+                appleAppCode, appleAppCode);
+        }
         setWarnAboutUnsaved(false);
         setTitleBasedOnFilename(getPrefs().saveLocation.getName());
         savePreferencesFile();
@@ -2601,6 +2635,54 @@ lang.getString("HELP_LICENSE") + "\n\n           http://www.gnu.org/copyleft/gpl
 //      g.fillRect(0,0,getWidth(),getHeight());
 //    }
   }
+
+
+
+
+
+/*
+  // Methods required by Apple's "ApplicationListener" interface
+  public void handleOpenFile(ApplicationEvent ae)
+  {
+     System.err.println("Jreepad.handleOpenFile() - ApplicationEvent is " + ae);
+     openHjtFile(new java.io.File(ae.getFilename()));
+     ae.setHandled(true);
+  }
+  public void handleOpenApplication(ApplicationEvent ae)
+  {
+     System.err.println("Jreepad.handleOpenApplication() - ApplicationEvent is " + ae);
+  }
+  public void handleReOpenApplication(ApplicationEvent ae)
+  {
+     System.err.println("Jreepad.handleReOpenApplication() - ApplicationEvent is " + ae);
+  }
+  public void handlePrintFile(ApplicationEvent ae)
+  {
+     System.err.println("Jreepad.handlePrintFile() - ApplicationEvent is " + ae);
+     ae.setHandled(true);
+     toBrowserForPrintAction();
+  }
+	public void handleAbout(ApplicationEvent ae) {
+        ae.setHandled(true);
+        about();
+	}
+	public void handlePreferences(ApplicationEvent ae) {
+        preferences();
+        ae.setHandled(true);
+	}
+	public void handleQuit(ApplicationEvent ae) {
+        //	
+        //	You MUST setHandled(false) if you want to delay or cancel the quit.
+        //	This is important for cross-platform development -- have a universal quit
+        //	routine that chooses whether or not to quit, so the functionality is identical
+        //	on all platforms.  This example simply cancels the AppleEvent-based quit and
+        //	defers to that universal method.
+        //
+        ae.setHandled(false);
+        quit();
+	}
+*/
+
 
 
 }
