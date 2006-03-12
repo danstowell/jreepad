@@ -2,7 +2,7 @@
 <node xmlns="http://jreepad.sourceforge.net/formats" title="Jreepad manual" type="text/plain">
 _______________________________
 
-Jreepad (C) 2004 Dan Stowell
+Jreepad (C) 2004-2006 Dan Stowell
 http://jreepad.sourceforge.net/
 
 Jreepad is open-source software. 
@@ -17,7 +17,7 @@ from the &quot;Treepad Lite&quot; manual!
 _______________________________
 
 
-<node title="How to read this manual" type="text/plain">This manual was written using Jreepad 1.0 and consists of numerous articles linked in a tree structure. 
+<node title="How to read this manual" type="text/plain">This manual was written using Jreepad and consists of numerous articles linked in a tree structure. 
 
 The tree, in the left pane of the program, consists of 'tree nodes'. Each 'node' has 
 an 'article' of text associated with it - click on the node's title to view the associated article in this pane.
@@ -200,7 +200,7 @@ then Jreepad will create three new nodes,
 entitled &quot;Bread&quot;, &quot;Milk&quot;, and &quot;Eggs&quot;.</node>
 <node title="HTML" type="text/plain">Jreepad's HTML export creates a nice, human-readable output. The output includes a simple embedded CSS stylesheet which formats the HTML page quite neatly.
 
-HTML export is very useful, for creating printouts or for sending an output of a Jreepad subtree to a colleague who may not use Jreepad or Treepad.�<node title="HTML export options" type="text/plain">When you choose to export HTML, you are presented with some options.
+HTML export is very useful, for creating printouts or for sending an output of a Jreepad subtree to a colleague who may not use Jreepad or Treepad.<node title="HTML export options" type="text/plain">When you choose to export HTML, you are presented with some options.
 
 The most important one is: do you want your articles to be interpreted as
 
@@ -210,6 +210,7 @@ The most important one is: do you want your articles to be interpreted as
 
 3) HTML markup?
 
+4) HTML created using &quot;Textile&quot; formatting?
 
 
 You can also choose whether you want URLs within your articles to be automatically turned into links. This is only applicable for the first two options above.</node>
@@ -239,6 +240,90 @@ I normally leave the toolbar on all the time, as it doesn't do much harm!</node>
 
 (By the way, I prefer to use Jreepad's WikiLikeBehaviour, since this provides slightly more stable and convenient crosslinking. To see how it works, highlight the phrase WikiLikeBehaviour and then choose 
 &quot;Actions &gt; Follow highlighted link&quot;!</node>
+</node>
+<node title="Article format options" type="text/plain">Within the View menu you will find a submenu marked &quot;View this article as...&quot;. It allows you to display the currently-selected article in one of four formats.<node title="Text" type="text/plain">&quot;Text&quot; is the default format, and it's the only format that allows you to edit the text.</node>
+<node title="HTML" type="text/html">&lt;h1&gt;HTML-formatted nodes&lt;/h1&gt;
+
+&lt;p&gt;If you know how to write HTML, you can write HTML in a Jreepad node and then opt to view it as rendered HTML. This displays the node a lot like a webpage.&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;b&gt;This&lt;/b&gt; is a HTML-formatted node.&lt;/li&gt;
+&lt;li&gt;Can you tell?&lt;/li&gt;
+&lt;ul&gt;
+
+&lt;blockquote&gt;&lt;i&gt;Hint: use the menu options to change this node back to plain text, and you can see the underlying syntax.&lt;/i&gt;&lt;/blockquote&gt;</node>
+<node title="Table (comma-separated data)" type="text/csv">A very,common,format is,&quot;comma-separated&quot;,data.
+Jreepad can,convert it,to a table.,(Like this)</node>
+<node title="Textile-formatted text" type="text/textile">h1. Textile
+
+h2. What is _textile_?
+
+__Textile__ formatting is very similar to wiki markup - a simple text format which looks quite elegant when viewed as plain text, but which converts in a straightforward manner into nicely-formatted HTML.
+
+* This node is a &quot;Textile&quot;-formatted node.
+* Can you tell?
+
+To see a simple example of the textile format, use the __View__ menu to convert this node to an ordinary text node.
+
+For a more complete example, see the child node attached to this node.<node title="Large textile example" type="text/textile">This example is taken from JTextile's own test file:
+
+* one
+* two
+* three
+
+* four
+* five
+
+h2(fred). This is a title
+
+h3. This is a subhead
+
+This is some text of dubious character. Isn't the use of &quot;quotes&quot; just lazy writing -- and theft of 'intellectual property' besides? I think the time has come to see a block quote.
+
+bq. This is a block quote. I'll admit it's not the most exciting block quote ever devised.
+
+bq(http://diveintomark.org/archives/2003/07/01/leave_rss_alone.html). This is a block quote. I'll admit it's not the most exciting block quote ever devised.
+
+Well, that went well. How about we insert an &lt;a href=&quot;/&quot; title=&quot;watch out&quot;&gt;old-fashioned hypertext link&lt;/a&gt;? Will the quote marks in the tags get messed up? No!
+
+&quot;This is a link (optional title)&quot;:http://www.textism.com
+
+An image:
+
+!/common/textist.gif(this is the alt text - you probably can't see the image)!
+
+# Librarians rule
+# Yes they do
+# But you knew that
+
+Some more text of dubious character. Here is a noisome string of CAPITAL letters. Here is something we want to _emphasize_. 
+That was a linebreak. And something to indicate *strength*. Of course I could use &lt;em&gt;my own HTML tags&lt;/em&gt; if I &lt;strong&gt;felt&lt;/strong&gt; like it.
+
+h3. Coding
+
+This &lt;code&gt;is some code, &quot;isn't it&quot;&lt;/code&gt;. Watch those quote marks! Now for some preformatted text:
+
+*arse*&lt;pre&gt;
+&lt;code&gt;
+	$text = str_replace(&quot;&lt;p&gt;%::%&lt;/p&gt;&quot;,&quot;&quot;,$text);
+	$text = str_replace(&quot;%::%&lt;/p&gt;&quot;,&quot;&quot;,$text);
+	$text = str_replace(&quot;%::%&quot;,&quot;&quot;,$text);
+
+&lt;/code&gt;
+&lt;/pre&gt;
+
+This isn't code.
+
+
+So you see, my friends:
+
+* The time is now
+* The time is not later
+* The time is not yesterday
+* We must act
+
+</node>
+</node>
 </node>
 </node>
 <node title="Additional information" type="text/plain"><node title="Treepad" type="text/plain">The concept for Jreepad is based on Treepad Lite. Treepad Lite is free software created by Henk Hagedoorn, primarily for Windows computers. The &quot;Treepad&quot; suite includes more feature-rich versions (these are not free!).

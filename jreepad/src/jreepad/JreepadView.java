@@ -1415,7 +1415,11 @@ System.out.println(err);
 	    editorPaneHtml.setText(s);
         break;
       case JreepadNode.ARTICLEMODE_TEXTILEHTML:
-	    editorPaneHtml.setText(s);
+        try{
+          editorPaneHtml.setText(JTextile.textile(s));
+        }catch(Exception e){
+          editorPaneHtml.setText(s);
+        }
         break;
       case JreepadNode.ARTICLEMODE_CSV:
         articleToJTable(s);

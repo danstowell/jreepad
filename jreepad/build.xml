@@ -6,7 +6,7 @@
 
 
 
-	<property name="curVersion" value="1.4.1" />
+	<property name="curVersion" value="1.5" />
 
 
 	<property name="srcDir" location="src" />
@@ -99,8 +99,8 @@
 		<copy file="icons/hjt.icns"  tofile="${distDir}/Jreepad-${curVersion}-OSX/Jreepad.app/Contents/Resources/hjt.icns"  />
  -->
         <tar destfile="${distDir}/Jreepad-${curVersion}-source.tar.gz" basedir="${srcDir}" compression="gzip"/>
-		<copy file="manual/JreepadManual.hjt" tofile="${distDir}/JreepadManual-${curVersion}.hjt"  />
-		<copy file="manual/JreepadManual.hjt" tofile="${distDir}/Jreepad-${curVersion}-OSX/JreepadManual-${curVersion}.hjt" />
+		<copy file="manual/JreepadManual.jree" tofile="${distDir}/JreepadManual-${curVersion}.jree"  />
+		<copy file="manual/JreepadManual.jree" tofile="${distDir}/Jreepad-${curVersion}-OSX/JreepadManual-${curVersion}.jree" />
 		<copy file="${distDir}/Jreepad-${curVersion}-source.tar.gz" todir="${distDir}/Jreepad-${curVersion}-OSX/" />
 		<copy file="manual/osxreadme/Read me first.rtf" todir="${distDir}/Jreepad-${curVersion}-OSX/" />
 
