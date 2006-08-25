@@ -878,6 +878,7 @@ public class JreepadView extends Box implements TableModelListener
   public static void setPrefs(JreepadPrefs thesePrefs)
   {
     prefs = thesePrefs;
+    prefs.save();
   }
   
 

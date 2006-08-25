@@ -6,7 +6,7 @@
 
 
 
-	<property name="curVersion" value="1.5" />
+	<property name="curVersion" value="1.6dev" />
 
 
 	<property name="srcDir" location="src" />
@@ -49,6 +49,9 @@
 		</copy>
 	</target>
 	<target name="jar" depends="compile">
+		<copy todir="${buildDir}/gnu">
+		  <fileset dir="${libDir}/gnu"/>
+		</copy>
 		<jar destfile="${distDir}/Jreepad-${curVersion}.jar" basedir="${buildDir}">
 			<manifest>
 				<attribute name="Built-By" value="${user.name}" />
@@ -108,9 +111,9 @@
         <exec dir="${distDir}" executable="hdiutil" os="Mac OS X">
            <arg line="create -ov -srcfolder Jreepad-${curVersion}-OSX Jreepad-${curVersion}-OSX.dmg"/>
         </exec>
-        <exec dir="${distDir}" executable="hdiutil" os="Mac OS X">
+        <!-- <exec dir="${distDir}" executable="hdiutil" os="Mac OS X">
            <arg line="internet-enable -yes Jreepad-${curVersion}-OSX.dmg"/>
-        </exec>
+        </exec> -->
 
 	</target>
 	<target name="clean">

@@ -45,7 +45,7 @@ public class JreepadViewer extends JFrame // implements ApplicationListener
   private Box toolBar, toolBarIconic;
   private JreepadView theJreepad;
   private Container content;
-  private File prefsFile = new File(System.getProperty("user.home"), ".jreepref");
+// DEPRECATED  private File prefsFile = new File(System.getProperty("user.home"), ".jreepref");
   protected static ResourceBundle lang = ResourceBundle.getBundle("jreepad.lang.JreepadStrings");
 
 //  private static final String[] fonts = GraphicsEnvironment.getLocalGraphicsEnvironment().getAvailableFontFamilyNames(null);  
@@ -255,6 +255,13 @@ public class JreepadViewer extends JFrame // implements ApplicationListener
     Dimension wndSize = theToolkit.getScreenSize();
     systemClipboard = theToolkit.getSystemClipboard();
 
+    // New method of loading prefs - using java's own API rather handling a file
+    setPrefs(new JreepadPrefs(wndSize));
+    if(!getPrefs().seenLicense) {
+      showLicense();
+      getPrefs().seenLicense = true;
+    }
+/*
     // Check if a preferences file exists - and if so, load it
     if(prefFilename!=null)
       prefsFile = new File(prefFilename);
@@ -276,7 +283,8 @@ public class JreepadViewer extends JFrame // implements ApplicationListener
     {
       setPrefs(new JreepadPrefs(wndSize));
     }
-    
+*/
+
     fileChooser = new JFileChooser();
     content = getContentPane();
 
@@ -318,6 +326,7 @@ public class JreepadViewer extends JFrame // implements ApplicationListener
     
     content.setLayout(new BoxLayout(content, BoxLayout.Y_AXIS));
     content.add(funkyGreenStrip = new ColouredStrip(new Color(0.09f, 0.4f, 0.12f), wndSize.width, 10) );
+    funkyGreenStrip.setVisible(getPrefs().showGreenStrip);
     content.add(toolBar);
     content.add(toolBarIconic);
     setToolbarMode(getPrefs().toolbarMode);
@@ -1418,6 +1427,7 @@ public class JreepadViewer extends JFrame // implements ApplicationListener
                                     // If exporting as HTML then we ignore this checkbox
                                     if(htmlExportModeSelector.getSelectedIndex()!=2)
                                       getPrefs().htmlExportUrlsToLinks = urlsToLinksCheckBox.isSelected();
+                                    getPrefs().save();
 									prefsDialog.setVisible(false);
                                    }});
     prefsCancelButton.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e){prefsDialog.setVisible(false);}});
@@ -2029,6 +2039,8 @@ public class JreepadViewer extends JFrame // implements ApplicationListener
   
   private void savePreferencesFile()
   {
+    getPrefs().save();
+    /*
     try
     {
       ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(prefsFile));
@@ -2038,6 +2050,7 @@ public class JreepadViewer extends JFrame // implements ApplicationListener
     catch(IOException err)
     {
     }
+    */
   }
   
   private void setViewMode(int mode)

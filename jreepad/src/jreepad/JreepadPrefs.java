@@ -28,6 +28,7 @@ import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
 import java.util.Vector;
+import java.util.prefs.Preferences;
 
 /*
 
@@ -36,9 +37,12 @@ permanent way which can be carried across from different versions
 
 */
 
-public class JreepadPrefs implements Serializable
+public class JreepadPrefs //implements Serializable
 {
+  Preferences prefs;
   File openLocation, saveLocation, importLocation, exportLocation, backupLocation;
+  
+  boolean seenLicense;
   
   int autoSavePeriod;
   boolean autoSave;
@@ -128,79 +132,198 @@ public class JreepadPrefs implements Serializable
   
   boolean showGreenStrip;
   
-  JreepadPrefs(Dimension wndSize)
-  {
-    openLocation = new File(System.getProperty("user.home"));
-    
-    autoSavePeriod = 10;
-    autoSave = false;
-    
-    viewWhich = 0;
-    
-    viewToolbar = true;
-    
-    searchMaxNum = 200;
-    
-    autoDateInArticles = true;
-    
-    loadLastFileOnOpen = true;
+  JreepadPrefs(Dimension wndSize) {
+    // Grab the prefs object from wherever Java's API has put it...
+    prefs = Preferences.userNodeForPackage(this.getClass());
 
-    webSearchName = JreepadViewer.lang.getString("PREFS_DEFAULT_SEARCH_TEXT"); //"Google search for highlighted text";
-    webSearchPrefix = "www.google.co.uk/search?q=";
-    webSearchPostfix = "&hl=en";
+    openLocation = new File(prefs.get("OPENLOCATION", System.getProperty("user.home")));
+    saveLocation = new File(prefs.get("SAVELOCATION", System.getProperty("user.home")));
+    importLocation = new File(prefs.get("IMPORTLOCATION", System.getProperty("user.home")));
+    exportLocation = new File(prefs.get("EXPORTLOCATION", System.getProperty("user.home")));
+    backupLocation = new File(prefs.get("BACKUPLOCATION", System.getProperty("user.home")));
+
+    seenLicense = prefs.getBoolean("SEENLICENSE", false);
     
-    defaultSearchMode = 0;
+    autoSavePeriod = prefs.getInt("AUTOSAVEPERIOD", 10);
+    autoSave = prefs.getBoolean("AUTOSAVE", false);
     
-    wikiBehaviourActive = true;
+    viewWhich = prefs.getInt("VIEWWHICH", 0);
     
-    fileEncoding = 2; // Default to UTF-8
+    viewToolbar = prefs.getBoolean("VIEWTOOLBAR", true);
+    
+    searchMaxNum = prefs.getInt("SEARCHMAXNUM", 200);
+    
+    autoDateInArticles = prefs.getBoolean("AUTODATEINARTICLES", true);
+    
+    loadLastFileOnOpen = prefs.getBoolean("LOADLASTFILEONOPEN", true);
+
+    webSearchName = prefs.get("WEBSEARCHNAME", 
+          JreepadViewer.lang.getString("PREFS_DEFAULT_SEARCH_TEXT")); //"Google search for highlighted text";
+    webSearchPrefix = prefs.get("WEBSEARCHPREFIX", "www.google.co.uk/search?q=");
+    webSearchPostfix = prefs.get("WEBSEARCHPOSTFIX", "&hl=en");
+    
+    defaultSearchMode = prefs.getInt("DEFAULTSEARCHMODE", 0);
+    
+    wikiBehaviourActive = prefs.getBoolean("WIKIBEHAVIOURACTIVE", true);
+    
+    fileEncoding = prefs.getInt("FILEENCODING", 2); // Default to UTF-8
     
     openRecentList = new Vector();
-    openRecentListLength = 10;
+    openRecentListLength = prefs.getInt("OPENRECENTLISTLENGTH", 10);
+    String tempFileListItem;
+    for(int i=0; i<100; i++){
+        tempFileListItem = prefs.get("OPENRECENTLIST_"+i, "");
+        if(!tempFileListItem.equals("")){
+            openRecentList.add(new File(tempFileListItem));
+        }else{
+            break;
+        }
+    }
+
+    String treeFontName = prefs.get("TREEFONTNAME", (new JTree()).getFont().getName());
+    String articleFontName = prefs.get("ARTICLEFONTNAME", (new JEditorPane()).getFont().getName());
+    int treeFontSize = prefs.getInt("TREEFONTSIZE", (new JTree()).getFont().getSize());
+    int articleFontSize = prefs.getInt("ARTICLEFONTSIZE", (new JEditorPane()).getFont().getSize());
     
-    treeFont = (new JTree()).getFont();
-    articleFont = (new JEditorPane()).getFont();
+    treeFont = new Font(treeFontName, Font.PLAIN, treeFontSize);
+    articleFont = new Font(articleFontName, Font.PLAIN, articleFontSize);
     
-    characterWrapWidth = 80;
+    characterWrapWidth = prefs.getInt("CHARACTERWRAPWIDTH", 80);
     
-    wrapToWindow = true;
+    wrapToWindow = prefs.getBoolean("WRAPTOWINDOW", true);
 
   //  Toolkit theToolkit = Toolkit.getDefaultToolkit();
   //  Dimension wndSize = theToolkit.getScreenSize();
-    windowWidth = (int)(wndSize.getWidth() * 0.6f);
-    windowHeight = (int)(wndSize.getHeight() * 0.6f);
+    windowWidth  = prefs.getInt("WINDOWWIDTH", 0);
+    windowHeight = prefs.getInt("WINDOWHEIGHT", 0);
+    windowTop    = prefs.getInt("WINDOWTOP", 0);
+    windowLeft   = prefs.getInt("WINDOWLEFT", 0);
+    if(windowWidth==0 || windowWidth==0){
+    
+        windowWidth = (int)(wndSize.getWidth() * 0.6f);
+        windowHeight = (int)(wndSize.getHeight() * 0.6f);
+    
+        // This bit attempts to ensure that the Jreepad view doesn't get too wide 
+        //   (e.g. for people with dual-screen systems)
+        //   - it limits the width/height proportion to the golden ratio!
+        // Can't seem to find anything in the Toolkit which would automatically give us multi-screen info
+        if(windowWidth > (int)(((float)windowHeight)*1.618034f) )
+          windowWidth = (int)(((float)windowHeight)*1.618034f);
+        else if(windowHeight > (int)(((float)windowWidth)*1.618034f) )
+          windowHeight = (int)(((float)windowWidth)*1.618034f);
+        
+        windowTop = windowHeight/3;
+        windowLeft = windowWidth/3;    
+        
+    }
 
-    // This bit attempts to ensure that the Jreepad view doesn't get too wide 
-    //   (e.g. for people with dual-screen systems)
-    //   - it limits the width/height proportion to the golden ratio!
-    // Can't seem to find anything in the Toolkit which would automatically give us multi-screen info
-    if(windowWidth > (int)(((float)windowHeight)*1.618034f) )
-      windowWidth = (int)(((float)windowHeight)*1.618034f);
-    else if(windowHeight > (int)(((float)windowWidth)*1.618034f) )
-      windowHeight = (int)(((float)windowWidth)*1.618034f);
+    linebreakType   = prefs.getInt("LINEBREAKTYPE", LINEBREAK_WIN);
 
-    windowTop = windowHeight/3;
-    windowLeft = windowWidth/3;    
+
+// THIS ISN'T CURRENTLY SAVED TO PREFERENCES IN ANY MEANINGFUL WAY.
+// NEED SOME WAY OF STORING THE TREE STATE WHICH ACTUALLY WORKS.
+treePathCollection = new TreePathCollection(new javax.swing.tree.TreePath[0]);
     
-    treePathCollection = new TreePathCollection(new javax.swing.tree.TreePath[0]);
+    htmlExportArticleType = prefs.getInt("HTMLEXPORTARTICLETYPE", 0);
+    htmlExportUrlsToLinks = prefs.getBoolean("HTMLEXPORTURLSTOLINKS", true);
+    htmlExportAnchorLinkType = prefs.getInt("HTMLEXPORTANCHORLINKTYPE", 1);
     
-    htmlExportArticleType = 0;
-    htmlExportUrlsToLinks = true;
-    htmlExportAnchorLinkType = 1;
+    dividerLocation = prefs.getInt("DIVIDERLOCATION", -1);
     
-    dividerLocation = -1;
+    autoDetectHtmlArticles = prefs.getBoolean("AUTODETECTHTMLINARTICLES", true);
     
-    autoDetectHtmlArticles = true;
+    addQuotesToCsvOutput = prefs.getBoolean("ADDQUOTESTOCSVOUTPUT", false);
     
-    addQuotesToCsvOutput = false;
+    mainFileType = prefs.getInt("MAINFILETYPE", FILETYPE_HJT);
     
-    mainFileType = FILETYPE_HJT;
+    toolbarMode = prefs.getInt("TOOLBARMODE", TOOLBAR_ICON);
     
-    toolbarMode = TOOLBAR_ICON;
-    
-    showGreenStrip = true;
+    showGreenStrip = prefs.getBoolean("SHOWGREENSTRIP", true);
+
+
   }
-  
+
+
+  void save()
+  {
+    prefs.put("OPENLOCATION",""+openLocation);
+    prefs.put("SAVELOCATION", ""+saveLocation);
+    prefs.put("IMPORTLOCATION", ""+importLocation);
+    prefs.put("EXPORTLOCATION", ""+exportLocation);
+    prefs.put("BACKUPLOCATION", ""+backupLocation);
+    
+    prefs.putBoolean("SEENLICENSE", seenLicense);
+
+    prefs.putInt("AUTOSAVEPERIOD", autoSavePeriod);
+    prefs.putBoolean("AUTOSAVE", autoSave);
+    
+    prefs.putInt("VIEWWHICH", viewWhich);
+    
+    prefs.putBoolean("VIEWTOOLBAR", viewToolbar);
+    
+    prefs.putInt("SEARCHMAXNUM", searchMaxNum);
+    
+    prefs.putBoolean("AUTODATEINARTICLES", autoDateInArticles);
+    
+    prefs.putBoolean("LOADLASTFILEONOPEN", loadLastFileOnOpen);
+
+    prefs.put("WEBSEARCHNAME", ""+webSearchName);
+    prefs.put("WEBSEARCHPREFIX", ""+webSearchPrefix);
+    prefs.put("WEBSEARCHPOSTFIX", ""+webSearchPostfix);
+
+    prefs.putInt("DEFAULTSEARCHMODE", defaultSearchMode);
+    
+    prefs.putBoolean("WIKIBEHAVIOURACTIVE", wikiBehaviourActive);
+
+    prefs.putInt("FILEENCODING",fileEncoding);
+
+    for(int i=0; i<openRecentList.size(); i++) {
+      prefs.put("OPENRECENTLIST_"+i, ""+((File)openRecentList.get(i)).toString());
+    }
+    prefs.putInt("OPENRECENTLISTLENGTH", openRecentListLength);
+
+    prefs.put("TREEFONTNAME", treeFont.getName());
+    prefs.putInt("TREEFONTSIZE", treeFont.getSize());
+    prefs.put("ARTICLEFONTNAME", articleFont.getName());
+    prefs.putInt("ARTICLEFONTSIZE", articleFont.getSize());
+    
+    prefs.putInt("CHARACTERWRAPWIDTH", characterWrapWidth);
+    
+    prefs.putBoolean("WRAPTOWINDOW", wrapToWindow);
+
+    prefs.putInt("WINDOWLEFT", windowLeft);
+    prefs.putInt("WINDOWTOP", windowTop);
+    prefs.putInt("WINDOWWIDTH", windowWidth);
+    prefs.putInt("WINDOWHEIGHT", windowHeight);
+
+    prefs.putInt("LINEBREAKTYPE", linebreakType);
+    
+// HOW TO SERIALISE? prefs.put(""+treePathCollection);
+    
+    prefs.putInt("HTMLEXPORTARTICLETYPE", htmlExportArticleType);
+    prefs.putBoolean("HTMLEXPORTURLSTOLINKS", htmlExportUrlsToLinks);
+    prefs.putInt("HTMLEXPORTANCHORLINKTYPE", htmlExportAnchorLinkType);
+    
+    prefs.putInt("DIVIDERLOCATION", dividerLocation);
+    
+    prefs.putBoolean("AUTODETECTHTMLINARTICLES", autoDetectHtmlArticles);
+    
+    prefs.putBoolean("ADDQUOTESTOCSVOUTPUT", addQuotesToCsvOutput);
+    
+    prefs.putInt("MAINFILETYPE", mainFileType);
+    
+    prefs.putInt("TOOLBARMODE", toolbarMode);
+    
+    prefs.putBoolean("SHOWGREENSTRIP", showGreenStrip);
+    
+    
+    try{
+      prefs.flush(); // Encourage the store to be saved
+    }catch(Exception err){
+    }
+  }
+
+/*  
   // We override the serialization routines so that different versions of our class can read 
   // each other's serialized states.
   private void writeObject(java.io.ObjectOutputStream out)
@@ -342,5 +465,6 @@ public class JreepadPrefs implements Serializable
    catch(IOException e)
    {
    }
- } 
+ }
+ */
 }
