@@ -60,7 +60,7 @@ public class JreepadSearcher
     searchResults = null;
     searchResultsVec = new Vector();
     
-    System.out.println("JreepadSearcher.performSearch: pathToSearchStart = " + pathToSearchStart);
+ //   System.out.println("JreepadSearcher.performSearch: pathToSearchStart = " + pathToSearchStart);
     
 //    recursiveSearchNode(inNodes, inArticles, root, pathToSearchStart, orNotAnd, caseSensitive, maxResults);
     recursiveSearchNode(inNodes, inArticles, (JreepadNode)pathToSearchStart.getLastPathComponent(), pathToSearchStart, orNotAnd, caseSensitive, maxResults);
