@@ -19,12 +19,56 @@ The full license can be read online here:
 
 package jreepad;
 
-import javax.swing.*;
-import javax.swing.tree.*;
-import javax.swing.table.*;
-import javax.swing.event.*;
-import javax.swing.undo.*;
-import javax.swing.text.*;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.event.ComponentEvent;
+import java.awt.event.ComponentListener;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.Vector;
+
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.JComponent;
+import javax.swing.JEditorPane;
+import javax.swing.JOptionPane;
+import javax.swing.JScrollPane;
+import javax.swing.JSplitPane;
+import javax.swing.JTable;
+import javax.swing.JTree;
+import javax.swing.event.CaretEvent;
+import javax.swing.event.CaretListener;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
+import javax.swing.event.TableModelEvent;
+import javax.swing.event.TableModelListener;
+import javax.swing.event.TreeModelEvent;
+import javax.swing.event.TreeModelListener;
+import javax.swing.event.TreeSelectionEvent;
+import javax.swing.event.TreeSelectionListener;
+import javax.swing.event.UndoableEditEvent;
+import javax.swing.event.UndoableEditListener;
+import javax.swing.table.DefaultTableModel;
+import javax.swing.text.AbstractDocument;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.BoxView;
+import javax.swing.text.ComponentView;
+import javax.swing.text.Document;
+import javax.swing.text.Element;
+import javax.swing.text.IconView;
+import javax.swing.text.LabelView;
+import javax.swing.text.StyleConstants;
+import javax.swing.text.StyledEditorKit;
+import javax.swing.text.View;
+import javax.swing.text.ViewFactory;
+import javax.swing.tree.TreePath;
 
 import org.philwilson.JTextile;
 
@@ -32,13 +76,6 @@ import edu.stanford.ejalbert.BrowserLauncher;
 import edu.stanford.ejalbert.exception.BrowserLaunchingExecutionException;
 import edu.stanford.ejalbert.exception.BrowserLaunchingInitializingException;
 import edu.stanford.ejalbert.exception.UnsupportedOperatingSystemException;
-
-import java.awt.*;
-import java.awt.event.*;
-import java.util.Enumeration;
-import java.util.Vector;
-import java.io.*;
-import java.awt.print.*;
 
 public class JreepadView extends Box implements TableModelListener
 {
@@ -90,10 +127,8 @@ public class JreepadView extends Box implements TableModelListener
   private static JreepadPrefs prefs;
   private JreepadNode root;
   private JreepadNode currentNode;
-  private JreepadNode currentDragDropNode;
-  private TreeNode topNode;
   private JreepadTreeModel treeModel;
-  private JTree tree;
+  private TreeView tree;
   private JScrollPane treeView;
   private JScrollPane articleView;
 
@@ -154,27 +189,7 @@ public class JreepadView extends Box implements TableModelListener
     treeModel = new JreepadTreeModel(root);
     treeModel.addTreeModelListener(new JreepadTreeModelListener());
 
-    tree = new JTree(treeModel){
-				  public void cancelEditing()
-				  {
-					super.cancelEditing(); // if we can override this perhaps we can prevent blank nodes...?
-					JreepadNode lastEditedNode = (JreepadNode)(tree.getSelectionPath().getLastPathComponent());
-					if(lastEditedNode.getTitle().equals(""))
-					  lastEditedNode.setTitle("<Untitled node>");
-				  }
-    };
-    tree.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
-    tree.setExpandsSelectedPaths(true);
-    tree.setInvokesStopCellEditing(true);
-    tree.setEditable(true);
-
-    tree.setModel(treeModel);
-
-    DefaultTreeCellRenderer renderer = new DefaultTreeCellRenderer();
-    renderer.setOpenIcon(null);
-    renderer.setClosedIcon(null);
-    renderer.setLeafIcon(null);
-    tree.setCellRenderer(renderer);
+    tree = new TreeView(treeModel);
 
     searcher = new JreepadSearcher(root);
 
@@ -198,66 +213,6 @@ public class JreepadView extends Box implements TableModelListener
                       }
                    });
 
-    // Fiddle with the cell editor - to ensure that when editing a new node, you shouldn't be able to leave a blank title
-    tree.getCellEditor().addCellEditorListener(new CellEditorListener()
-                                   {
-                                     public void editingCanceled(ChangeEvent e)
-                                     {
-                                       ensureNodeTitleIsNotEmpty(e);
-                                     }
-                                     public void editingStopped(ChangeEvent e)
-                                     {
-                                       ensureNodeTitleIsNotEmpty(e);
-                                     }
-                                   });
-
-    // Add mouse listener - this will be used to implement drag-and-drop, context menu (?), etc
-    MouseListener ml = new MouseAdapter()
-    {
-      public void mousePressed(MouseEvent e)
-      {
-        TreePath selPath = tree.getPathForLocation(e.getX(), e.getY());
-        if(selPath != null)
-        {
-          currentDragDropNode = (JreepadNode)selPath.getLastPathComponent();
-          setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        }
-      }
-      public void mouseReleased(MouseEvent e)
-      {
-        TreePath selPath = tree.getPathForLocation(e.getX(), e.getY());
-//        System.out.println("Mouse released: path = " + selPath);
-        if(selPath != null)
-        {
-          if(currentDragDropNode != null &&
-             currentDragDropNode.getParentNode() != null &&
-             currentDragDropNode.getParentNode() != (JreepadNode)selPath.getLastPathComponent() &&
-             currentDragDropNode != (JreepadNode)selPath.getLastPathComponent())
-          {
-            // Then we need to perform a drag-and-drop operation!
-            moveNode(currentDragDropNode, (JreepadNode)selPath.getLastPathComponent());
-
-            // Ensure that the destination node is open
-            tree.setSelectionPath(selPath.pathByAddingChild(currentDragDropNode));
-          }
-        }
-        setCursor(Cursor.getDefaultCursor());
-        currentDragDropNode = null;
-      }
-      public void mouseClicked(MouseEvent e)
-      {
-        TreePath selPath = tree.getPathForLocation(e.getX(), e.getY());
-        if(selPath != null)
-        {
-          if(e.isPopupTrigger())
-          {
-            // Now we can implement the pop-up content menu
-            System.out.println("Context menu would be launched here!");
-          }
-        }
-      }
-    };
-    tree.addMouseListener(ml);
 
     tree.addKeyListener(new KeyAdapter(){public void keyPressed(KeyEvent kee) {
      int key = kee.getKeyCode();
@@ -470,48 +425,7 @@ public class JreepadView extends Box implements TableModelListener
     return ret.toString() + "\"";
   }
 
-  public void moveNode(JreepadNode node, JreepadNode newParent)
-  {
-    // First we need to make sure that the node is not a parent of the new parent
-    // - otherwise things would go really wonky!
-    if(node.isNodeInSubtree(newParent))
-    {
-      return;
-    }
 
-    //DEL storeForUndo();
-
-    JreepadNode oldParent = node.getParentNode();
-
-    // Now make a note of the expanded/collapsed state of the subtree of the moving node
-    boolean thisOnesExpanded = tree.isExpanded(tree.getSelectionPath());
-    Enumeration enumer;
-    Vector expanded;
-    if(thisOnesExpanded)
-    {
-      enumer = tree.getExpandedDescendants(tree.getSelectionPath());
-      expanded = new Vector();
-      while(enumer.hasMoreElements())
-      {
-        expanded.add((TreePath)enumer.nextElement());
-//        System.out.println(expanded.lastElement());
-      }
-    }
-
-    node.removeFromParent();
-    newParent.addChild(node);
-
-    treeModel.reload(oldParent);
-    treeModel.reload(newParent);
-  //  treeModel.reload((TreeNode)tree.getPathForRow(0).getLastPathComponent());
-
-    // If the destination node didn't previously have any children, then we'll expand it
- //   if(newParent.getChildCount()==1)
-
-
-    // Reapply the expanded/collapsed states
-
-  }
 
   public void indentCurrentNode()
   {
@@ -521,7 +435,6 @@ public class JreepadView extends Box implements TableModelListener
       return;
     }
 
-    int nodeRow = tree.getLeadSelectionRow();
     TreePath parentPath = tree.getSelectionPath().getParentPath();
     int pos = currentNode.getIndex();
     if(pos<1) return;
@@ -745,65 +658,22 @@ public class JreepadView extends Box implements TableModelListener
 
   public void expandAllCurrentNode()
   {
-    expandAll(currentNode, tree.getLeadSelectionPath());
-  }
-  public void expandAll(JreepadNode thisNode, TreePath tp)
-  {
-    // It's at this point that we expand the current element
-    tree.expandPath(tp);
-
-    Enumeration getKids = thisNode.children();
-    JreepadNode thisKid;
-    while(getKids.hasMoreElements())
-    {
-      thisKid = (JreepadNode)getKids.nextElement();
-      expandAll(thisKid, tp.pathByAddingChild(thisKid));
-    }
+    tree.expandAll(currentNode, tree.getLeadSelectionPath());
   }
   public void collapseAllCurrentNode()
   {
-    collapseAll(currentNode, tree.getLeadSelectionPath());
+    tree.collapseAll(currentNode, tree.getLeadSelectionPath());
   }
-  public void collapseAll(JreepadNode thisNode, TreePath tp)
-  {
-    Enumeration getKids = thisNode.children();
-    JreepadNode thisKid;
-    while(getKids.hasMoreElements())
-    {
-      thisKid = (JreepadNode)getKids.nextElement();
-      collapseAll(thisKid, tp.pathByAddingChild(thisKid));
-    }
-    // It's at this point that we collapse the current element
-    tree.collapsePath(tp);
-  }
-
 
   public TreePath[] getAllExpandedPaths()
   {
-    if(root.getChildCount()==0)
-      return new TreePath[] {new TreePath(root)};
-
-    Enumeration getPaths = tree.getExpandedDescendants(new TreePath(root));
-    TreePath thisKid;
-    Vector allPaths = new Vector();
-    while(getPaths.hasMoreElements())
-    {
-      thisKid = (TreePath)getPaths.nextElement();
-      allPaths.add(thisKid);
-    }
-    TreePath[] ret = new TreePath[allPaths.size()];
-    for(int i=0; i<ret.length; i++)
-      ret[i] = (TreePath)allPaths.get(i);
-    return ret;
+      return tree.getAllExpandedPaths();
   }
 
   // THIS FUNCTION SEEMS TO HAVE NO EFFECT, ON MY MACHINE AT LEAST! WHAT'S GOING ON?
   public void expandPaths(TreePath[] paths)
   {
-    for(int i=0; i<paths.length; i++)
-    {
-      tree.expandPath(paths[i]);
-    }
+      tree.expandPaths(paths);
   }
 
 
@@ -1477,22 +1347,7 @@ System.out.println(err);
   }
   // End of: functions which should allow us to switch between JEditorPane and JTable
 
-  private void ensureNodeTitleIsNotEmpty(ChangeEvent e)
-  {
-    TreeCellEditor theEditor = (TreeCellEditor)tree.getCellEditor();
-    String newTitle = (String)(theEditor.getCellEditorValue());
 
-//    JreepadNode thatNode = (JreepadNode)(tree.getEditingPath().getLastPathComponent());
-    //System.out.println("ensureNodeTitleIsNotEmpty(): Event source = " + e.getSource());
-    //System.out.println("ensureNodeTitleIsNotEmpty(): thatNode = " + thatNode);
-//    System.out.println("getCellEditorValue() = " + newTitle);
-
-    if(newTitle.equals(""))
-    {
-      theEditor.getTreeCellEditorComponent(tree, "<Untitled node>", true, true, false, 1);
-//      thatNode.setTitle("<Untitled node>");
-    }
-  }
 
   public void editNodeTitleAction()
   {
@@ -1527,9 +1382,9 @@ System.out.println(err);
     public void treeNodesChanged(TreeModelEvent e)
     {
       warnAboutUnsaved = true;
-      Object[] parentPath = e.getPath(); // Parent of the changed node(s)
-      int[] children = e.getChildIndices(); // Indices of the changed node(s)
-      JreepadNode parent = (JreepadNode)(parentPath[parentPath.length-1]);
+//      Object[] parentPath = e.getPath(); // Parent of the changed node(s)
+//      int[] children = e.getChildIndices(); // Indices of the changed node(s)
+//      JreepadNode parent = (JreepadNode)(parentPath[parentPath.length-1]);
       tree.repaint();
     }
     public void treeNodesInserted(TreeModelEvent e)
