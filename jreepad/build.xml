@@ -4,9 +4,6 @@
 		Java treepad - personal information manager
 	</description>
 
-
-
-
 	<property name="curVersion" value="1.6dev" />
 
 
@@ -20,28 +17,51 @@
 	<property name="timeStamp" location="${DSTAMP}" />
 	<property name="packageName" location="jreepad" />
 
-<!--    <taskdef name="jarbundler" 
-         classpath="${libDir}/jarbundler-1.6plus.jar"
-         classname="net.sourceforge.jarbundler.JarBundler" /> -->
-    <taskdef name="jarbundler" 
-         classpath="${libDir}/jarbundler-1.6.1.jar"
+	<!-- jars to be included in the distribution -->
+	<fileset id="distJars" dir="${libDir}">
+		<include name="*.jar"/>
+		<exclude name="AppleJavaExtensions.jar"/>
+		<exclude name="jarbundler*.jar"/>
+	</fileset>
+
+	<path id="distJarsPath">
+		<fileset refid="distJars"/>
+	</path>
+
+	<pathconvert property="distJarsProperty" pathsep=" ">
+		<path refid="distJarsPath"/>
+		<chainedmapper>
+			<flattenmapper/>
+			<globmapper from="*" to="lib/*"/>
+		</chainedmapper>
+	</pathconvert>
+
+	<!-- jars required for building -->
+	<path id="projectClasspath">
+		<pathelement path="${buildDir}" />
+		<fileset dir="${libDir}">
+			<include name="*.jar"/>
+			<exclude name="jarbundler*.jar"/>
+		</fileset>
+	</path>
+
+    <taskdef name="jarbundler"
+         classpath="${libDir}/jarbundler-1.9.jar"
          classname="net.sourceforge.jarbundler.JarBundler" />
-<!--    <taskdef name="jarbundler" 
-         classpath="${libDir}/jarbundler-1.5.jar"
-         classname="com.informagen.ant.tasks.jarbundler.JarBundler" /> -->
-<!--    <taskdef name="jarbundler" 
-         classpath="${libDir}/jarbundler-1.4.jar"
-         classname="com.loomcom.ant.tasks.jarbundler.JarBundler" /> -->
 
     <target name="init">
 		<tstamp />
 		<mkdir dir="${buildDir}" />
 		<mkdir dir="${buildDir}/jreepad/lang" />
 		<mkdir dir="${distDir}" />
+		<mkdir dir="${distDir}/lib" />
 		<mkdir dir="${distDir}/Jreepad-${curVersion}-OSX/" />
 	</target>
+
 	<target name="compile" depends="init">
-		<javac srcdir="${srcDir}" destdir="${buildDir}" debug="on"/>
+		<javac srcdir="${srcDir}" destdir="${buildDir}" debug="on">
+			<classpath refid="projectClasspath"/>
+		</javac>
 		<copy todir="${buildDir}/jreepad/lang">
 			<fileset dir="${srcDir}/jreepad/lang" includes="*.properties" />
 		</copy>
@@ -49,53 +69,52 @@
 			<fileset dir="${imgDir}" />
 		</copy>
 	</target>
+
 	<target name="jar" depends="compile">
-		<copy todir="${buildDir}/gnu">
-		  <fileset dir="${libDir}/gnu"/>
-		</copy>
 		<jar destfile="${distDir}/Jreepad-${curVersion}.jar" basedir="${buildDir}">
 			<manifest>
 				<attribute name="Built-By" value="${user.name}" />
 				<attribute name="Main-Class" value="jreepad.JreepadViewer" />
+				<attribute name="Class-Path" value="${distJarsProperty}"/>
 			</manifest>
 		</jar>
+		<copy todir="${distDir}/lib">
+			<fileset refid="distJars"/>
+		</copy>
 	</target>
+
 	<target name="run" depends="compile">
 		<java fork="yes" dir="${buildDir}" classname="jreepad.JreepadViewer" failonerror="true">
-<!--			<classpath>
-				<pathelement location="${buildDir}" />
-				<pathelement path="" />
-				<pathelement path="${java.class.path}" />
-			</classpath> -->
+			<classpath refid="projectClasspath"/>
 		</java>
 	</target>
+
 	<target name="runjar" depends="compile,jar">
-		<java fork="yes" jar="${distDir}/Jreepad-${curVersion}.jar" failonerror="true">
-			<classpath>
-				<pathelement location="${distDir}/Jreepad-${curVersion}.jar" />
-				<pathelement path="" />
-				<pathelement path="${java.class.path}" />
-			</classpath>
-		</java>
+		<java fork="yes" jar="${distDir}/Jreepad-${curVersion}.jar" failonerror="true"/>
 	</target>
+
 	<target name="dist" depends="clean,compile,jar">
         <jarbundler dir="${distDir}/Jreepad-${curVersion}-OSX"
               name="Jreepad"
               version="${curVersion}"
               icon="icons/jreepadlogo-01.icns"
               infostring="Jreepad, compiled ${DSTAMP}"
-              mainclass="jreepad.JreepadViewer" 
+              mainclass="jreepad.JreepadViewer"
               bundleid="net.sf.jreepad"
-              jars="${distDir}/Jreepad-${curVersion}.jar" 
               screenmenu="true"
               signature="JREE"
               jvmversion="1.4+"
               >
+        <jarfileset dir="${distDir}">
+		<include name="*.jar"/>
+		<include name="lib/*.jar"/>
+	</jarfileset>
+
            <documenttype extensions="jree" iconFile="icons/jree.icns" name="Jreepad tree document" role="Editor"/>
            <documenttype extensions="hjt" iconFile="icons/hjt.icns" name="Treepad tree document" role="Editor"/>
            <documenttype ostypes="JREE" iconFile="icons/jree.icns" name="Jreepad tree document" role="Editor"/>
            <!-- <documenttype ostypes="****" iconFile="icons/jree.icns" name="Jreepad file" role="Editor"/>  -->
-           
+
         </jarbundler>
 
 		<!-- Copying these icon files should NOT be needed if/when the jarbundler task includes doc file parameters -->
@@ -115,8 +134,8 @@
         <!-- <exec dir="${distDir}" executable="hdiutil" os="Mac OS X">
            <arg line="internet-enable -yes Jreepad-${curVersion}-OSX.dmg"/>
         </exec> -->
-
 	</target>
+
 	<target name="clean">
 		<delete dir="${buildDir}" />
 		<delete dir="${distDir}" />

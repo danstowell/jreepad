@@ -24,8 +24,15 @@ import javax.swing.tree.*;
 import javax.swing.table.*;
 import javax.swing.event.*;
 import javax.swing.undo.*;
-import javax.swing.text.BadLocationException;
 import javax.swing.text.*;
+
+import org.philwilson.JTextile;
+
+import edu.stanford.ejalbert.BrowserLauncher;
+import edu.stanford.ejalbert.exception.BrowserLaunchingExecutionException;
+import edu.stanford.ejalbert.exception.BrowserLaunchingInitializingException;
+import edu.stanford.ejalbert.exception.UnsupportedOperatingSystemException;
+
 import java.awt.*;
 import java.awt.event.*;
 import java.util.Enumeration;
@@ -68,7 +75,7 @@ public class JreepadView extends Box implements TableModelListener
 	}
   }
 
-  private static short paraRightMargin = 0; 
+  private static short paraRightMargin = 0;
   static class JPParagraphView extends javax.swing.text.ParagraphView
   {
 	public JPParagraphView(Element e)
@@ -97,7 +104,7 @@ public class JreepadView extends Box implements TableModelListener
   private JEditorPane editorPanePlainText;
   private JEditorPane editorPaneHtml;
   private JTable editorPaneCsv;
-  
+
 
   // Undo features
 //  protected UndoManager undoMgr;
@@ -120,7 +127,7 @@ public class JreepadView extends Box implements TableModelListener
   {
     this(new JreepadNode("<Untitled node>", "", null));
   }
-  
+
   public JreepadView(JreepadNode root)
   {
     super(BoxLayout.X_AXIS);
@@ -143,7 +150,7 @@ public class JreepadView extends Box implements TableModelListener
 					 );
 
     this.root = root;
-    
+
     treeModel = new JreepadTreeModel(root);
     treeModel.addTreeModelListener(new JreepadTreeModelListener());
 
@@ -160,7 +167,7 @@ public class JreepadView extends Box implements TableModelListener
     tree.setExpandsSelectedPaths(true);
     tree.setInvokesStopCellEditing(true);
     tree.setEditable(true);
-    
+
     tree.setModel(treeModel);
 
     DefaultTreeCellRenderer renderer = new DefaultTreeCellRenderer();
@@ -182,14 +189,14 @@ public class JreepadView extends Box implements TableModelListener
                         JreepadNode node = (JreepadNode)
                            tree.getLastSelectedPathComponent();
                         if (node == null) return;
-                        
+
 // UNDO DEVELOPMENT:
 //                        System.out.println("TreeSelectionListener:valueChanged");
 //                        undoMgr.discardAllEdits();
-                        
+
                         setCurrentNode(node);
                       }
-                   }); 
+                   });
 
     // Fiddle with the cell editor - to ensure that when editing a new node, you shouldn't be able to leave a blank title
     tree.getCellEditor().addCellEditorListener(new CellEditorListener()
@@ -222,14 +229,14 @@ public class JreepadView extends Box implements TableModelListener
 //        System.out.println("Mouse released: path = " + selPath);
         if(selPath != null)
         {
-          if(currentDragDropNode != null && 
-             currentDragDropNode.getParentNode() != null && 
-             currentDragDropNode.getParentNode() != (JreepadNode)selPath.getLastPathComponent() && 
+          if(currentDragDropNode != null &&
+             currentDragDropNode.getParentNode() != null &&
+             currentDragDropNode.getParentNode() != (JreepadNode)selPath.getLastPathComponent() &&
              currentDragDropNode != (JreepadNode)selPath.getLastPathComponent())
           {
             // Then we need to perform a drag-and-drop operation!
             moveNode(currentDragDropNode, (JreepadNode)selPath.getLastPathComponent());
-            
+
             // Ensure that the destination node is open
             tree.setSelectionPath(selPath.pathByAddingChild(currentDragDropNode));
           }
@@ -250,7 +257,7 @@ public class JreepadView extends Box implements TableModelListener
         }
       }
     };
-    tree.addMouseListener(ml); 
+    tree.addMouseListener(ml);
 
     tree.addKeyListener(new KeyAdapter(){public void keyPressed(KeyEvent kee) {
      int key = kee.getKeyCode();
@@ -264,8 +271,8 @@ public class JreepadView extends Box implements TableModelListener
          break;
      }
      // System.out.println("Tree detected a keypress: " + kee.getKeyText(kee.getKeyCode()) + " (key code "+ kee.getKeyCode()+")");
-     }}); 
- 
+     }});
+
     treeView.setViewportView(tree);
 
 
@@ -286,7 +293,7 @@ public class JreepadView extends Box implements TableModelListener
     				    return; // i.e. we are deactivated while changing from node to node
     				  if(currentNode.getArticleMode() != JreepadNode.ARTICLEMODE_ORDINARY)
     				    return; // i.e. we are only relevant when in plain-text mode
-    				
+
     				  if(!editorPanePlainText.getText().equals(currentNode.getContent()))
     				  {
     				    // System.out.println("UPDATE - I'd now overwrite node content with editorpane content");
@@ -351,7 +358,7 @@ public class JreepadView extends Box implements TableModelListener
 //      System.out.println("articleView size: " + articleView.getSize());
 //      System.out.println("articleView viewport size: " + articleView.getViewport().getSize());
 //      System.out.println();
-      
+
     switch(mode)
     {
       case JreepadPrefs.VIEW_BOTH:
@@ -372,7 +379,7 @@ public class JreepadView extends Box implements TableModelListener
       editorPanePlainText.setSize(articleView.getViewport().getExtentSize());
       editorPaneHtml.setPreferredSize(articleView.getViewport().getExtentSize());
       editorPaneHtml.setSize(articleView.getViewport().getExtentSize());
-      validate(); 
+      validate();
       repaint();
 //      System.out.println("editorPane size: " + editorPane.getSize());
 //      System.out.println("articleView size: " + articleView.getSize());
@@ -382,7 +389,7 @@ public class JreepadView extends Box implements TableModelListener
   }
 
   private void setViewBoth()
-  {   
+  {
     ensureCorrectArticleRenderMode();
     splitPane.setLeftComponent(treeView);
     splitPane.setRightComponent(articleView);
@@ -401,8 +408,8 @@ public class JreepadView extends Box implements TableModelListener
      this.remove(splitPane);
      this.remove(treeView);
      ensureCorrectArticleRenderMode();
-     this.add(articleView); 
-     articleView.setSize(getSize());   
+     this.add(articleView);
+     articleView.setSize(getSize());
   }
   /*
   private void setCurrentNode(DefaultMutableTreeNode node)
@@ -422,7 +429,7 @@ public class JreepadView extends Box implements TableModelListener
       // Only update the node's stored content if it's a plaintext node
       if(currentNode.getArticleMode() == JreepadNode.ARTICLEMODE_ORDINARY)
         currentNode.setContent(getEditorPaneText());
-      return;      
+      return;
     }
 
     copyEditorPaneContentToNodeContent = false; // Deactivate the caret-listener, effectively - ALSO DEACTIVATES UNDO-STORAGE
@@ -471,9 +478,9 @@ public class JreepadView extends Box implements TableModelListener
     {
       return;
     }
-    
+
     //DEL storeForUndo();
-    
+
     JreepadNode oldParent = node.getParentNode();
 
     // Now make a note of the expanded/collapsed state of the subtree of the moving node
@@ -497,13 +504,13 @@ public class JreepadView extends Box implements TableModelListener
     treeModel.reload(oldParent);
     treeModel.reload(newParent);
   //  treeModel.reload((TreeNode)tree.getPathForRow(0).getLastPathComponent());
-    
+
     // If the destination node didn't previously have any children, then we'll expand it
  //   if(newParent.getChildCount()==1)
-      
-    
+
+
     // Reapply the expanded/collapsed states
-    
+
   }
 
   public void indentCurrentNode()
@@ -518,11 +525,11 @@ public class JreepadView extends Box implements TableModelListener
     TreePath parentPath = tree.getSelectionPath().getParentPath();
     int pos = currentNode.getIndex();
     if(pos<1) return;
-    
+
     //DEL storeForUndo();
-    
+
     JreepadNode newParent = ((JreepadNode)currentNode.getParent().getChildAt(pos-1));
-    
+
     if(currentNode.indent())
     {
       treeModel.reload(currentNode.getParent().getParent());
@@ -561,13 +568,13 @@ public class JreepadView extends Box implements TableModelListener
   public void moveCurrentNodeUp()
   {
     TreePath nodePath = tree.getSelectionPath();
-    
+
     if(currentNode.equals(root))
     {
       notForRootNode();
       return;
     }
-    
+
     //DEL storeForUndo();
     currentNode.moveUp();
     treeModel.reload(currentNode.getParent());
@@ -588,21 +595,21 @@ public class JreepadView extends Box implements TableModelListener
     treeModel.reload(currentNode.getParent());
     tree.setSelectionPath(nodePath);
   }
-  
+
   private void notForRootNode()
   {
     // FIXME: If there are no child nodes, assume the user needs some advice about adding nodes
     if(root.isLeaf())
-      JOptionPane.showMessageDialog(this, 
-       JreepadViewer.lang.getString("MSG_ONLY_ON_CHILDNODES"), JreepadViewer.lang.getString("TITLE_ONLY_ON_CHILDNODES") , 
+      JOptionPane.showMessageDialog(this,
+       JreepadViewer.lang.getString("MSG_ONLY_ON_CHILDNODES"), JreepadViewer.lang.getString("TITLE_ONLY_ON_CHILDNODES") ,
          JOptionPane.INFORMATION_MESSAGE);
-    else 
+    else
       return;
-//      JOptionPane.showMessageDialog(this, 
-//       "The root node is currently selected - you can only perform this operation on child nodes.", "Root node is selected" , 
+//      JOptionPane.showMessageDialog(this,
+//       "The root node is currently selected - you can only perform this operation on child nodes.", "Root node is selected" ,
 //         JOptionPane.INFORMATION_MESSAGE);
   }
-  
+
   protected String getContentForNewNode()
   {
     if(prefs.autoDateInArticles)
@@ -610,36 +617,36 @@ public class JreepadView extends Box implements TableModelListener
     else
       return "";
   }
-  
+
   private java.text.DateFormat dateFormat = java.text.DateFormat.getDateInstance();
   private String getCurrentDate()
   {
     return dateFormat.format(new java.util.Date());
   }
-  
+
   public void insertDate()
   {
     if(currentNode.getArticleMode() != JreepadNode.ARTICLEMODE_ORDINARY)
       return; // May want to fix this later - allow other modes to have the date inserted...
-  
+
     //DEL storeForUndo();
     String theDate = getCurrentDate();
     Document doc = editorPanePlainText.getDocument();
     int here = editorPanePlainText.getCaretPosition();
     try
     {
-      editorPanePlainText.setText(doc.getText(0, here) + theDate + 
-                              doc.getText(here, doc.getLength() - here)); 
-      editorPaneHtml.setText(doc.getText(0, here) + theDate + 
-                              doc.getText(here, doc.getLength() - here)); 
-      editorPanePlainText.setCaretPosition(here + theDate.length()); 
+      editorPanePlainText.setText(doc.getText(0, here) + theDate +
+                              doc.getText(here, doc.getLength() - here));
+      editorPaneHtml.setText(doc.getText(0, here) + theDate +
+                              doc.getText(here, doc.getLength() - here));
+      editorPanePlainText.setCaretPosition(here + theDate.length());
     }
     catch(BadLocationException e)
     {
       // Simply ignore this
     }
   }
-  
+
   public JreepadNode addNodeAbove()
   {
     int index = currentNode.getIndex();
@@ -689,7 +696,7 @@ public class JreepadView extends Box implements TableModelListener
     ret.setContent(getContentForNewNode());
     TreePath nodePath = tree.getSelectionPath();
     treeModel.nodesWereInserted(currentNode, new int[]{currentNode.getIndex(ret)});
-    
+
 //    tree.setSelectionPath(nodePath.pathByAddingChild(ret));
     tree.scrollPathToVisible(nodePath.pathByAddingChild(ret));
     tree.startEditingAtPath(nodePath.pathByAddingChild(ret));
@@ -730,12 +737,12 @@ public class JreepadView extends Box implements TableModelListener
     treeModel.reload(currentNode);
     // System.out.println(currentNode.toFullString());
   }
-  
+
   public void returnFocusToTree()
   {
     tree.requestFocus();
   }
-  
+
   public void expandAllCurrentNode()
   {
     expandAll(currentNode, tree.getLeadSelectionPath());
@@ -744,7 +751,7 @@ public class JreepadView extends Box implements TableModelListener
   {
     // It's at this point that we expand the current element
     tree.expandPath(tp);
-    
+
     Enumeration getKids = thisNode.children();
     JreepadNode thisKid;
     while(getKids.hasMoreElements())
@@ -829,7 +836,7 @@ public class JreepadView extends Box implements TableModelListener
     treeModel.reload(currentNode);
     tree.expandPath(tree.getSelectionPath());
   }
-  
+
   public void addChild(JreepadNode newKid)
   {
     //DEL storeForUndo();
@@ -870,7 +877,7 @@ public class JreepadView extends Box implements TableModelListener
         return editorPanePlainText.getSelectedText();
     }
   }
-  
+
   public static JreepadPrefs getPrefs()
   {
     return prefs;
@@ -880,7 +887,7 @@ public class JreepadView extends Box implements TableModelListener
     prefs = thesePrefs;
     prefs.save();
   }
-  
+
 
 /*
 
@@ -893,7 +900,7 @@ public class JreepadView extends Box implements TableModelListener
   {
     if(!canWeUndo())
       return;
-  
+
     // Swap the old root / selectionpath / expandedpaths for the current ones
     JreepadNode tempRoot = root;
     root = oldRootForUndo;
@@ -938,12 +945,12 @@ public class JreepadView extends Box implements TableModelListener
 
     if(url==null || url.length()==0)
       url = currentNode.getTitle();
-  
+
     if((url == null) && (currentNode.getArticleMode()==JreepadNode.ARTICLEMODE_ORDINARY))
     {
       try
       {
-      
+
       String text = getEditorPaneText();
       int startpos = editorPanePlainText.getCaretPosition();
       int endpos = startpos;
@@ -984,7 +991,7 @@ System.out.println(err);
     {
       try
       {
-      
+
       String text = getEditorPaneText();
       int startpos = editorPanePlainText.getCaretPosition();
       int endpos = startpos;
@@ -1067,7 +1074,7 @@ System.out.println(err);
         followWikiLink(url, false);
       return;
     }
-    
+
     // Strip quotes off
     if(url.length()>2 && url.startsWith("\"") && url.endsWith("\""))
       url = url.substring(1, url.length()-1);
@@ -1076,15 +1083,15 @@ System.out.println(err);
     if(url.startsWith("node://"))
     {
       if(!followTreepadInternalLink(url))
-	    JOptionPane.showMessageDialog(this, 
-	            JreepadViewer.lang.getString("MSG_NODE_NOT_FOUND"), 
+	    JOptionPane.showMessageDialog(this,
+	            JreepadViewer.lang.getString("MSG_NODE_NOT_FOUND"),
 	            JreepadViewer.lang.getString("TITLE_NODE_NOT_FOUND"),
 	            JOptionPane.ERROR_MESSAGE);
       return;
     }
-    
+
     // It's probably a web-link, so let's do something to it and then try and launch it
-    
+
 /*
 
 //  NOTE:
@@ -1114,15 +1121,36 @@ System.out.println(err);
 			surl.append("%20");
 		  else
 			surl.append(curl[i]);
-		try
-		{
-		  BrowserLauncher.openURL(surl.toString());
-		}
-		catch(IOException err)
-		{
-		  JOptionPane.showMessageDialog(this, "I/O error while opening URL:\n"+surl+"\n\nThe \"BrowserLauncher\" used to open a URL is an open-source Java library \nseparate from Jreepad itself - i.e. a separate Sourceforge project. \nIt may be a good idea to submit a bug report to\nhttp://sourceforge.net/projects/browserlauncher\n\nIf you do, please remember to supply information about the operating system\nyou are using - which type, and which version.", "Error" , JOptionPane.ERROR_MESSAGE);
-		}
+        try
+        {
+          new BrowserLauncher(null).openURLinBrowser(surl.toString());
+        }
+        catch (BrowserLaunchingInitializingException e)
+        {
+          displayBrowserLauncherException(e, surl.toString());
+        }
+        catch (BrowserLaunchingExecutionException e)
+        {
+          displayBrowserLauncherException(e, surl.toString());
+        }
+        catch (UnsupportedOperatingSystemException e)
+        {
+          displayBrowserLauncherException(e, surl.toString());
+        }
 //    }
+  }
+
+  private void displayBrowserLauncherException(Exception e, String url)
+  {
+    JOptionPane.showMessageDialog(this, "Error while opening URL:\n" + url + "\n"
+      + e.getMessage() + "\n\n"
+      + "The \"BrowserLauncher\" used to open a URL is an open-source Java library \n"
+      + "separate from Jreepad itself - i.e. a separate Sourceforge project. \n"
+      + "It may be a good idea to submit a bug report to\n"
+      + "http://browserlaunch2.sourceforge.net/\n\n"
+      + "If you do, please remember to supply information about the operating system\n"
+      + "you are using - which type, and which version.", "Error",
+      JOptionPane.ERROR_MESSAGE);
   }
 
   public boolean followTreepadInternalLink(String url)
@@ -1184,7 +1212,7 @@ System.out.println(err);
 	      newPath = leadPath.pathByAddingChild(newNode);
 	    else
 	      newPath = new TreePath(newNode);
-	    
+
 	    // Now we need to select it... how do we do that?
 	    tree.setSelectionPath(newPath);
 	    tree.scrollPathToVisible(newPath);
@@ -1230,7 +1258,7 @@ System.out.println(err);
       }
     }
     return null;
-    
+
   }
   // End of: Searching (for wikilike action)
 
@@ -1242,7 +1270,7 @@ System.out.println(err);
   {
     warnAboutUnsaved = yo;
   }
-  
+
 //  public void setTreeFont(Font f)
 //  {
 //    ((DefaultTreeCellRenderer)tree.getCellRenderer()).setFont(f);
@@ -1272,11 +1300,11 @@ System.out.println(err);
 
   public void setArticleMode(int newMode)
   {
-//    System.out.println("\n\n\nnode content : " + currentNode.getContent() 
+//    System.out.println("\n\n\nnode content : " + currentNode.getContent()
 //          + "\neditorPanePlainText contains: " + editorPanePlainText.getText());
-    
+
     copyEditorPaneContentToNodeContent = false; // Disables store-for-undo
-    
+
     currentNode.setContent(editorPanePlainText.getText());
 /*
     switch(currentNode.getArticleMode())
@@ -1297,7 +1325,7 @@ System.out.println(err);
     switch(newMode)
     {
       case JreepadNode.ARTICLEMODE_ORDINARY:
-        // DELETEME - PLAINTEXT SHOULD NOT BE AFFECTED BY OTHERS 
+        // DELETEME - PLAINTEXT SHOULD NOT BE AFFECTED BY OTHERS
         editorPanePlainText.setText(currentNode.getContent());
         break;
       case JreepadNode.ARTICLEMODE_HTML:
@@ -1331,7 +1359,7 @@ System.out.println(err);
   {
     String[][] rowData = currentNode.interpretContentAsCsv();
     String[] columnNames = null;
-    
+
 //    System.out.println("articleToJTable(): rows=" + rowData.length + ", cols="+rowData[0].length);
     initJTable(rowData, columnNames);
   }
@@ -1341,7 +1369,7 @@ System.out.println(err);
     String[] columnNames = new String[rowData[0].length];
     for(int i=0; i<columnNames.length; i++)
       columnNames[i] = " ";
-    
+
 //    System.out.println("articleToJTable(s): rows=" + rowData.length + ", cols="+rowData[0].length);
     initJTable(rowData, columnNames);
   }
@@ -1349,7 +1377,7 @@ System.out.println(err);
   private void initJTable(String[][] rowData, String[] columnNames)
   {
     editorPaneCsv = new JTable(new ArticleTableModel(rowData, columnNames));
-//    editorPaneCsv = new JTable(new ArticleTableModel(rowData, columnNames), 
+//    editorPaneCsv = new JTable(new ArticleTableModel(rowData, columnNames),
 //             (getCurrentNode().tblColModel==null ? new ArticleTableColumnModel(): getCurrentNode().tblColModel));
 //    editorPaneCsv = new JTable(rowData, columnNames);
 //    editorPaneCsv.setModel(new ArticleTableModel());
@@ -1453,12 +1481,12 @@ System.out.println(err);
   {
     TreeCellEditor theEditor = (TreeCellEditor)tree.getCellEditor();
     String newTitle = (String)(theEditor.getCellEditorValue());
-  
+
 //    JreepadNode thatNode = (JreepadNode)(tree.getEditingPath().getLastPathComponent());
     //System.out.println("ensureNodeTitleIsNotEmpty(): Event source = " + e.getSource());
     //System.out.println("ensureNodeTitleIsNotEmpty(): thatNode = " + thatNode);
 //    System.out.println("getCellEditorValue() = " + newTitle);
-    
+
     if(newTitle.equals(""))
     {
       theEditor.getTreeCellEditorComponent(tree, "<Untitled node>", true, true, false, 1);
@@ -1539,8 +1567,8 @@ System.out.println(err);
    public ArticleTableModel(){
      super();
    }
-   
-   
+
+
    public boolean isCellEditable(int row, int col) {
      return false;
    }
@@ -1567,12 +1595,12 @@ System.out.println(err);
     protected class JreepadUndoableEditListener
                     implements UndoableEditListener {
         public void undoableEditHappened(UndoableEditEvent e) {
-            
+
             //System.out.println("Undoable event is " + (e.getEdit().isSignificant()?"":"NOT ") + "significant");
             //System.out.println("Undoable event source: " + e.getEdit());
 
             //Remember the edit and update the menus.
-            
+
             if(copyEditorPaneContentToNodeContent){
               //System.out.println("Storing undoable event for node " + getCurrentNode().getTitle());
               //System.out.println("   Event is " + e.getEdit().getPresentationName() );
@@ -1584,9 +1612,9 @@ System.out.println(err);
               //Thread.currentThread().dumpStack();
               getCurrentNode().undoMgr.addEdit(e.getEdit());
             }
-            
-            
-            
+
+
+
             //undoAction.updateUndoState();
             //redoAction.updateRedoState();
         }
@@ -1606,7 +1634,7 @@ System.out.println(err);
      super();
      initColListener();
    }
-   
+
    private void initColListener(){
      addColumnModelListener(new TableColumnModelListener()
             {
@@ -1617,13 +1645,13 @@ System.out.println(err);
               public void columnSelectionChanged(ListSelectionEvent e){ storeColumnModel();}
             });
    }
-   
+
    private void storeColumnModel()
    {
      // Simply store the TableColumnModel in the node, for future reference
      getCurrentNode().tblColModel = this;
    }
-   
+
   } // End of: class ArticleTableColumnModel
 */
 

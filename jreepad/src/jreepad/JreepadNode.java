@@ -26,6 +26,8 @@ import javax.swing.tree.*;
 import java.text.*;
 import javax.swing.undo.*;
 
+import org.philwilson.JTextile;
+
 public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Comparable
 {
   private Vector children;
@@ -83,7 +85,7 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
 
     Stack nodeStack = new Stack();
     nodeStack.push(this);
-    
+
     String currentLine = bReader.readLine(); // Read the first line, check for treepadness
 
     if(currentLine.startsWith("<?xml version=\"1.0\""))
@@ -110,11 +112,11 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
     }
     else if((currentLine.toLowerCase().startsWith("<treepad") && currentLine.endsWith(">")) )
     {
-      constructFromHjtInputStream(treeInputStream, autoDetectHtmlArticles, 
+      constructFromHjtInputStream(treeInputStream, autoDetectHtmlArticles,
             1, bReader, lineNum, nodeStack, children);
     }
     else if((currentLine.toLowerCase().startsWith("<hj-treepad") && currentLine.endsWith(">")) )
-      constructFromHjtInputStream(treeInputStream, autoDetectHtmlArticles, 
+      constructFromHjtInputStream(treeInputStream, autoDetectHtmlArticles,
             2, bReader, lineNum, nodeStack, children);
     else
     {
@@ -154,9 +156,9 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
   // This function should return any XML string content that remains unprocessed
   private String recursiveCreateFromXmlStream(BufferedReader bReader, String currentXmlContent, int depth) throws IOException
   {
-  
+
     // System.out.println("XMLparse recursive: depth "+depth);
-  
+
     // String currentXmlContent should BEGIN with the <node> tag. This is assumed, and if not true may cause problems!
     String currentLine;
     int titleOffset, typeOffset, startTagOffset, endTagOffset;
@@ -203,9 +205,9 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
 
 	  // We're reading CONTENT into the current node.
       currentXmlContent += currentLine;
-      
+
     //  System.out.println("\n\nThe content that I'm currently trying to process is:\n"+currentXmlContent);
-	  
+
 	  // Look out for <node which tells us we're starting a child
 	  startTagOffset = currentXmlContent.indexOf("<node");
 	  // Look out for </node> which tells us we're finishing this node and returning to the parent
@@ -226,19 +228,19 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
         {
           if(readingContent)
 		    this.content += xmlUnescapeChars(currentXmlContent.substring(0, startTagOffset));
-		  
+
 		  // Having found a child node, we want to STOP adding anything to the current node's content (e.g. newlines...)
 		  readingContent = false;
 
           // Process the nearest start tag
 		  babyNode = new JreepadNode(this);
 		  //System.out.println("\n\nJust before passing to baby: content is:\n"+currentXmlContent);
-		  currentXmlContent = babyNode.recursiveCreateFromXmlStream(bReader, 
+		  currentXmlContent = babyNode.recursiveCreateFromXmlStream(bReader,
 				   currentXmlContent.substring(startTagOffset), depth+1);
 		  //System.out.println("\n\nJust after passing to baby: content is:\n"+currentXmlContent);
 		  children.add(babyNode);
         }
-      
+
 		startTagOffset = currentXmlContent.indexOf("<node");
 		endTagOffset = currentXmlContent.indexOf("</node>");
       }
@@ -255,7 +257,7 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
   }
 
 
-  private void constructFromHjtInputStream(InputStreamReader treeInputStream, boolean autoDetectHtmlArticles, 
+  private void constructFromHjtInputStream(InputStreamReader treeInputStream, boolean autoDetectHtmlArticles,
             int hjtFileFormat, BufferedReader bReader, int lineNum, Stack nodeStack,
             Vector children
             ) throws IOException
@@ -268,7 +270,7 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
     dtLine = "dt=text";
 
     while(       (hjtFileFormat == 2 ||  (dtLine = bReader.readLine())!=null)
-         && (nodeLine = bReader.readLine())!=null && 
+         && (nodeLine = bReader.readLine())!=null &&
           (titleLine = bReader.readLine())!=null && (depthLine = bReader.readLine())!=null)
     {
       // Read "dt=text"    [or error] - NB THE OLDER FORMAT DOESN'T INCLUDE THIS LINE SO WE SKIP IT
@@ -334,7 +336,7 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
 
     Stack nodeStack = new Stack();
     nodeStack.push(this);
-    
+
     int hjtFileFormat = -1;
 
     String dtLine, nodeLine, titleLine, depthLine;
@@ -346,11 +348,11 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
       hjtFileFormat = 2;
     else
       throw new IOException("\"<Treepad>\" tag not found at beginning of file!\n(This can be caused by having the wrong character set specified.)");
-    
+
     dtLine = "dt=text";
 
     while(       (hjtFileFormat == 2 ||  (dtLine = bReader.readLine())!=null)
-         && (nodeLine = bReader.readLine())!=null && 
+         && (nodeLine = bReader.readLine())!=null &&
           (titleLine = bReader.readLine())!=null && (depthLine = bReader.readLine())!=null)
     {
       // Read "dt=text"    [or error] - NB THE OLDER FORMAT DOESN'T INCLUDE THIS LINE SO WE SKIP IT
@@ -497,7 +499,7 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
     ret.append("\n</dl>\n</body>\n</html>");
     return ret.toString();
   }
-  
+
   public String articleToHtml(int exportMode, boolean urlsToLinks, String anchorName, int anchorType)
   {
     switch(articleMode)
@@ -529,7 +531,7 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
 		switch(exportMode)
 		{
 		  case EXPORT_HTML_PREFORMATTED:
-			return "<pre>" 
+			return "<pre>"
 			  + (urlsToLinks ? urlsToHtmlLinksAndHtmlSpecialChars(getContent(), anchorType) : htmlSpecialChars(getContent()) )
 			  + "</pre>";
 		  case EXPORT_HTML_HTML:
@@ -546,7 +548,7 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
 		}
     }
   }
-  
+
   private static String htmlSpecialChars(String in)
   {
     char[] c = in.toCharArray();
@@ -560,7 +562,7 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
       else                ret.append(c[i]);
     return ret.toString();
   }
-  
+
   // Search through the String, replacing URI-like substrings (containing ://) with HTML links
   private String urlsToHtmlLinksAndHtmlSpecialChars(String in, int anchorType)
   {
@@ -576,7 +578,7 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
        // // First check whether currentWord is empty...?
        // if(c!=CharacterIterator.DONE && currentWord.length()==0)
        //   continue;
-        
+
         // Check if the current word is a URL - do weird stuff to it if so, else just output it
         if(currentWord.toString().indexOf("://")>0)
         {
@@ -620,9 +622,9 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
 		else if(c=='&') out.append("&amp;");
 		else if(c==CharacterIterator.DONE);
 		else                out.append(c);
-       
+
         currentWord.setLength(0);
-        
+
         if(c==CharacterIterator.DONE)
           break;
       }
@@ -690,7 +692,7 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
   public String toTreepadString(int currentDepth)
   {
     StringBuffer ret = new StringBuffer("dt=Text\n<node>\n");
-    ret.append(getTitle() + "\n" + (currentDepth++) + "\n" + getContent() 
+    ret.append(getTitle() + "\n" + (currentDepth++) + "\n" + getContent()
                      + "\n"
 //                     + (currentDepth==1?"ROOTNODEMANIA":"\n") // Not sure why I need to be slightly unusual with the root node...
                      + "<end node> 5P9i0s8y19Z\n");
@@ -718,7 +720,7 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
     }
 
     if(child<0 || child > children.size()) return null;
-    
+
     JreepadNode ret = (JreepadNode)children.remove(child);
     return ret;
   }
@@ -804,7 +806,7 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
     if(getParentNode()==null) return;
     int index = getIndex();
     if(index<1) return;
-    
+
     removeFromParent();
     getParentNode().insert(this, index-1);
   }
@@ -813,7 +815,7 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
     if(getParentNode()==null) return;
     int index = getIndex();
     if(index<0 || index >= getParentNode().getChildCount()-1) return;
-    
+
     removeFromParent();
     getParentNode().insert(this, index+1);
   }
@@ -839,7 +841,7 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
     theChild.setParent(this);
     return theChild;
   }
-  
+
   public int getIndex(TreeNode child)
   {
     if(articleMode==ARTICLEMODE_SOFTLINK)
@@ -857,7 +859,7 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
       return -1;
     return getParent().getIndex(this);
   }
-  
+
   public boolean isNodeInSubtree(JreepadNode n)
   {
     if(articleMode==ARTICLEMODE_SOFTLINK)
@@ -872,7 +874,7 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
     }
     return false;
   }
-  
+
   public void sortChildren()
   {
     if(articleMode==ARTICLEMODE_SOFTLINK)
@@ -960,7 +962,7 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
   {
     return getChildCount()==0; // Is this the correct behaviour?
   }
-  
+
   public Enumeration children()
   {
     if(articleMode==ARTICLEMODE_SOFTLINK)
@@ -1050,7 +1052,7 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
     }
     return ret;
   }
-  
+
   public JreepadNode getChildByTitle(String title)
   {
     if(articleMode==ARTICLEMODE_SOFTLINK)
@@ -1072,7 +1074,7 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
     }
     if(charWidth < 2)
       return;
-    
+
     StringBuffer ret = new StringBuffer();
     StringCharacterIterator iter = new StringCharacterIterator(content);
     int charsOnThisLine = 0;
@@ -1086,10 +1088,10 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
         charsOnThisLine=0;
       }
       ret.append(c);
-    } 
+    }
     content = ret.toString();
   }
-  
+
   public synchronized void stripAllTags()
   {
     if(articleMode==ARTICLEMODE_SOFTLINK)
@@ -1108,7 +1110,7 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
         on = false;
       else if(on)
         ret.append(c);
-    } 
+    }
     content = ret.toString();
   }
 
@@ -1179,7 +1181,7 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
     int curCols = 1;
     int parseMode = CSVPARSE_MODE_EXPECTINGDATA;
     StringBuffer curData = new StringBuffer();
-    
+
     // Go through once to determine the number of rows and columns
     StringCharacterIterator iter = new StringCharacterIterator(theContent);
 
@@ -1319,7 +1321,7 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
     ret += toXmlNoHeader(encoding, 0, true);
     return stripControlChars(ret);
   }
-  
+
   public String toXmlNoHeader(String encoding, int depth, boolean incChildren)
   {
     StringBuffer ret = new StringBuffer("<node ");
@@ -1448,10 +1450,10 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
     protected class JreepadNodeUndoableEditListener
                     implements UndoableEditListener {
         public void undoableEditHappened(UndoableEditEvent e) {
-            
+
             //System.out.println("Undoable event is " + (e.getEdit().isSignificant()?"":"NOT ") + "significant");
             //System.out.println("Undoable event source: " + e.getEdit());
-    
+
             //Remember the edit and update the menus.
             undoMgr.addEdit(e.getEdit());
             //undoAction.updateUndoState();
