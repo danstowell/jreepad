@@ -134,7 +134,7 @@ public class TreeView extends JTree
         }
 
         node.removeFromParent();
-        newParent.addChild(node);
+        newParent.add(node);
 
         treeModel.reload(oldParent);
         treeModel.reload(newParent);

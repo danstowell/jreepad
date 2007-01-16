@@ -36,7 +36,7 @@ import java.util.Vector;
 
 /*
 
-The "Find" class is a command-line utility for searching a single HJT file. 
+The "Find" class is a command-line utility for searching a single HJT file.
 
 Examples of usage:
 
@@ -46,7 +46,7 @@ java jreepad.find -f ../hjts/notes.hjt -t "Wood Green" -a "020"
 java jreepad.find -f ../hjts/notes.hjt "Wood Green" -a "020"
 
 The "-f" argument indicates the file to load.
-The remaining arguments are the search terms, 
+The remaining arguments are the search terms,
   which by default are found in EITHER the node title or the article.
 A "-t" indicates that what follows should only be in the title.
 A "-a" indicates that what follows should only be in the article.
@@ -105,10 +105,10 @@ public class find
     boolean orNotAnd = true;
     File userFile = null;
     int outputFormat = OUTPUT_XML;
-    
+
     Vector titleSearches = new Vector();
     Vector articleSearches = new Vector();
-    
+
     // Load the arguments and check them out
     if(args.length==0 || (args.length==1 && (args[0].startsWith("-h") || args[0].startsWith("--h")) ))
     {
@@ -165,7 +165,7 @@ public class find
         }
       }
     }
-    
+
     String inNodes = "";
     for(int i=0; i<titleSearches.size(); i++)
     {
@@ -180,7 +180,7 @@ public class find
     {
       System.out.println("Warning: complicated searches (more than 1 item to find in article, or more than 1 article to find in title) don't currently work properly!");
     }
-    
+
     String encoding = "UTF-8";
     File prefsLastFile = null;
     // Load the preferences file (if exists)
@@ -193,7 +193,7 @@ public class find
 	  ObjectInputStream prefsLoader = new ObjectInputStream(new FileInputStream(prefsFile));
 	  jreepref = (JreepadPrefs)prefsLoader.readObject();
 	  prefsLoader.close();
-    
+
       // ...and take some data from it
       encoding = jreepref.getEncoding();
       prefsLastFile = jreepref.getMostRecentFile();
@@ -205,11 +205,11 @@ public class find
     else
     {
     }
-    
+
     // If no file specified by user, attempt to take it from the preferences file
     if(userFile==null)
       userFile = prefsLastFile;
-    
+
     // If file unspecified or not found, exit with error
     if(userFile==null)
     {
@@ -221,7 +221,7 @@ public class find
       System.out.println("File not found!");
       System.exit(1);
     }
-    
+
     // Load the file to be searched
     JreepadNode root = new JreepadNode();
 	try
@@ -233,20 +233,20 @@ public class find
 	  System.out.println("File input error: " + err);
 	  System.exit(1);
 	}
-    
-    
+
+
     // Carry out the search
     JreepadSearcher searcher = new JreepadSearcher(root);
     searcher.performSearch(inNodes, inArticles, new TreePath(root),
   							orNotAnd, caseSensitive, maxResults);
     JreepadSearcher.JreepadSearchResult[] res = searcher.getSearchResults();
-   
+
     if(res.length==0)
     {
 	  System.out.println("No matches.");
 	  System.exit(1);
     }
-    
+
     // Output the results
     JreepadNode resultsParent;
     switch(outputFormat)
@@ -260,15 +260,15 @@ public class find
           System.out.println(formatResultBrieferText(res[i]));
         break;
       case OUTPUT_XML:
-        resultsParent = new JreepadNode("Search results","",null);
+        resultsParent = new JreepadNode("Search results","");
         for(int i=0; i<res.length; i++)
-          resultsParent.addChild(res[i].getNode());
+          resultsParent.add(res[i].getNode());
         System.out.println(resultsParent.toXml("ISO-8859-1")); // FIXME: What should the encoding be, if anything?
         break;
       case OUTPUT_HJT:
-        resultsParent = new JreepadNode("Search results","",null);
+        resultsParent = new JreepadNode("Search results","");
         for(int i=0; i<res.length; i++)
-          resultsParent.addChild(res[i].getNode());
+          resultsParent.add(res[i].getNode());
         System.out.println(resultsParent.toTreepadString());
         break;
       case OUTPUT_TITLES:

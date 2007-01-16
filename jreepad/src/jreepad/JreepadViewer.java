@@ -1580,7 +1580,7 @@ public class JreepadViewer extends JFrame // implements ApplicationListener
           return; // This cancels "New" if the save action failed or was cancelled
     }
 	content.remove(theJreepad);
-	theJreepad = new JreepadView(new JreepadNode("<Untitled node>",theJreepad.getContentForNewNode(), null));
+	theJreepad = new JreepadView(new JreepadNode("<Untitled node>",theJreepad.getContentForNewNode()));
 	getPrefs().saveLocation = null;
 	content.add(theJreepad);
 	setTitleBasedOnFilename("");
@@ -2477,7 +2477,7 @@ lang.getString("HELP_LICENSE") + "\n\n           http://www.gnu.org/copyleft/gpl
       }
       else
         titStr = contStr.substring(0, newlinePos-1);
-      theJreepad.addChild(new JreepadNode(titStr, contStr, theJreepad.getCurrentNode()));
+      theJreepad.addChild(new JreepadNode(titStr, contStr));
     }
     catch(Exception err)
     {

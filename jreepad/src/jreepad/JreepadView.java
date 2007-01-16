@@ -160,7 +160,7 @@ public class JreepadView extends Box implements TableModelListener
 
   public JreepadView()
   {
-    this(new JreepadNode("<Untitled node>", "", null));
+    this(new JreepadNode("<Untitled node>", ""));
   }
 
   public JreepadView(JreepadNode root)
@@ -710,7 +710,7 @@ public class JreepadView extends Box implements TableModelListener
   public void addChild(JreepadNode newKid)
   {
     //DEL storeForUndo();
-	getCurrentNode().addChild(newKid);
+	getCurrentNode().add(newKid);
     treeModel.reload(currentNode);
     tree.expandPath(tree.getSelectionPath());
   }
@@ -724,7 +724,7 @@ public class JreepadView extends Box implements TableModelListener
     String curLine;
     while((curLine = bReader.readLine())!=null)
       if(curLine.trim().length() > 0)
-        getCurrentNode().addChild(new JreepadNode(curLine.trim(), "", getCurrentNode()));
+        getCurrentNode().add(new JreepadNode(curLine.trim(), ""));
 
     treeModel.reload(currentNode);
     tree.expandPath(tree.getSelectionPath());
@@ -1075,7 +1075,7 @@ System.out.println(err);
 	  {
         JreepadNode newNode;
         TreePath newPath;
-	    newNode = new JreepadNode(text, "", currentNode);
+	    newNode = new JreepadNode(text, "");
 	    addChild(newNode);
 	    TreePath leadPath = tree.getLeadSelectionPath();
 	    if(leadPath != null)

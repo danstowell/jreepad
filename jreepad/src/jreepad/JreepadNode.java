@@ -20,23 +20,32 @@ The full license can be read online here:
 
 package jreepad;
 
-import java.util.*;
-import java.io.*;
-import javax.swing.tree.*;
-import java.text.*;
-import javax.swing.undo.*;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
+import java.text.CharacterIterator;
+import java.text.StringCharacterIterator;
+import java.util.Comparator;
+import java.util.Enumeration;
+import java.util.Stack;
+
+import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.MutableTreeNode;
+import javax.swing.tree.TreeNode;
+import javax.swing.undo.UndoManager;
 
 import org.philwilson.JTextile;
 
-public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Comparable
+public class JreepadNode extends DefaultMutableTreeNode implements Comparable
 {
-  private Vector children;
   private String title;
   private String content;
-//  private int childrenCount=0;
-  private JreepadNode parentNode, softLinkTarget;
-  private OurSortComparator ourSortComparator;
-  protected transient javax.swing.table.TableColumnModel tblColModel;
+  private JreepadNode softLinkTarget;
+  private static OurSortComparator ourSortComparator = new OurSortComparator();
+  //protected transient javax.swing.table.TableColumnModel tblColModel;
 
 //  private String lineSeparator = System.getProperty("line.separator");
 
@@ -49,27 +58,20 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
 
   // Undo features
   protected transient UndoManager undoMgr;
-  protected transient String lastEditStyle = "";
+  //protected transient String lastEditStyle = "";
 
   public JreepadNode()
   {
-    this((JreepadNode)null);
+    this("");
   }
-  public JreepadNode(JreepadNode parentNode)
+  public JreepadNode(String content)
   {
-    this("", parentNode);
+    this("",content);
   }
-  public JreepadNode(String content, JreepadNode parentNode)
-  {
-    this("",content, parentNode);
-  }
-  public JreepadNode(String title, String content, JreepadNode parentNode)
+  public JreepadNode(String title, String content)
   {
     this.title = title;
     this.content = content;
-    this.parentNode = parentNode;
-    ourSortComparator = new OurSortComparator();
-    children = new Vector();
     undoMgr = new UndoManager();
   }
   public JreepadNode(InputStreamReader treeInputStream, boolean autoDetectHtmlArticles) throws IOException
@@ -81,7 +83,6 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
   {
     int lineNum = 2;
     BufferedReader bReader = new BufferedReader(treeInputStream);
-    children = new Vector();
 
     Stack nodeStack = new Stack();
     nodeStack.push(this);
@@ -113,11 +114,11 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
     else if((currentLine.toLowerCase().startsWith("<treepad") && currentLine.endsWith(">")) )
     {
       constructFromHjtInputStream(treeInputStream, autoDetectHtmlArticles,
-            1, bReader, lineNum, nodeStack, children);
+            1, bReader, lineNum, nodeStack);
     }
     else if((currentLine.toLowerCase().startsWith("<hj-treepad") && currentLine.endsWith(">")) )
       constructFromHjtInputStream(treeInputStream, autoDetectHtmlArticles,
-            2, bReader, lineNum, nodeStack, children);
+            2, bReader, lineNum, nodeStack);
     else
     {
       System.out.println("First line of file does not indicate a recognised format:\n" + currentLine + "\n");
@@ -164,7 +165,7 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
     int titleOffset, typeOffset, startTagOffset, endTagOffset;
     String title, typeString, content;
     JreepadNode babyNode;
-    children = new Vector();
+    removeAllChildren();
     this.content = "";
 
     // Extract the attributes
@@ -233,12 +234,12 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
 		  readingContent = false;
 
           // Process the nearest start tag
-		  babyNode = new JreepadNode(this);
+		  babyNode = new JreepadNode();
 		  //System.out.println("\n\nJust before passing to baby: content is:\n"+currentXmlContent);
 		  currentXmlContent = babyNode.recursiveCreateFromXmlStream(bReader,
 				   currentXmlContent.substring(startTagOffset), depth+1);
 		  //System.out.println("\n\nJust after passing to baby: content is:\n"+currentXmlContent);
-		  children.add(babyNode);
+          add(babyNode);
         }
 
 		startTagOffset = currentXmlContent.indexOf("<node");
@@ -258,9 +259,7 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
 
 
   private void constructFromHjtInputStream(InputStreamReader treeInputStream, boolean autoDetectHtmlArticles,
-            int hjtFileFormat, BufferedReader bReader, int lineNum, Stack nodeStack,
-            Vector children
-            ) throws IOException
+            int hjtFileFormat, BufferedReader bReader, int lineNum, Stack nodeStack) throws IOException
   {
     int depthMarker;
     JreepadNode babyNode;
@@ -295,8 +294,7 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
       }
 
       // Now, having established the content and the title and the depth, we'll create the child
-      babyNode = new JreepadNode(titleLine, currentContent.substring(0, Math.max(currentContent.length()-1,0)),
-                             (JreepadNode)(nodeStack.peek()));
+      babyNode = new JreepadNode(titleLine, currentContent.substring(0, Math.max(currentContent.length()-1,0)));
 //      babyNode = new JreepadNode(titleLine, currentContent.substring(0, Math.max(currentContent.length()-2,0)),
 //                             (JreepadNode)(nodeStack.peek()));
 
@@ -319,13 +317,14 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
         while(nodeStack.size()>depthMarker)
           nodeStack.pop();
 
-        ((JreepadNode)(nodeStack.peek())).addChild(babyNode);
+        ((JreepadNode)(nodeStack.peek())).add(babyNode);
         nodeStack.push(babyNode);
       }
     }
 
   } // End of constructor from HJT FileInputStream
 
+  /*
   private void OLDVERSIONconstructFromInputStream(InputStreamReader treeInputStream, boolean autoDetectHtmlArticles) throws IOException
   {
     int lineNum = 2;
@@ -407,6 +406,7 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
     }
 
   } // End of constructor from FileInputStream
+*/
 
   public String toString()
   {
@@ -471,14 +471,14 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
     // Write out the node's article content - using normal, preformatted, or HTML modes as appropriate
     ret.append(articleToHtml(exportMode, urlsToLinks, anchorName, anchorType));
 
-    if(children.size()>0)
+    if(getChildCount()>0)
       ret.append("\n<dl>");
     for(int i=0; i<children.size(); i++)
     {
       JreepadNode thisKid = (JreepadNode)getChildAt(i);
       ret.append(thisKid.exportAsHtml(exportMode, urlsToLinks, anchorName+"/"+htmlSpecialChars(thisKid.getTitle()), anchorType));
     }
-    if(children.size()>0)
+    if(getChildCount()>0)
       ret.append("\n</dl>");
     ret.append("</dd>");
 
@@ -702,15 +702,14 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
     return ret.toString();
   }
 
-  public void addChild(JreepadNode child)
+  public void add(JreepadNode child)
   {
     if(articleMode==ARTICLEMODE_SOFTLINK)
     {
-      softLinkTarget.addChild(child);
+      softLinkTarget.add(child);
       return;
     }
-    children.add(child);
-    child.setParent(this);
+    super.add(child);
   }
   public JreepadNode removeChild(int child) // Can be used to delete, OR to 'get' one for moving
   {
@@ -719,9 +718,8 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
       return softLinkTarget.removeChild(child);
     }
 
-    if(child<0 || child > children.size()) return null;
-
-    JreepadNode ret = (JreepadNode)children.remove(child);
+    JreepadNode ret = (JreepadNode)getChildAt(child);
+    remove(child);
     return ret;
   }
   public TreeNode getChildAt(int child)
@@ -730,10 +728,7 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
     {
       return softLinkTarget.getChildAt(child);
     }
-    if(child<0 || child>= children.size())
-      return null;
-    else
-      return (JreepadNode)children.get(child);
+    return super.getChildAt(child);
   }
   public int getChildCount()
   {
@@ -741,7 +736,7 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
     {
       return softLinkTarget.getChildCount();
     }
-    return children.size();
+    return super.getChildCount();
   }
   public boolean indent()
   {
@@ -749,10 +744,10 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
     int pos = getIndex();
     if(pos<1) return false;
     // Get sibling node just above, and move self to there.
-    getParentNode().removeChild(pos);
-    JreepadNode newParent = (JreepadNode)getParentNode().getChildAt(pos-1);
-    newParent.addChild(this);
-    setParent(newParent);
+    MutableTreeNode oldParent = (MutableTreeNode)getParent();
+    DefaultMutableTreeNode newParent = (DefaultMutableTreeNode)oldParent.getChildAt(pos-1);
+    removeFromParent();
+    newParent.add(this);
     return true;
   }
   public boolean outdent()
@@ -767,7 +762,6 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
     // Move self to parent's parent, at (ppos+1)
     p.removeChild(getIndex());
     pp.insert(this, ppos+1);
-    setParent(pp);
 
     // Also (as in the original treepad) move all the later siblings so they're children of this node
 
@@ -784,10 +778,10 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
       softLinkTarget.moveChildUp(child);
       return;
     }
-    if(child<1 || child>= children.size())
+    if(child<1 || child>= getChildCount())
       return;
 
-    children.add(child-1, children.remove(child));
+    insert(removeChild(child), child-1);
   }
   public void moveChildDown(int child)
   {
@@ -796,28 +790,30 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
       softLinkTarget.moveChildDown(child);
       return;
     }
-    if(child<0 || child>= children.size()-1)
+    if(child<0 || child>= getChildCount()-1)
       return;
 
-    children.add(child+1, children.remove(child));
+    insert(removeChild(child), child+1);
   }
   public void moveUp()
   {
-    if(getParentNode()==null) return;
+    MutableTreeNode parent = (MutableTreeNode)getParent();
+    if(parent==null) return;
     int index = getIndex();
     if(index<1) return;
 
     removeFromParent();
-    getParentNode().insert(this, index-1);
+    parent.insert(this, index-1);
   }
   public void moveDown()
   {
-    if(getParentNode()==null) return;
+    MutableTreeNode parent = (MutableTreeNode)getParent();
+    if(parent==null) return;
     int index = getIndex();
-    if(index<0 || index >= getParentNode().getChildCount()-1) return;
+    if(index<0 || index >= parent.getChildCount()-1) return;
 
     removeFromParent();
-    getParentNode().insert(this, index+1);
+    parent.insert(this, index+1);
   }
   public JreepadNode addChild()
   {
@@ -825,9 +821,8 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
     {
       return softLinkTarget.addChild();
     }
-    JreepadNode theChild = new JreepadNode(this);
-    children.add(theChild);
-    theChild.setParent(this);
+    JreepadNode theChild = new JreepadNode();
+    add(theChild);
     return theChild;
   }
   public JreepadNode addChild(int index)
@@ -836,9 +831,8 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
     {
       return softLinkTarget.addChild(index);
     }
-    JreepadNode theChild = new JreepadNode(this);
-    children.add(index, theChild);
-    theChild.setParent(this);
+    JreepadNode theChild = new JreepadNode();
+    insert(theChild, index);
     return theChild;
   }
 
@@ -848,10 +842,7 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
     {
       return softLinkTarget.getIndex(child);
     }
-    for(int i=0; i<getChildCount(); i++)
-      if(((JreepadNode)child).equals(getChildAt(i)))
-        return i;
-    return -1;
+    return super.getIndex(child);
   }
   public int getIndex()
   {
@@ -866,13 +857,7 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
     {
       return softLinkTarget.isNodeInSubtree(n);
     }
-    for(int i=0; i<getChildCount(); i++)
-    {
-      JreepadNode aChild = (JreepadNode)getChildAt(i);
-      if(aChild.equals(n) || aChild.isNodeInSubtree(n))
-        return true;
-    }
-    return false;
+    return isNodeDescendant(n);
   }
 
   public void sortChildren()
@@ -902,9 +887,9 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
   {
     Object[] childrenArray = children.toArray();
     java.util.Arrays.sort(childrenArray, ourSortComparator);
-    children = new Vector();
+    removeAllChildren();
     for(int i=0; i<childrenArray.length; i++)
-      children.add((JreepadNode)childrenArray[i]);
+      add((JreepadNode)childrenArray[i]);
   }
   private static class OurSortComparator implements Comparator, Serializable
   {
@@ -925,11 +910,12 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
     }
 */
   }
+  /*
   public int OLDSIMPLEcompareTo(Object o)
   {
     return getTitle().compareToIgnoreCase(
             ((JreepadNode)o).getTitle());
-  }
+  }*/
   // The following function is a halfway-house on the way to "natural numerical ordering"
   public int compareTo(Object o)
   {
@@ -957,10 +943,9 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
   }
   // End of: Stuff to use Java's built-in mergesort
 
-  public boolean getAllowsChildren() { return true; } // Required by TreeNode interface
   public boolean isLeaf()
   {
-    return getChildCount()==0; // Is this the correct behaviour?
+    return (getChildCount()==0);
   }
 
   public Enumeration children()
@@ -969,16 +954,12 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
     {
       return softLinkTarget.children();
     }
-    return new JreepadNodeEnumeration();
+    return super.children();
   } // Required by TreeNode interface
 
   public JreepadNode getParentNode()
   {
-    return parentNode;
-  }
-  public TreeNode getParent()
-  {
-    return parentNode;
+    return (JreepadNode)getParent();
   }
 
   // MutableTreeNode functions
@@ -989,7 +970,7 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
       softLinkTarget.remove(child);
       return;
     }
-    removeChild(child);
+    super.remove(child);
   }
   public void remove(MutableTreeNode node)
   {
@@ -998,23 +979,9 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
       softLinkTarget.remove(node);
       return;
     }
-    removeChild(getIndex((JreepadNode)node));
-  }
-  public void removeFromParent()
-  {
-    if(parentNode != null)
-      parentNode.remove(this);
-  }
-  public void setParent(MutableTreeNode parent)
-  {
-    parentNode = (JreepadNode)parent; // Do we need to do anything more at this point?
+    super.remove(node);
   }
 
-  public void setUserObject(Object object)
-  {
-    // ?
-    setContent(object.toString());
-  }
   public void insert(MutableTreeNode child, int index)
   {
     if(articleMode==ARTICLEMODE_SOFTLINK)
@@ -1022,7 +989,7 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
       softLinkTarget.insert(child, index);
       return;
     }
-    children.insertElementAt((JreepadNode)child, index);
+    super.insert(child, index);
   }
 
   public void addChildFromTextFile(InputStreamReader textFile, String nodeName) throws IOException
@@ -1039,16 +1006,16 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
     while((currentLine = bReader.readLine())!=null)
       contentString.append(currentLine + "\n");
     // Then just create the node
-    addChild(new JreepadNode(nodeName, contentString.toString(), this));
+    add(new JreepadNode(nodeName, contentString.toString()));
   }
 
   // This getCopy() function is intended to return a copy of the entire subtree, used for Undo
   public JreepadNode getCopy()
   {
-    JreepadNode ret = new JreepadNode(getTitle(), getContent(), null);
+    JreepadNode ret = new JreepadNode(getTitle(), getContent());
     for(int i=0; i<getChildCount(); i++)
     {
-      ret.addChild(((JreepadNode)getChildAt(i)).getCopy());
+      ret.add(((JreepadNode)getChildAt(i)).getCopy());
     }
     return ret;
   }
@@ -1432,18 +1399,11 @@ public class JreepadNode implements Serializable, TreeNode, MutableTreeNode, Com
 
   protected JreepadNode makeSoftLink()
   {
-    JreepadNode link;
-    getParentNode().addChild(link = new JreepadNode(getParentNode()));
+    JreepadNode link = new JreepadNode();
+    getParentNode().add(link);
     link.makeMeASoftLinkTo(this);
     return link;
   }
-
-  public class JreepadNodeEnumeration implements Enumeration
-  {
-    private int i=0;
-    public boolean hasMoreElements() { return i<getChildCount(); }
-    public Object nextElement()      { return getChildAt(i++);   }
-  } // This enumerator class is required by the TreeNode interface
 
 /*
     // Listens for edits that can be undone.
