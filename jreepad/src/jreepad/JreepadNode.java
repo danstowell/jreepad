@@ -23,8 +23,6 @@ package jreepad;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.text.CharacterIterator;
 import java.text.StringCharacterIterator;
@@ -672,7 +670,7 @@ public class JreepadNode extends DefaultMutableTreeNode implements Comparable
     return ret;
   }
 
-
+/*
   private void writeObject(ObjectOutputStream out) throws IOException
   {
     out.writeBytes(this.toTreepadString()); // FIXME - What is this used for? Is it right? What about XML mode?
@@ -685,22 +683,7 @@ public class JreepadNode extends DefaultMutableTreeNode implements Comparable
   {
     constructFromInputStream(new InputStreamReader(in), false);
   }
-  public String toTreepadString()
-  {
-    return "<Treepad version 2.7>\n" + toTreepadString(0);
-  }
-  public String toTreepadString(int currentDepth)
-  {
-    StringBuffer ret = new StringBuffer("dt=Text\n<node>\n");
-    ret.append(getTitle() + "\n" + (currentDepth++) + "\n" + getContent()
-                     + "\n"
-//                     + (currentDepth==1?"ROOTNODEMANIA":"\n") // Not sure why I need to be slightly unusual with the root node...
-                     + "<end node> 5P9i0s8y19Z\n");
-    for(int i=0; i<getChildCount(); i++)
-      ret.append(((JreepadNode)getChildAt(i)).toTreepadString(currentDepth));
-//    System.out.println("\n\n____________________NODE AT DEPTH " + currentDepth + "_________________________\n" + ret);
-    return ret.toString();
-  }
+  */
 
   public void add(JreepadNode child)
   {
@@ -1282,71 +1265,6 @@ public class JreepadNode extends DefaultMutableTreeNode implements Comparable
     setContent(o.toString());
   }
 
-  public String toXml(String encoding)
-  {
-    String ret = "<?xml version=\"1.0\" encoding=\"" + encoding + "\"?>\n";
-    ret += toXmlNoHeader(encoding, 0, true);
-    return stripControlChars(ret);
-  }
-
-  public String toXmlNoHeader(String encoding, int depth, boolean incChildren)
-  {
-    StringBuffer ret = new StringBuffer("<node ");
-    if(depth==0)
-      ret.append("xmlns=\"http://jreepad.sourceforge.net/formats\"  ");
-    ret.append("title=\"" + xmlEscapeChars(getTitle()) + "\" type=\"");
-
-    switch(getArticleMode())
-    {
-      case ARTICLEMODE_HTML:
-        ret.append("text/html");
-        break;
-      case ARTICLEMODE_TEXTILEHTML:
-        ret.append("text/textile");
-        break;
-      case ARTICLEMODE_CSV:
-        ret.append("text/csv");
-        break;
-      default:
-        ret.append("text/plain");
-        break;
-    }
-    ret.append("\">");
-    ret.append(xmlEscapeChars(getContent()));
-    if(incChildren)
-    {
-      Enumeration kids = children();
-      while(kids.hasMoreElements())
-        ret.append(  ((JreepadNode)kids.nextElement()).toXmlNoHeader(encoding, depth+1, incChildren));
-    }
-    ret.append("</node>\n");
-    return ret.toString();
-  }
-
-  private static String stripControlChars(String in)
-  {
-    // Don't output control characters... well duh! I have no idea why my XML was coming out with control characters in the first place...
-    char[] c = in.toCharArray();
-    StringBuffer ret = new StringBuffer();
-    for(int i=0; i<c.length; i++)
-      if((c[i]=='\n') || (c[i]=='\t') || (Character.getType(c[i]) != Character.CONTROL))
-        ret.append(c[i]);
-    return ret.toString();
-  }
-
-  private static String xmlEscapeChars(String in)
-  {
-    char[] c = in.toCharArray();
-    StringBuffer ret = new StringBuffer();
-    for(int i=0; i<c.length; i++)
-      if(c[i]=='<')       ret.append("&lt;");
-      else if(c[i]=='>')  ret.append("&gt;");
-      else if(c[i]=='&')  ret.append("&amp;");
-      else if(c[i]=='"') ret.append("&quot;");
-      else                ret.append(c[i]);
-    return ret.toString();
-  }
-
   private static String xmlUnescapeChars(String in)
   {
     char[] c = in.toCharArray();
@@ -1422,4 +1340,3 @@ public class JreepadNode extends DefaultMutableTreeNode implements Comparable
     }
 */
 }
-

@@ -31,8 +31,13 @@ import java.util.Enumeration;
 import java.awt.print.*;
 */
 import java.io.*;
+
 import javax.swing.tree.TreePath;
 import java.util.Vector;
+
+import jreepad.io.JreepadWriter;
+import jreepad.io.TreepadWriter;
+import jreepad.io.XmlWriter;
 
 /*
 
@@ -98,7 +103,7 @@ public class find
 
   private static final File prefsFile = new File(System.getProperty("user.home"), ".jreepref");
 
-  public static void main(String[] args)
+  public static void main(String[] args) throws IOException
   {
     int maxResults = 200; // A default which can be overridden
     boolean caseSensitive = false;
@@ -260,16 +265,17 @@ public class find
           System.out.println(formatResultBrieferText(res[i]));
         break;
       case OUTPUT_XML:
-        resultsParent = new JreepadNode("Search results","");
-        for(int i=0; i<res.length; i++)
-          resultsParent.add(res[i].getNode());
-        System.out.println(resultsParent.toXml("ISO-8859-1")); // FIXME: What should the encoding be, if anything?
-        break;
       case OUTPUT_HJT:
         resultsParent = new JreepadNode("Search results","");
         for(int i=0; i<res.length; i++)
           resultsParent.add(res[i].getNode());
-        System.out.println(resultsParent.toTreepadString());
+        String outputEncoding = "ISO-8859-1"; // FIXME: What should the encoding be?
+        JreepadWriter writer;
+        if (outputFormat == OUTPUT_XML)
+            writer= new XmlWriter(outputEncoding);
+        else
+            writer= new TreepadWriter(outputEncoding);
+        writer.write(System.out, resultsParent);
         break;
       case OUTPUT_TITLES:
         for(int i=0; i<res.length; i++)
@@ -289,6 +295,7 @@ public class find
     JreepadNode n = res.getNode();
     return n.getTitle() + "\n    " + res.getArticleQuote().replace('\n', ' ');
   }
+  /*
   private static String formatResultXml(JreepadSearcher.JreepadSearchResult res)
   {
     JreepadNode n = res.getNode();
@@ -296,6 +303,7 @@ public class find
     return n.toXmlNoHeader("ISO-8859-1", 1, false);
 //    return "<node title=\"" + n.getTitle() + "\">" + n.getContent() + "</node>";
   }
+  */
 
   private static void printUsage()
   {

@@ -46,6 +46,10 @@ import edu.stanford.ejalbert.exception.UnsupportedOperatingSystemException;
 
 import java.lang.reflect.*;
 
+import jreepad.io.JreepadWriter;
+import jreepad.io.TreepadWriter;
+import jreepad.io.XmlWriter;
+
 public class JreepadViewer extends JFrame // implements ApplicationListener
 {
   private static Vector theApps = new Vector(1,1);
@@ -1647,20 +1651,16 @@ public class JreepadViewer extends JFrame // implements ApplicationListener
     {
       setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 
-	  // Get the output to be written - as HJT or as XML
-	  String writeMe;
+      // Write to either HJT or XML
+      JreepadWriter writer;
 	  if(getPrefs().mainFileType==JreepadPrefs.FILETYPE_XML)
-		writeMe = theJreepad.getRootJreepadNode().toXml(getPrefs().getEncoding());
+        writer = new XmlWriter(getPrefs().getEncoding());
 	  else
-		writeMe = theJreepad.getRootJreepadNode().toTreepadString();
+        writer = new TreepadWriter(getPrefs().getEncoding());
+      OutputStream fos = new FileOutputStream(getPrefs().saveLocation);
+      writer.write(fos, theJreepad.getRootJreepadNode());
+      fos.close();
 
-      FileOutputStream fO = new FileOutputStream(getPrefs().saveLocation);
-      DataOutputStream dO = new DataOutputStream(fO);
-      BufferedWriter bO = new BufferedWriter(new OutputStreamWriter(dO, getPrefs().getEncoding()));
-      bO.write(writeMe);
-      bO.close();
-      dO.close();
-      fO.close();
       if(MAC_OS_X){
         com.apple.eio.FileManager.setFileTypeAndCreator(getPrefs().saveLocation.toString(),
                 appleAppCode, appleAppCode);
@@ -1696,20 +1696,16 @@ public class JreepadViewer extends JFrame // implements ApplicationListener
         setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
         getPrefs().saveLocation = fileChooser.getSelectedFile();
 
-        // Get the output to be written - as HJT or as XML
-        String writeMe;
-        if(getPrefs().mainFileType==JreepadPrefs.FILETYPE_XML)
-          writeMe = theJreepad.getRootJreepadNode().toXml(getPrefs().getEncoding());
+        // Write to either HJT or XML
+        JreepadWriter writer;
+        if(getPrefs().mainFileType == JreepadPrefs.FILETYPE_XML)
+          writer = new XmlWriter(getPrefs().getEncoding());
         else
-          writeMe = theJreepad.getRootJreepadNode().toTreepadString();
+          writer = new TreepadWriter(getPrefs().getEncoding());
+        OutputStream fos = new FileOutputStream(getPrefs().saveLocation);
+        writer.write(fos, theJreepad.getRootJreepadNode());
+        fos.close();
 
-        FileOutputStream fO = new FileOutputStream(getPrefs().saveLocation);
-        DataOutputStream dO = new DataOutputStream(fO);
-        BufferedWriter bO = new BufferedWriter(new OutputStreamWriter(dO, getPrefs().getEncoding()));
-        bO.write(writeMe);
-        bO.close();
-        dO.close();
-        fO.close();
         if(MAC_OS_X){
           com.apple.eio.FileManager.setFileTypeAndCreator(getPrefs().saveLocation.toString(),
                 appleAppCode, appleAppCode);
@@ -1740,12 +1736,13 @@ public class JreepadViewer extends JFrame // implements ApplicationListener
       {
         setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
         getPrefs().backupLocation = fileChooser.getSelectedFile();
-        String writeMe = theJreepad.getRootJreepadNode().toTreepadString();
-        FileOutputStream fO = new FileOutputStream(getPrefs().backupLocation);
-        DataOutputStream dO = new DataOutputStream(fO);
-        dO.writeBytes(writeMe);
-        dO.close();
-        fO.close();
+
+        // Write to either HJT
+        JreepadWriter writer = new TreepadWriter(getPrefs().getEncoding());
+        OutputStream fos = new FileOutputStream(getPrefs().backupLocation);
+        writer.write(fos, theJreepad.getRootJreepadNode());
+        fos.close();
+
         setCursor(Cursor.getDefaultCursor());
         return true;
       }
@@ -1885,18 +1882,24 @@ public class JreepadViewer extends JFrame // implements ApplicationListener
 		String output;
 		switch(exportFormat)
 		{
-		  case FILE_FORMAT_HJT:
-			output = theJreepad.getCurrentNode().toTreepadString();
-			break;
 		  case FILE_FORMAT_HTML:
 			output = theJreepad.getCurrentNode().exportAsHtml(getPrefs().htmlExportArticleType,
 			                                                  getPrefs().htmlExportUrlsToLinks,
 			                                                  getPrefs().htmlExportAnchorLinkType);
 			break;
 		  case FILE_FORMAT_XML:
-//			output = theJreepad.getCurrentNode().exportAsSimpleXml();
-			output = theJreepad.getCurrentNode().toXml(getPrefs().getEncoding());
-			break;
+          case FILE_FORMAT_HJT:
+            JreepadWriter writer;
+            if (exportFormat == FILE_FORMAT_XML)
+              writer= new XmlWriter(getPrefs().getEncoding());
+            else
+                writer= new TreepadWriter(getPrefs().getEncoding());
+            OutputStream fos = new FileOutputStream(getPrefs().exportLocation);
+            writer.write(fos, theJreepad.getCurrentNode());
+            fos.close();
+            setCursor(Cursor.getDefaultCursor());
+			return;
+
 		  case FILE_FORMAT_TEXT:
 			output = theJreepad.getCurrentNode().getContent();
 			break;
