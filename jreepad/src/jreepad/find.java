@@ -35,6 +35,8 @@ import java.io.*;
 import javax.swing.tree.TreePath;
 import java.util.Vector;
 
+import jreepad.io.AutoDetectReader;
+import jreepad.io.JreepadReader;
 import jreepad.io.JreepadWriter;
 import jreepad.io.TreepadWriter;
 import jreepad.io.XmlWriter;
@@ -231,7 +233,9 @@ public class find
     JreepadNode root = new JreepadNode();
 	try
 	{
-	  root = new JreepadNode(new InputStreamReader(new FileInputStream(userFile), encoding), false);
+        InputStream in = new FileInputStream(userFile);
+        JreepadReader reader = new AutoDetectReader(encoding, false);
+        root = reader.read(in);
 	}
 	catch(IOException err)
 	{

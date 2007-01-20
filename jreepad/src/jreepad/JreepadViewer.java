@@ -46,6 +46,8 @@ import edu.stanford.ejalbert.exception.UnsupportedOperatingSystemException;
 
 import java.lang.reflect.*;
 
+import jreepad.io.AutoDetectReader;
+import jreepad.io.JreepadReader;
 import jreepad.io.JreepadWriter;
 import jreepad.io.TreepadWriter;
 import jreepad.io.XmlWriter;
@@ -356,7 +358,11 @@ public class JreepadViewer extends JFrame // implements ApplicationListener
       {
         getPrefs().openLocation = firstTimeFile;
         content.remove(theJreepad);
-        theJreepad = new JreepadView(new JreepadNode(new InputStreamReader(new FileInputStream(getPrefs().openLocation), getPrefs().getEncoding()), getPrefs().autoDetectHtmlArticles));
+
+        InputStream in = new FileInputStream(getPrefs().openLocation);
+        JreepadReader reader = new AutoDetectReader(getPrefs().getEncoding(), getPrefs().autoDetectHtmlArticles);
+        theJreepad = new JreepadView(reader.read(in));
+
         getPrefs().saveLocation = getPrefs().exportLocation = getPrefs().importLocation = getPrefs().openLocation;
         content.add(theJreepad);
 	    getPrefs().saveLocation = getPrefs().openLocation;
@@ -1621,7 +1627,11 @@ public class JreepadViewer extends JFrame // implements ApplicationListener
         setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
         getPrefs().openLocation = f;
         content.remove(theJreepad);
-        theJreepad = new JreepadView(new JreepadNode(new InputStreamReader(new FileInputStream(getPrefs().openLocation), getPrefs().getEncoding()), getPrefs().autoDetectHtmlArticles));
+
+        InputStream in = new FileInputStream(getPrefs().openLocation);
+        JreepadReader reader = new AutoDetectReader(getPrefs().getEncoding(), getPrefs().autoDetectHtmlArticles);
+        theJreepad = new JreepadView(reader.read(in));
+
         getPrefs().saveLocation = getPrefs().openLocation;
         content.add(theJreepad);
         addToOpenRecentMenu(getPrefs().openLocation);
@@ -1824,7 +1834,9 @@ public class JreepadViewer extends JFrame // implements ApplicationListener
 		switch(importFormat)
 		{
 		  case FILE_FORMAT_HJT:
-			theJreepad.addChild(new JreepadNode(new InputStreamReader(new FileInputStream(getPrefs().importLocation), getPrefs().getEncoding()), getPrefs().autoDetectHtmlArticles));
+            InputStream in = new FileInputStream(getPrefs().importLocation);
+            JreepadReader reader = new AutoDetectReader(getPrefs().getEncoding(), getPrefs().autoDetectHtmlArticles);
+            theJreepad.addChild(reader.read(in));
 			break;
 		  case FILE_FORMAT_TEXT:
 		    theJreepad.addChildrenFromTextFiles(fileChooser.getSelectedFiles());
