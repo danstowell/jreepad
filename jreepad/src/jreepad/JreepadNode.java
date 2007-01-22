@@ -101,52 +101,6 @@ public class JreepadNode extends DefaultMutableTreeNode implements Comparable
   public static final int EXPORT_HTML_TEXTILEHTML=3;
   public static final int EXPORT_HTML_ANCHORS_PATH=0;
   public static final int EXPORT_HTML_ANCHORS_WIKI=1;
-  public String exportAsHtml(int exportMode, boolean urlsToLinks, int anchorType)
-  {
-    return exportAsHtml(exportMode, urlsToLinks, anchorType, false);
-  }
-  public String exportAsHtml(int exportMode, boolean urlsToLinks, int anchorType, boolean causeToPrint)
-  {
-    StringBuffer ret = new StringBuffer();
-    ret.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">\n<html xmlns=\"http://www.w3.org/1999/xhtml\" xml:lang=\"en\">\n<head>\n<title>");
-    ret.append(htmlSpecialChars(getTitle()));
-    ret.append("</title>\n<style type=\"text/css\">\n"
-   	  + "dl {}\ndl dt { font-weight: bold; margin-top: 10px; font-size: 24pt; }\ndl dd {margin-left: 20px; padding-left: 0px;}\ndl dd dl dt {background: black; color: white; font-size: 12pt; }\ndl dd dl dd dl dt {background: white; color: black; }"
-	  + "\n</style>\n</head>\n\n<body"
-	  + (causeToPrint? " onload='print();'" : "")
-	  + ">\n<!-- Exported from Jreepad -->\n<dl>");
-    ret.append(exportAsHtml(exportMode, urlsToLinks, htmlSpecialChars(getTitle()), anchorType));
-    ret.append("\n</dl>\n</body>\n</html>");
-    return ret.toString();
-  }
-  public StringBuffer exportAsHtml(int exportMode, boolean urlsToLinks, String anchorName, int anchorType)
-  {
-    StringBuffer ret = new StringBuffer();
-    ret.append("\n<dt><a name=\"");
-    if(anchorType==EXPORT_HTML_ANCHORS_WIKI)
-      ret.append(getTitle());
-    else
-      ret.append(anchorName);
-    ret.append("\"></a>");
-    ret.append(htmlSpecialChars(getTitle()));
-    ret.append("</dt>\n<dd>");
-
-    // Write out the node's article content - using normal, preformatted, or HTML modes as appropriate
-    ret.append(articleToHtml(exportMode, urlsToLinks, anchorName, anchorType));
-
-    if(getChildCount()>0)
-      ret.append("\n<dl>");
-    for(int i=0; i<children.size(); i++)
-    {
-      JreepadNode thisKid = (JreepadNode)getChildAt(i);
-      ret.append(thisKid.exportAsHtml(exportMode, urlsToLinks, anchorName+"/"+htmlSpecialChars(thisKid.getTitle()), anchorType));
-    }
-    if(getChildCount()>0)
-      ret.append("\n</dl>");
-    ret.append("</dd>");
-
-    return ret;
-  }
 
   public String exportSingleArticleAsHtml(int exportMode, boolean urlsToLinks, int anchorType, boolean causeToPrint)
   {
@@ -158,12 +112,12 @@ public class JreepadNode extends DefaultMutableTreeNode implements Comparable
 	  + "\n</style>\n</head>\n\n<body"
 	  + (causeToPrint? " onload='print();'" : "")
 	  + ">\n<!-- Exported from Jreepad -->\n<dl>");
-    ret.append(articleToHtml(exportMode, urlsToLinks, htmlSpecialChars(getTitle()), anchorType));
+    ret.append(articleToHtml(exportMode, urlsToLinks, anchorType));
     ret.append("\n</dl>\n</body>\n</html>");
     return ret.toString();
   }
 
-  public String articleToHtml(int exportMode, boolean urlsToLinks, String anchorName, int anchorType)
+  public String articleToHtml(int exportMode, boolean urlsToLinks, int anchorType)
   {
     switch(articleMode)
     {
@@ -210,6 +164,13 @@ public class JreepadNode extends DefaultMutableTreeNode implements Comparable
 			return (urlsToLinks ? urlsToHtmlLinksAndHtmlSpecialChars(getContent(), anchorType) : htmlSpecialChars(getContent()) );
 		}
     }
+  }
+
+  public String getWikiAnchor()
+  {
+      if (getParent() == null)
+          return htmlSpecialChars(getTitle());
+      return getParentNode().getWikiAnchor() + "/" + htmlSpecialChars(getTitle());
   }
 
   private static String htmlSpecialChars(String in)
@@ -729,6 +690,11 @@ public class JreepadNode extends DefaultMutableTreeNode implements Comparable
     content = ret.toString();
   }
 
+  public JreepadNode getSoftLinkTarget()
+  {
+      return softLinkTarget;
+  }
+
   public String getTitle()
   { return articleMode==ARTICLEMODE_SOFTLINK ? softLinkTarget.getTitle() : title; }
   public String getContent() { return articleMode==ARTICLEMODE_SOFTLINK ? softLinkTarget.getContent() : content; }
@@ -783,7 +749,7 @@ public class JreepadNode extends DefaultMutableTreeNode implements Comparable
   static final int CSVPARSE_MODE_INQUOTES = 1;
   static final int CSVPARSE_MODE_EXPECTINGDELIMITER = 2;
   static final int CSVPARSE_MODE_EXPECTINGDATA = 3;
-  protected String[][] interpretContentAsCsv()
+  public String[][] interpretContentAsCsv()
   {
     return interpretContentAsCsv(getContent());
   }
@@ -928,50 +894,6 @@ public class JreepadNode extends DefaultMutableTreeNode implements Comparable
 	  o.append("\n");
     }
     setContent(o.toString());
-  }
-
-  private static String xmlUnescapeChars(String in)
-  {
-    char[] c = in.toCharArray();
-    StringBuffer ret = new StringBuffer();
-    StringBuffer entity = new StringBuffer();
-    String ent;
-
-    int i,j;
-    OuterLoop:
-    for(i=0; i<c.length; i++)
-      if(c[i]=='&')
-      {
-        entity = new StringBuffer();
-        for(j=0; j<8; j++) // Add things into the entity buffer until we hit a semicolon
-        {
-          i++;
-          if(i == c.length)
-          {
-            ret.append('&' + entity.toString());
-            continue OuterLoop;
-          }
-          else if(c[i]!=';')
-            entity.append(c[i]);
-          else
-            break; // Reached end of the entity (or end of the whole string!)
-        }
-        ent = entity.toString();
-        if(ent.equals("lt"))
-          ret.append("<");
-        else if(ent.equals("gt"))
-          ret.append(">");
-        else if(ent.equals("amp"))
-          ret.append("&");
-        else if(ent.equals("quot"))
-          ret.append("\"");
-        else
-          ret.append('&' + ent + ';');
-      }
-      else
-        ret.append(c[i]);
-
-    return ret.toString();
   }
 
   private void makeMeASoftLinkTo(JreepadNode targetNode)

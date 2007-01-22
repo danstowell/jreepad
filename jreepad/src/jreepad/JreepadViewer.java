@@ -47,6 +47,7 @@ import edu.stanford.ejalbert.exception.UnsupportedOperatingSystemException;
 import java.lang.reflect.*;
 
 import jreepad.io.AutoDetectReader;
+import jreepad.io.HtmlWriter;
 import jreepad.io.JreepadReader;
 import jreepad.io.JreepadWriter;
 import jreepad.io.TreepadWriter;
@@ -1891,27 +1892,22 @@ public class JreepadViewer extends JFrame // implements ApplicationListener
         setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
         getPrefs().exportLocation = fileChooser.getSelectedFile();
 
-		String output;
+		String output = null;
+        JreepadWriter writer = null;
 		switch(exportFormat)
 		{
 		  case FILE_FORMAT_HTML:
-			output = theJreepad.getCurrentNode().exportAsHtml(getPrefs().htmlExportArticleType,
-			                                                  getPrefs().htmlExportUrlsToLinks,
-			                                                  getPrefs().htmlExportAnchorLinkType);
+            writer = new HtmlWriter(getPrefs().getEncoding(),
+                getPrefs().htmlExportArticleType,
+                getPrefs().htmlExportUrlsToLinks,
+			    getPrefs().htmlExportAnchorLinkType);
 			break;
 		  case FILE_FORMAT_XML:
+            writer= new XmlWriter(getPrefs().getEncoding());
+            break;
           case FILE_FORMAT_HJT:
-            JreepadWriter writer;
-            if (exportFormat == FILE_FORMAT_XML)
-              writer= new XmlWriter(getPrefs().getEncoding());
-            else
-                writer= new TreepadWriter(getPrefs().getEncoding());
-            OutputStream fos = new FileOutputStream(getPrefs().exportLocation);
-            writer.write(fos, theJreepad.getCurrentNode());
-            fos.close();
-            setCursor(Cursor.getDefaultCursor());
-			return;
-
+            writer= new TreepadWriter(getPrefs().getEncoding());
+            break;
 		  case FILE_FORMAT_TEXT:
 			output = theJreepad.getCurrentNode().getContent();
 			break;
@@ -1930,14 +1926,18 @@ public class JreepadViewer extends JFrame // implements ApplicationListener
 			return;
 		}
 
-        FileOutputStream fO = new FileOutputStream(getPrefs().exportLocation);
-//        DataOutputStream dO = new DataOutputStream(fO);
-        OutputStreamWriter osw = new OutputStreamWriter(fO, getPrefs().getEncoding());
-//        dO.writeBytes(output);
-        osw.write(output);
-        osw.close();
-//        dO.close();
-        fO.close();
+        OutputStream fos = new FileOutputStream(getPrefs().exportLocation);
+        if (writer != null)
+        {
+          writer.write(fos, theJreepad.getCurrentNode());
+          fos.close();
+        }
+        else // assume (output != null)
+        {
+          OutputStreamWriter osw = new OutputStreamWriter(fos, getPrefs().getEncoding());
+          osw.write(output);
+          osw.close();
+        }
         setCursor(Cursor.getDefaultCursor());
       }
     }
@@ -1952,9 +1952,13 @@ public class JreepadViewer extends JFrame // implements ApplicationListener
   {
     setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 
-    String output = theJreepad.getCurrentNode().exportAsHtml(getPrefs().htmlExportArticleType,
-      getPrefs().htmlExportUrlsToLinks,
-      getPrefs().htmlExportAnchorLinkType, true);
+    HtmlWriter writer = new HtmlWriter(
+        getPrefs().getEncoding(),
+        getPrefs().htmlExportArticleType,
+        getPrefs().htmlExportUrlsToLinks,
+        getPrefs().htmlExportAnchorLinkType,
+        true);
+    String output = writer.write(theJreepad.getCurrentNode());
 
     toBrowserForPrintAction(output);
 
