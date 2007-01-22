@@ -22,10 +22,8 @@ package jreepad;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.Serializable;
 import java.text.CharacterIterator;
 import java.text.StringCharacterIterator;
-import java.util.Comparator;
 import java.util.Enumeration;
 
 import javax.swing.tree.DefaultMutableTreeNode;
@@ -40,7 +38,6 @@ public class JreepadNode extends DefaultMutableTreeNode implements Comparable
   private String title;
   private String content;
   private JreepadNode softLinkTarget;
-  private static OurSortComparator ourSortComparator = new OurSortComparator();
   //protected transient javax.swing.table.TableColumnModel tblColModel;
 
 //  private String lineSeparator = System.getProperty("line.separator");
@@ -495,36 +492,12 @@ public class JreepadNode extends DefaultMutableTreeNode implements Comparable
   private void sort()
   {
     Object[] childrenArray = children.toArray();
-    java.util.Arrays.sort(childrenArray, ourSortComparator);
+    java.util.Arrays.sort(childrenArray);
     removeAllChildren();
     for(int i=0; i<childrenArray.length; i++)
       add((JreepadNode)childrenArray[i]);
   }
-  private static class OurSortComparator implements Comparator, Serializable
-  {
-    public int compare(Object o1, Object o2)
-    {
-//      return ((JreepadNode)o1).getTitle().compareToIgnoreCase(
-//            ((JreepadNode)o2).getTitle());
-      return ((JreepadNode)o1).compareTo(o2);
-    }
-/*
-    public boolean equals(Object obj)
-    {
-      return obj.equals(this); // Lazy!
-    }
-    public int hashCode() // Apparently this is required by the contract of Object.hashCode()
-    {
-      return this.hashCode();
-    }
-*/
-  }
-  /*
-  public int OLDSIMPLEcompareTo(Object o)
-  {
-    return getTitle().compareToIgnoreCase(
-            ((JreepadNode)o).getTitle());
-  }*/
+
   // The following function is a halfway-house on the way to "natural numerical ordering"
   public int compareTo(Object o)
   {
