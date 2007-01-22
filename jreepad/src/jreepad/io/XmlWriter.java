@@ -48,7 +48,7 @@ public class XmlWriter
         Writer writer = new OutputStreamWriter(out, encoding);
         writer.write("<?xml version=\"1.0\" encoding=\"" + encoding + "\"?>\n");
         writeNode(writer, node, 0, true);
-        out.close();
+        writer.close();
     }
 
     private void writeNode(Writer writer, JreepadNode node, int depth, boolean includeChildren) throws IOException
