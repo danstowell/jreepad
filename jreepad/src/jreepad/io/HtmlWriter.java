@@ -26,6 +26,7 @@ import java.io.StringWriter;
 import java.io.Writer;
 import java.util.Enumeration;
 
+import jreepad.JreepadArticle;
 import jreepad.JreepadNode;
 
 /**
@@ -119,7 +120,7 @@ public class HtmlWriter
     public void writeNode(Writer writer, JreepadNode node) throws IOException
     {
         writer.write("\n<dt><a name=\"");
-        if (anchorType == JreepadNode.EXPORT_HTML_ANCHORS_WIKI)
+        if (anchorType == JreepadArticle.EXPORT_HTML_ANCHORS_WIKI)
             writer.write(node.getTitle());
         else
             writer.write(node.getWikiAnchor());
@@ -129,7 +130,7 @@ public class HtmlWriter
 
         // Write out the node's article content - using normal, preformatted, or HTML modes as
         // appropriate
-        writer.write(node.articleToHtml(exportMode, urlsToLinks, anchorType));
+        writer.write(node.getArticle().toHtml(exportMode, urlsToLinks, anchorType));
 
         if (node.getChildCount() > 0)
             writer.write("\n<dl>");

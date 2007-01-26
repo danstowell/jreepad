@@ -292,7 +292,7 @@ public class find
   private static String formatResultSimpleText(JreepadSearcher.JreepadSearchResult res)
   {
     JreepadNode n = res.getNode();
-    return "-- " + n.getTitle() + " --\n" + n.getContent();
+    return "-- " + n.getArticle().getTitle() + " --\n" + n.getArticle().getContent();
   }
   private static String formatResultBrieferText(JreepadSearcher.JreepadSearchResult res)
   {

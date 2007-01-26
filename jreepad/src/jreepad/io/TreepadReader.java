@@ -25,6 +25,7 @@ import java.io.InputStreamReader;
 import java.io.LineNumberReader;
 import java.util.Stack;
 
+import jreepad.JreepadArticle;
 import jreepad.JreepadNode;
 
 /**
@@ -100,8 +101,8 @@ public class TreepadReader implements JreepadReader
             // Turn it into a HTML-mode node if it matches "<html> ... </html>"
             String compareContent = newNode.getContent().toLowerCase().trim();
             int newArticleMode = (autoDetectHtmlArticles && compareContent.startsWith("<html>") && compareContent
-                .endsWith("</html>")) ? JreepadNode.ARTICLEMODE_HTML : JreepadNode.ARTICLEMODE_ORDINARY;
-            newNode.setArticleMode(newArticleMode);
+                .endsWith("</html>")) ? JreepadArticle.ARTICLEMODE_HTML : JreepadArticle.ARTICLEMODE_ORDINARY;
+            newNode.getArticle().setArticleMode(newArticleMode);
 
             if (depthLine.equals("0"))
             {

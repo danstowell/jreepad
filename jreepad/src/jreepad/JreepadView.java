@@ -246,13 +246,13 @@ public class JreepadView extends Box implements TableModelListener
     				{
     				  if(!copyEditorPaneContentToNodeContent)
     				    return; // i.e. we are deactivated while changing from node to node
-    				  if(currentNode.getArticleMode() != JreepadNode.ARTICLEMODE_ORDINARY)
+    				  if(currentNode.getArticle().getArticleMode() != JreepadArticle.ARTICLEMODE_ORDINARY)
     				    return; // i.e. we are only relevant when in plain-text mode
 
     				  if(!editorPanePlainText.getText().equals(currentNode.getContent()))
     				  {
     				    // System.out.println("UPDATE - I'd now overwrite node content with editorpane content");
-    				    currentNode.setContent(editorPanePlainText.getText());
+    				    currentNode.getArticle().setContent(editorPanePlainText.getText());
     				    setWarnAboutUnsaved(true);
     				  }
     				  else
@@ -382,8 +382,8 @@ public class JreepadView extends Box implements TableModelListener
     if(isSame)
     {
       // Only update the node's stored content if it's a plaintext node
-      if(currentNode.getArticleMode() == JreepadNode.ARTICLEMODE_ORDINARY)
-        currentNode.setContent(getEditorPaneText());
+      if(currentNode.getArticle().getArticleMode() == JreepadArticle.ARTICLEMODE_ORDINARY)
+        currentNode.getArticle().setContent(getEditorPaneText());
       return;
     }
 
@@ -391,11 +391,11 @@ public class JreepadView extends Box implements TableModelListener
     if(currentNode != null)
     {
       // Only update the node's stored content if it's a plaintext node
-      if(currentNode.getArticleMode() == JreepadNode.ARTICLEMODE_ORDINARY)
-        currentNode.setContent(getEditorPaneText());
+      if(currentNode.getArticle().getArticleMode() == JreepadArticle.ARTICLEMODE_ORDINARY)
+        currentNode.getArticle().setContent(getEditorPaneText());
     }
     currentNode = n;
-    setEditorPaneText(n.getContent());
+    setEditorPaneText(n.getArticle());
 //    editorPanePlainText.setText(n.getContent());
 //    editorPaneHtml.setText(n.getContent());
     ensureCorrectArticleRenderMode();
@@ -539,7 +539,7 @@ public class JreepadView extends Box implements TableModelListener
 
   public void insertDate()
   {
-    if(currentNode.getArticleMode() != JreepadNode.ARTICLEMODE_ORDINARY)
+    if(currentNode.getArticle().getArticleMode() != JreepadArticle.ARTICLEMODE_ORDINARY)
       return; // May want to fix this later - allow other modes to have the date inserted...
 
     //DEL storeForUndo();
@@ -575,7 +575,7 @@ public class JreepadView extends Box implements TableModelListener
     TreePath parentPath = tree.getSelectionPath().getParentPath();
     JreepadNode parent = currentNode.getParentNode();
     JreepadNode ret = parent.addChild(index);
-    ret.setContent(getContentForNewNode());
+    ret.getArticle().setContent(getContentForNewNode());
     treeModel.nodesWereInserted(parent, new int[]{index});
     TreePath newPath = (parentPath.pathByAddingChild(ret));
     if(newPath!=null)
@@ -597,7 +597,7 @@ public class JreepadView extends Box implements TableModelListener
     TreePath parentPath = tree.getSelectionPath().getParentPath();
     JreepadNode parent = currentNode.getParentNode();
     JreepadNode ret = parent.addChild(index+1);
-    ret.setContent(getContentForNewNode());
+    ret.getArticle().setContent(getContentForNewNode());
     treeModel.nodesWereInserted(parent, new int[]{index+1});
     tree.startEditingAtPath(parentPath.pathByAddingChild(ret));
     return ret;
@@ -606,7 +606,7 @@ public class JreepadView extends Box implements TableModelListener
   {
     //DEL storeForUndo();
     JreepadNode ret = currentNode.addChild();
-    ret.setContent(getContentForNewNode());
+    ret.getArticle().setContent(getContentForNewNode());
     TreePath nodePath = tree.getSelectionPath();
     treeModel.nodesWereInserted(currentNode, new int[]{currentNode.getIndex(ret)});
 
@@ -732,17 +732,17 @@ public class JreepadView extends Box implements TableModelListener
 
   public String getSelectedTextInArticle()
   {
-    switch(currentNode.getArticleMode())
+    switch(currentNode.getArticle().getArticleMode())
     {
-      case JreepadNode.ARTICLEMODE_CSV:
+      case JreepadArticle.ARTICLEMODE_CSV:
         int x = editorPaneCsv.getSelectedColumn();
         int y = editorPaneCsv.getSelectedRow();
         if(x==-1 || y ==-1)
           return "";
         return editorPaneCsv.getValueAt(y,x).toString();
-      case JreepadNode.ARTICLEMODE_HTML:
+      case JreepadArticle.ARTICLEMODE_HTML:
         return editorPaneHtml.getSelectedText();
-      case JreepadNode.ARTICLEMODE_ORDINARY:
+      case JreepadArticle.ARTICLEMODE_ORDINARY:
       default:
         return editorPanePlainText.getSelectedText();
     }
@@ -816,7 +816,7 @@ public class JreepadView extends Box implements TableModelListener
     if(url==null || url.length()==0)
       url = currentNode.getTitle();
 
-    if((url == null) && (currentNode.getArticleMode()==JreepadNode.ARTICLEMODE_ORDINARY))
+    if((url == null) && (currentNode.getArticle().getArticleMode()==JreepadArticle.ARTICLEMODE_ORDINARY))
     {
       try
       {
@@ -857,7 +857,7 @@ System.out.println(err);
   public void openURLSelectedInArticle()
   {
     String url = getSelectedTextInArticle();
-    if((url == null) && (currentNode.getArticleMode()==JreepadNode.ARTICLEMODE_ORDINARY))
+    if((url == null) && (currentNode.getArticle().getArticleMode()==JreepadArticle.ARTICLEMODE_ORDINARY))
     {
       try
       {
@@ -1153,7 +1153,7 @@ System.out.println(err);
   public void wrapContentToCharWidth(int charWidth)
   {
     //DEL storeForUndo();
-    currentNode.wrapContentToCharWidth(charWidth);
+    currentNode.getArticle().wrapContentToCharWidth(charWidth);
     editorPanePlainText.setText(currentNode.getContent());
     editorPaneHtml.setText(currentNode.getContent());
     setWarnAboutUnsaved(true);
@@ -1161,7 +1161,7 @@ System.out.println(err);
   public void stripAllTags()
   {
     //DEL storeForUndo();
-    currentNode.stripAllTags();
+    currentNode.getArticle().stripAllTags();
     editorPanePlainText.setText(currentNode.getContent());
     editorPaneHtml.setText(currentNode.getContent());
     setWarnAboutUnsaved(true);
@@ -1175,7 +1175,7 @@ System.out.println(err);
 
     copyEditorPaneContentToNodeContent = false; // Disables store-for-undo
 
-    currentNode.setContent(editorPanePlainText.getText());
+    currentNode.getArticle().setContent(editorPanePlainText.getText());
 /*
     switch(currentNode.getArticleMode())
     {
@@ -1194,27 +1194,27 @@ System.out.println(err);
 */
     switch(newMode)
     {
-      case JreepadNode.ARTICLEMODE_ORDINARY:
+      case JreepadArticle.ARTICLEMODE_ORDINARY:
         // DELETEME - PLAINTEXT SHOULD NOT BE AFFECTED BY OTHERS
         editorPanePlainText.setText(currentNode.getContent());
         break;
-      case JreepadNode.ARTICLEMODE_HTML:
+      case JreepadArticle.ARTICLEMODE_HTML:
         editorPaneHtml.setText(currentNode.getContent());
         break;
-      case JreepadNode.ARTICLEMODE_TEXTILEHTML:
+      case JreepadArticle.ARTICLEMODE_TEXTILEHTML:
         try{
           editorPaneHtml.setText(JTextile.textile(currentNode.getContent()));
         }catch(Exception e){
           editorPaneHtml.setText(currentNode.getContent());
         }
         break;
-      case JreepadNode.ARTICLEMODE_CSV:
-        articleToJTable(currentNode.getContent());
+      case JreepadArticle.ARTICLEMODE_CSV:
+        articleToJTable(currentNode.getArticle());
         break;
       default:
         return;
     }
-    currentNode.setArticleMode(newMode);
+    currentNode.getArticle().setArticleMode(newMode);
     ensureCorrectArticleRenderMode();
     getEditorPaneComponent().repaint();
     copyEditorPaneContentToNodeContent = true; // Re-enables store-for-undo
@@ -1227,15 +1227,15 @@ System.out.println(err);
 
   public void articleToJTable()
   {
-    String[][] rowData = currentNode.interpretContentAsCsv();
+    String[][] rowData = currentNode.getArticle().interpretContentAsCsv();
     String[] columnNames = null;
 
 //    System.out.println("articleToJTable(): rows=" + rowData.length + ", cols="+rowData[0].length);
     initJTable(rowData, columnNames);
   }
-  public void articleToJTable(String s)
+  public void articleToJTable(JreepadArticle a)
   {
-    String[][] rowData = JreepadNode.interpretContentAsCsv(s);
+    String[][] rowData = a.interpretContentAsCsv();
     String[] columnNames = new String[rowData[0].length];
     for(int i=0; i<columnNames.length; i++)
       columnNames[i] = " ";
@@ -1265,14 +1265,14 @@ System.out.println(err);
     if(currentNode==null)
       return editorPanePlainText; // This is a bit of a hack - it shouldn't really even be called to act on null
 
-    switch(currentNode.getArticleMode())
+    switch(currentNode.getArticle().getArticleMode())
     {
-      case JreepadNode.ARTICLEMODE_ORDINARY:
+      case JreepadArticle.ARTICLEMODE_ORDINARY:
         return editorPanePlainText;
-      case JreepadNode.ARTICLEMODE_HTML:
-      case JreepadNode.ARTICLEMODE_TEXTILEHTML:
+      case JreepadArticle.ARTICLEMODE_HTML:
+      case JreepadArticle.ARTICLEMODE_TEXTILEHTML:
         return editorPaneHtml;
-      case JreepadNode.ARTICLEMODE_CSV:
+      case JreepadArticle.ARTICLEMODE_CSV:
         return editorPaneCsv;
       default:
         System.err.println("getEditorPaneComponent() says: JreepadNode.getArticleMode() returned an unrecognised value");
@@ -1281,23 +1281,24 @@ System.out.println(err);
   }
   String getEditorPaneText()
   {
-    switch(currentNode.getArticleMode())
+    switch(currentNode.getArticle().getArticleMode())
     {
-      case JreepadNode.ARTICLEMODE_ORDINARY:
+      case JreepadArticle.ARTICLEMODE_ORDINARY:
         return editorPanePlainText.getText();
-      case JreepadNode.ARTICLEMODE_HTML:
+      case JreepadArticle.ARTICLEMODE_HTML:
         return editorPaneHtml.getText();
-      case JreepadNode.ARTICLEMODE_TEXTILEHTML:
+      case JreepadArticle.ARTICLEMODE_TEXTILEHTML:
         return editorPaneHtml.getText();
-      case JreepadNode.ARTICLEMODE_CSV:
+      case JreepadArticle.ARTICLEMODE_CSV:
 		return jTableContentToCsv();
       default:
         System.err.println("getEditorPaneText() says: JreepadNode.getArticleMode() returned an unrecognised value");
         return null;
     }
   }
-  void setEditorPaneText(String s)
+  void setEditorPaneText(JreepadArticle a)
   {
+    String s = a.getContent();
     try{
       editorPanePlainText.setText(s);
     }catch(Exception ex){
@@ -1306,22 +1307,22 @@ System.out.println(err);
       System.err.println("String: " + s);
       ex.printStackTrace();
     }
-    switch(currentNode.getArticleMode())
+    switch(currentNode.getArticle().getArticleMode())
     {
-      case JreepadNode.ARTICLEMODE_ORDINARY:
+      case JreepadArticle.ARTICLEMODE_ORDINARY:
         break;
-      case JreepadNode.ARTICLEMODE_HTML:
+      case JreepadArticle.ARTICLEMODE_HTML:
 	    editorPaneHtml.setText(s);
         break;
-      case JreepadNode.ARTICLEMODE_TEXTILEHTML:
+      case JreepadArticle.ARTICLEMODE_TEXTILEHTML:
         try{
           editorPaneHtml.setText(JTextile.textile(s));
         }catch(Exception e){
           editorPaneHtml.setText(s);
         }
         break;
-      case JreepadNode.ARTICLEMODE_CSV:
-        articleToJTable(s);
+      case JreepadArticle.ARTICLEMODE_CSV:
+        articleToJTable(a);
         break;
       default:
         System.err.println("setEditorPaneText() says: JreepadNode.getArticleMode() returned an unrecognised value");
@@ -1373,8 +1374,8 @@ System.out.println(err);
   public void tableChanged(TableModelEvent e)
   {
     // System.out.println(" -- tableChanged() -- ");
-    if(currentNode.getArticleMode() == JreepadNode.ARTICLEMODE_CSV)
-      currentNode.setContent(jTableContentToCsv());
+    if(currentNode.getArticle().getArticleMode() == JreepadArticle.ARTICLEMODE_CSV)
+      currentNode.getArticle().setContent(jTableContentToCsv());
   }
 
   class JreepadTreeModelListener implements TreeModelListener
@@ -1465,7 +1466,7 @@ System.out.println(err);
               //System.out.println("   Content: " + getCurrentNode().getContent());
               //System.out.println("   Node undoMgr: " + getCurrentNode().undoMgr);
               //Thread.currentThread().dumpStack();
-              getCurrentNode().undoMgr.addEdit(e.getEdit());
+              getCurrentNode().getArticle().getUndoMgr().addEdit(e.getEdit());
             }
 
 

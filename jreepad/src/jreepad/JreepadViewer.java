@@ -630,25 +630,25 @@ public class JreepadViewer extends JFrame // implements ApplicationListener
     articleViewModeMenuItem = new JMenu(lang.getString("MENUITEM_ARTICLEFORMAT")); //"View this article as...");
 	  articleViewModeTextMenuItem = new JMenuItem(lang.getString("MENUITEM_ARTICLEFORMAT_TEXT")); //"Text");
 	  articleViewModeTextMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {
-				theJreepad.setArticleMode(JreepadNode.ARTICLEMODE_ORDINARY);
+				theJreepad.setArticleMode(JreepadArticle.ARTICLEMODE_ORDINARY);
 				updateUndoRedoMenuState();
 					   }});
 	  articleViewModeMenuItem.add(articleViewModeTextMenuItem);
 	  articleViewModeHtmlMenuItem = new JMenuItem(lang.getString("MENUITEM_ARTICLEFORMAT_HTML")); //"HTML");
 	  articleViewModeHtmlMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {
-				theJreepad.setArticleMode(JreepadNode.ARTICLEMODE_HTML);
+				theJreepad.setArticleMode(JreepadArticle.ARTICLEMODE_HTML);
 				updateUndoRedoMenuState();
 					   }});
 	  articleViewModeMenuItem.add(articleViewModeHtmlMenuItem);
 	  articleViewModeCsvMenuItem = new JMenuItem(lang.getString("MENUITEM_ARTICLEFORMAT_CSV")); //"Table (comma-separated data)");
 	  articleViewModeCsvMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {
-				theJreepad.setArticleMode(JreepadNode.ARTICLEMODE_CSV);
+				theJreepad.setArticleMode(JreepadArticle.ARTICLEMODE_CSV);
 				updateUndoRedoMenuState();
 					   }});
 	  articleViewModeMenuItem.add(articleViewModeCsvMenuItem);
 	  articleViewModeTextileMenuItem = new JMenuItem(lang.getString("MENUITEM_ARTICLEFORMAT_TEXTILE"));
 	  articleViewModeTextileMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {
-				theJreepad.setArticleMode(JreepadNode.ARTICLEMODE_TEXTILEHTML);
+				theJreepad.setArticleMode(JreepadArticle.ARTICLEMODE_TEXTILEHTML);
 				updateUndoRedoMenuState();
 					   }});
 	  articleViewModeMenuItem.add(articleViewModeTextileMenuItem);
@@ -1379,7 +1379,7 @@ public class JreepadViewer extends JFrame // implements ApplicationListener
     hBox.setAlignmentX(Component.LEFT_ALIGNMENT);
 //    hBox.add(Box.createGlue());
     hBox.add(new JLabel(lang.getString("PREFS_HTML_TREATTEXTAS"), SwingConstants.LEFT));
-    htmlExportModeSelector = new JComboBox(JreepadNode.getHtmlExportArticleTypes());
+    htmlExportModeSelector = new JComboBox(JreepadArticle.getHtmlExportArticleTypes());
     htmlExportModeSelector.setAlignmentX(Component.LEFT_ALIGNMENT);
     htmlExportModeSelector.setSelectedIndex(getPrefs().htmlExportArticleType);
     htmlExportModeSelector.addActionListener(new ActionListener(){
@@ -1405,7 +1405,7 @@ public class JreepadViewer extends JFrame // implements ApplicationListener
     hBox.setAlignmentX(Component.LEFT_ALIGNMENT);
   //  hBox.add(Box.createGlue());
     hBox.add(new JLabel(lang.getString("PREFS_HTML_INTERNALLINKS"), SwingConstants.LEFT));
-    htmlExportAnchorTypeSelector = new JComboBox(JreepadNode.getHtmlExportAnchorLinkTypes());
+    htmlExportAnchorTypeSelector = new JComboBox(JreepadArticle.getHtmlExportAnchorLinkTypes());
     htmlExportAnchorTypeSelector.setSelectedIndex(getPrefs().htmlExportAnchorLinkType);
     htmlExportAnchorTypeSelector.setAlignmentX(Component.LEFT_ALIGNMENT);
     hBox.add(htmlExportAnchorTypeSelector);
@@ -1969,7 +1969,7 @@ public class JreepadViewer extends JFrame // implements ApplicationListener
   {
     setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 
-    String output = theJreepad.getCurrentNode().exportSingleArticleAsHtml(
+    String output = theJreepad.getCurrentNode().getArticle().exportAsHtml(
       getPrefs().htmlExportArticleType, getPrefs().htmlExportUrlsToLinks,
       getPrefs().htmlExportAnchorLinkType, true);
 
@@ -2113,7 +2113,7 @@ public class JreepadViewer extends JFrame // implements ApplicationListener
     else
 	  JOptionPane.showMessageDialog(this, lang.getString("MSG_NOTHING_TO_UNDO"), "No change" , JOptionPane.INFORMATION_MESSAGE);
 */
-    UndoManager undoMgr = theJreepad.getCurrentNode().undoMgr;
+    UndoManager undoMgr = theJreepad.getCurrentNode().getArticle().getUndoMgr();
     String undoStyle = undoMgr.getUndoPresentationName();
     try{
       // This "while" should roll multiple adds or deletes into one.
@@ -2128,7 +2128,7 @@ public class JreepadViewer extends JFrame // implements ApplicationListener
 	updateUndoRedoMenuState();
   }
   private void redoAction(){
-    UndoManager undoMgr = theJreepad.getCurrentNode().undoMgr;
+    UndoManager undoMgr = theJreepad.getCurrentNode().getArticle().getUndoMgr();
     String redoStyle = undoMgr.getRedoPresentationName();
     try{
       while(redoStyle.equals(undoMgr.getRedoPresentationName()))
@@ -2149,7 +2149,7 @@ public class JreepadViewer extends JFrame // implements ApplicationListener
     if(getPrefs().viewWhich == JreepadPrefs.VIEW_TREE)
       return false;
 
-    if(theJreepad.getCurrentNode().getArticleMode() != JreepadNode.ARTICLEMODE_ORDINARY)
+    if(theJreepad.getCurrentNode().getArticle().getArticleMode() != JreepadArticle.ARTICLEMODE_ORDINARY)
       return false;
 
     // Deactivated: since this class can't tell if text has been typed or not...
@@ -2162,10 +2162,10 @@ public class JreepadViewer extends JFrame // implements ApplicationListener
     if(getPrefs().viewWhich == JreepadPrefs.VIEW_TREE)
       return false;
 
-    if(theJreepad.getCurrentNode().getArticleMode() != JreepadNode.ARTICLEMODE_ORDINARY)
+    if(theJreepad.getCurrentNode().getArticle().getArticleMode() != JreepadArticle.ARTICLEMODE_ORDINARY)
       return false;
 
-    if(!theJreepad.getCurrentNode().undoMgr.canRedo())
+    if(!theJreepad.getCurrentNode().getArticle().getUndoMgr().canRedo())
       return false;
 
     return true;

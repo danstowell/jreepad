@@ -25,6 +25,7 @@ import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.util.Enumeration;
 
+import jreepad.JreepadArticle;
 import jreepad.JreepadNode;
 
 /**
@@ -58,15 +59,15 @@ public class XmlWriter
             writer.write("xmlns=\"http://jreepad.sourceforge.net/formats\" ");
         writer.write("title=\"" + xmlEscapeChars(node.getTitle()) + "\" type=\"");
 
-        switch (node.getArticleMode())
+        switch (node.getArticle().getArticleMode())
         {
-        case JreepadNode.ARTICLEMODE_HTML:
+        case JreepadArticle.ARTICLEMODE_HTML:
             writer.write("text/html");
             break;
-        case JreepadNode.ARTICLEMODE_TEXTILEHTML:
+        case JreepadArticle.ARTICLEMODE_TEXTILEHTML:
             writer.write("text/textile");
             break;
-        case JreepadNode.ARTICLEMODE_CSV:
+        case JreepadArticle.ARTICLEMODE_CSV:
             writer.write("text/csv");
             break;
         default:

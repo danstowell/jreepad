@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 
+import jreepad.JreepadArticle;
 import jreepad.JreepadNode;
 
 /**
@@ -107,15 +108,15 @@ public class XmlReader implements JreepadReader
             typeString = "text/plain";
 
         if (typeString.equals("text/csv"))
-            node.setArticleMode(JreepadNode.ARTICLEMODE_CSV);
+            node.getArticle().setArticleMode(JreepadArticle.ARTICLEMODE_CSV);
         else if (typeString.equals("text/html"))
-            node.setArticleMode(JreepadNode.ARTICLEMODE_HTML);
+            node.getArticle().setArticleMode(JreepadArticle.ARTICLEMODE_HTML);
         else if (typeString.equals("text/textile"))
-            node.setArticleMode(JreepadNode.ARTICLEMODE_TEXTILEHTML);
-        else if (typeString.equals("application/x-jreepad-softlink"))
-            node.setArticleMode(JreepadNode.ARTICLEMODE_SOFTLINK);
+            node.getArticle().setArticleMode(JreepadArticle.ARTICLEMODE_TEXTILEHTML);
+        //else if (typeString.equals("application/x-jreepad-softlink"))
+        //    node.setArticleMode(JreepadArticle.ARTICLEMODE_SOFTLINK);
         else
-            node.setArticleMode(JreepadNode.ARTICLEMODE_ORDINARY);
+            node.getArticle().setArticleMode(JreepadArticle.ARTICLEMODE_ORDINARY);
 
         node.setTitle(xmlUnescapeChars(title));
 
@@ -154,7 +155,7 @@ public class XmlReader implements JreepadReader
                         content += xmlUnescapeChars(currentXmlContent.substring(0, endTagOffset));
                     String returnFromBaby = currentXmlContent.substring(endTagOffset + 7);
                     // System.out.println("\n\nBaby intends to return:"+returnFromBaby);
-                    node.setContent(content);
+                    node.getArticle().setContent(content);
                     return new ReturnValue(returnFromBaby, node);
                 }
                 else
@@ -162,7 +163,7 @@ public class XmlReader implements JreepadReader
                     if (readingContent)
                     {
                         content += xmlUnescapeChars(currentXmlContent.substring(0, startTagOffset));
-                        node.setContent(content);
+                        node.getArticle().setContent(content);
                     }
 
                     // Having found a child node, we want to STOP adding anything to the current
@@ -190,7 +191,7 @@ public class XmlReader implements JreepadReader
         endTagOffset = currentXmlContent.indexOf('<');
         if (readingContent && (endTagOffset != -1))
             content += xmlUnescapeChars(currentXmlContent.substring(0, endTagOffset));
-        node.setContent(content);
+        node.getArticle().setContent(content);
         // System.out.println("THE MAIN WHILE LOOP HAS ENDED. SPARE CONTENT:\n" +
         // currentXmlContent);
         return new ReturnValue("", node);
