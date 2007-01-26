@@ -41,6 +41,11 @@ public class SoftLinkNode extends JreepadNode
         this.target = target;
     }
 
+    public JreepadArticle getArticle()
+    {
+        return target.getArticle();
+    }
+
     public void add(MutableTreeNode child)
     {
         target.add(child);
