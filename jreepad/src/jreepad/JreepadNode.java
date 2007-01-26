@@ -22,23 +22,20 @@ package jreepad;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.Enumeration;
 
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.MutableTreeNode;
-import javax.swing.tree.TreeNode;
+
 
 /**
- * The tree node. Contains an article or is a soft link to another node.
+ * The tree node. Contains an article.
  *
- * @version $Id: JreepadNode.java,v 1.25 2007-01-26 21:47:55 pewu Exp $
+ * @version $Id: JreepadNode.java,v 1.26 2007-01-26 22:38:37 pewu Exp $
  */
 public class JreepadNode
     extends DefaultMutableTreeNode
     implements Comparable
 {
-    private JreepadNode softLinkTarget = null;
-
     public JreepadNode()
     {
         this(new JreepadArticle());
@@ -61,24 +58,7 @@ public class JreepadNode
 
     public JreepadArticle getArticle()
     {
-        if (isSoftLink())
-            return softLinkTarget.getArticle();
         return (JreepadArticle)getUserObject();
-    }
-
-    public JreepadNode(JreepadNode softLinkTarget)
-    {
-        this.softLinkTarget = softLinkTarget;
-    }
-
-    public String toString()
-    {
-        return getTitle();
-    }
-
-    public boolean isSoftLink()
-    {
-        return softLinkTarget != null;
     }
 
     public String toFullString()
@@ -154,36 +134,11 @@ public class JreepadNode
         return ret;
     }
 
-    public void add(JreepadNode child)
-    {
-        if (isSoftLink())
-            softLinkTarget.add(child);
-        else
-            super.add(child);
-    }
-
     public JreepadNode removeChild(int child) // Can be used to delete, OR to 'get' one for moving
     {
-        if (isSoftLink())
-            return softLinkTarget.removeChild(child);
-
         JreepadNode ret = (JreepadNode)getChildAt(child);
         remove(child);
         return ret;
-    }
-
-    public TreeNode getChildAt(int child)
-    {
-        if (isSoftLink())
-            return softLinkTarget.getChildAt(child);
-        return super.getChildAt(child);
-    }
-
-    public int getChildCount()
-    {
-        if (isSoftLink())
-            return softLinkTarget.getChildCount();
-        return super.getChildCount();
     }
 
     public boolean indent()
@@ -225,11 +180,6 @@ public class JreepadNode
 
     public void moveChildUp(int child)
     {
-        if (isSoftLink())
-        {
-            softLinkTarget.moveChildUp(child);
-            return;
-        }
         if (child < 1 || child >= getChildCount())
             return;
 
@@ -238,11 +188,6 @@ public class JreepadNode
 
     public void moveChildDown(int child)
     {
-        if (isSoftLink())
-        {
-            softLinkTarget.moveChildDown(child);
-            return;
-        }
         if (child < 0 || child >= getChildCount() - 1)
             return;
 
@@ -277,9 +222,6 @@ public class JreepadNode
 
     public JreepadNode addChild()
     {
-        if (isSoftLink())
-            return softLinkTarget.addChild();
-
         JreepadNode theChild = new JreepadNode();
         add(theChild);
         return theChild;
@@ -287,19 +229,9 @@ public class JreepadNode
 
     public JreepadNode addChild(int index)
     {
-        if (isSoftLink())
-            return softLinkTarget.addChild(index);
-
         JreepadNode theChild = new JreepadNode();
         insert(theChild, index);
         return theChild;
-    }
-
-    public int getIndex(TreeNode child)
-    {
-        if (isSoftLink())
-            return softLinkTarget.getIndex(child);
-        return super.getIndex(child);
     }
 
     public int getIndex()
@@ -309,35 +241,15 @@ public class JreepadNode
         return getParent().getIndex(this);
     }
 
-    public boolean isNodeInSubtree(JreepadNode n)
-    {
-        if (isSoftLink())
-            return softLinkTarget.isNodeInSubtree(n);
-        return isNodeDescendant(n);
-    }
-
-    public void sortChildren()
-    {
-        if (isSoftLink())
-            softLinkTarget.sortChildren();
-        else
-            sort();
-    }
-
     public void sortChildrenRecursive()
     {
-        if (isSoftLink())
-        {
-            softLinkTarget.sortChildrenRecursive();
-            return;
-        }
-        sort();
+        sortChildren();
         for (int i = 0; i < getChildCount(); i++)
             ((JreepadNode)getChildAt(i)).sortChildrenRecursive();
     }
 
     // Function for using Java's built-in mergesort
-    private void sort()
+    public void sortChildren()
     {
         Object[] childrenArray = children.toArray();
         java.util.Arrays.sort(childrenArray);
@@ -378,51 +290,14 @@ public class JreepadNode
         return (getChildCount() == 0);
     }
 
-    public Enumeration children()
-    {
-        if (isSoftLink())
-            return softLinkTarget.children();
-        return super.children();
-    }
-
     public JreepadNode getParentNode()
     {
         return (JreepadNode)getParent();
     }
 
-    // MutableTreeNode functions
-    public void remove(int child)
-    {
-        if (isSoftLink())
-            softLinkTarget.remove(child);
-        else
-            super.remove(child);
-    }
-
-    public void remove(MutableTreeNode node)
-    {
-        if (isSoftLink())
-            softLinkTarget.remove(node);
-        else
-            super.remove(node);
-    }
-
-    public void insert(MutableTreeNode child, int index)
-    {
-        if (isSoftLink())
-            softLinkTarget.insert(child, index);
-        else
-            super.insert(child, index);
-    }
-
     public void addChildFromTextFile(InputStreamReader textFile, String nodeName)
         throws IOException
     {
-        if (isSoftLink())
-        {
-            softLinkTarget.addChildFromTextFile(textFile, nodeName);
-            return;
-        }
         // Load the content as a string
         StringBuffer contentString = new StringBuffer();
         String currentLine;
@@ -446,18 +321,10 @@ public class JreepadNode
 
     public JreepadNode getChildByTitle(String title)
     {
-        if (isSoftLink())
-            return softLinkTarget.getChildByTitle(title);
-
         for (int i = 0; i < getChildCount(); i++)
             if (((JreepadNode)getChildAt(i)).getTitle().equals(title))
                 return (JreepadNode)getChildAt(i);
         return null;
-    }
-
-    public JreepadNode getSoftLinkTarget()
-    {
-        return softLinkTarget;
     }
 
     public String getTitle()

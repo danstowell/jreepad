@@ -34,6 +34,7 @@ import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeSelectionModel;
 
 
+
 /**
  * The GUI component that displays the tree.
  *
@@ -109,7 +110,7 @@ public class TreeView extends JTree
     {
         // First we need to make sure that the node is not a parent of the new parent
         // - otherwise things would go really wonky!
-        if (node.isNodeInSubtree(newParent))
+        if (node.isNodeDescendant(newParent))
         {
             return;
         }
