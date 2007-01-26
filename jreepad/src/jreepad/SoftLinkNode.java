@@ -61,16 +61,6 @@ public class SoftLinkNode extends JreepadNode
         return target.getChildCount();
     }
 
-    public void moveChildUp(int child)
-    {
-        target.moveChildUp(child);
-    }
-
-    public void moveChildDown(int child)
-    {
-        target.moveChildDown(child);
-    }
-
     public JreepadNode addChild()
     {
         return target.addChild();

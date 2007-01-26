@@ -30,7 +30,7 @@ import javax.swing.tree.MutableTreeNode;
 /**
  * The tree node. Contains an article.
  *
- * @version $Id: JreepadNode.java,v 1.26 2007-01-26 22:38:37 pewu Exp $
+ * @version $Id: JreepadNode.java,v 1.27 2007-01-26 22:49:04 pewu Exp $
  */
 public class JreepadNode
     extends DefaultMutableTreeNode
@@ -150,7 +150,6 @@ public class JreepadNode
         // Get sibling node just above, and move self to there.
         MutableTreeNode oldParent = (MutableTreeNode)getParent();
         DefaultMutableTreeNode newParent = (DefaultMutableTreeNode)oldParent.getChildAt(pos - 1);
-        removeFromParent();
         newParent.add(this);
         return true;
     }
@@ -178,22 +177,6 @@ public class JreepadNode
         return true;
     }
 
-    public void moveChildUp(int child)
-    {
-        if (child < 1 || child >= getChildCount())
-            return;
-
-        insert(removeChild(child), child - 1);
-    }
-
-    public void moveChildDown(int child)
-    {
-        if (child < 0 || child >= getChildCount() - 1)
-            return;
-
-        insert(removeChild(child), child + 1);
-    }
-
     public void moveUp()
     {
         MutableTreeNode parent = (MutableTreeNode)getParent();
@@ -203,7 +186,6 @@ public class JreepadNode
         if (index < 1)
             return;
 
-        removeFromParent();
         parent.insert(this, index - 1);
     }
 
@@ -216,7 +198,6 @@ public class JreepadNode
         if (index < 0 || index >= parent.getChildCount() - 1)
             return;
 
-        removeFromParent();
         parent.insert(this, index + 1);
     }
 
