@@ -21,8 +21,6 @@ The full license can be read online here:
 package jreepad;
 
 import javax.swing.*;
-import javax.swing.event.*;
-import javax.swing.table.*;
 import javax.swing.undo.*;
 import java.awt.*;
 import java.awt.event.*;
@@ -97,16 +95,7 @@ public class JreepadViewer extends JFrame // implements ApplicationListener
   private JButton autoSaveCancelButton;
 
   private JDialog prefsDialog;
-
-  private JDialog searchDialog;
-  private JTextField nodeSearchField;
-  private JCheckBox searchCaseCheckBox;
-  private JComboBox searchWhereSelector;
-  private JSpinner searchMaxNumSpinner;
-  private JLabel searchResultsLabel;
-  private JTable searchResultsTable;
-  private JScrollPane searchResultsTableScrollPane;
-  private AbstractTableModel searchResultsTableModel;
+  private SearchDialog searchDialog;
 
   private JDialog nodeUrlDisplayDialog;
   private JTextField nodeUrlDisplayField;
@@ -263,7 +252,7 @@ public class JreepadViewer extends JFrame // implements ApplicationListener
 
     establishMenus();
     establishToolbar();
-    establishSearchDialogue();
+    searchDialog = new SearchDialog(this, theJreepad);
     prefsDialog = new PrefsDialog(this);
     establishAutosaveDialogue();
     establishNodeUrlDisplayDialogue();
@@ -323,6 +312,8 @@ public class JreepadViewer extends JFrame // implements ApplicationListener
 
         getPrefs().saveLocation = getPrefs().exportLocation = getPrefs().importLocation = getPrefs().openLocation;
         content.add(theJreepad);
+        searchDialog.setJreepad(theJreepad);
+
 	    getPrefs().saveLocation = getPrefs().openLocation;
         setTitleBasedOnFilename(getPrefs().openLocation.getName());
         setWarnAboutUnsaved(false);
@@ -333,6 +324,7 @@ public class JreepadViewer extends JFrame // implements ApplicationListener
         content.remove(theJreepad);
         theJreepad = new JreepadView(new JreepadNode());
         content.add(theJreepad);
+        searchDialog.setJreepad(theJreepad);
         setTitleBasedOnFilename("");
       }
     }
@@ -525,7 +517,7 @@ public class JreepadViewer extends JFrame // implements ApplicationListener
     editMenu.add(collapseAllMenuItem);
     //
     searchMenuItem = new JMenuItem(lang.getString("MENUITEM_SEARCH")); //"Search");
-    searchMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { openSearchDialog(); }});
+    searchMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { searchDialog.open(); }});
     searchMenu.add(searchMenuItem);
     launchUrlMenuItem = new JMenuItem(lang.getString("MENUITEM_FOLLOWLINK")); //"Follow highlighted link");
     launchUrlMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { theJreepad.openURLSelectedInArticle(); }});
@@ -1038,166 +1030,6 @@ public class JreepadViewer extends JFrame // implements ApplicationListener
     repaint();
   }
 
-
-  private void establishSearchDialogue()
-  {
-    // Establish the search dialogue box - so that it can be called whenever wanted
-    searchDialog = new JDialog(this, lang.getString("SEARCH_WINDOWTITLE"), false);
-    searchDialog.setVisible(false);
-    Box vBox = Box.createVerticalBox();
-    //
-    Box hBox = Box.createHorizontalBox();
-    nodeSearchField = new JTextField("");
-    vBox.add(new JLabel(lang.getString("SEARCH_SEARCHFOR")));
-    hBox.add(nodeSearchField);
-    nodeSearchField.addActionListener(new ActionListener(){ public void actionPerformed(ActionEvent e){
-                                           doTheSearch();}});
-    nodeSearchField.addCaretListener(new CaretListener(){ public void caretUpdate(CaretEvent e){
-                                           doTheSearch();}});
-    vBox.add(hBox);
-    //
-    searchWhereSelector = new JComboBox(new String[]{lang.getString("SEARCH_SELECTEDNODE"), lang.getString("SEARCH_WHOLETREE")});
-    searchWhereSelector.setSelectedIndex(1);
-    searchWhereSelector.setEditable(false);
-    searchWhereSelector.addActionListener(new ActionListener(){ public void actionPerformed(ActionEvent e){
-                                           doTheSearch();}});
-    hBox = Box.createHorizontalBox();
-    hBox.add(Box.createGlue());
-    hBox.add(new JLabel(lang.getString("SEARCH_SEARCHWHERE")));
-    hBox.add(searchWhereSelector);
-    hBox.add(Box.createGlue());
-    hBox.add(searchCaseCheckBox = new JCheckBox(lang.getString("SEARCH_CASESENSITIVE"), false));
-    searchCaseCheckBox.addActionListener(new ActionListener(){ public void actionPerformed(ActionEvent e){
-                                           doTheSearch();}});
-    hBox.add(Box.createGlue());
-    vBox.add(hBox);
-    //
-//    searchMaxNumSpinner = new DSpinner(1,1000,getPrefs().searchMaxNum);
-    searchMaxNumSpinner = new JSpinner(new SpinnerNumberModel(getPrefs().searchMaxNum,1,1000,1));
-/*    searchMaxNumSpinner.addCaretListener(new CaretListener(){ public void caretUpdate(CaretEvent e){
-                                           doTheSearch();}});
-    searchMaxNumSpinner.addActionListener(new ActionListener(){ public void actionPerformed(ActionEvent e){
-                                           doTheSearch();}});
-*/
-    searchMaxNumSpinner.getModel().addChangeListener(new ChangeListener(){ public void stateChanged(ChangeEvent e){
-                                           doTheSearch();}});
-    hBox = Box.createHorizontalBox();
-    hBox.add(Box.createGlue());
-    hBox.add(new JLabel(lang.getString("SEARCH_MAXRESULTS")));
-    hBox.add(searchMaxNumSpinner);
-    hBox.add(Box.createGlue());
-    vBox.add(hBox);
-    //
-    // NOW FOR THE SEARCH RESULTS TABLE - COULD BE TRICKY!
-    searchResultsTableModel = new AbstractTableModel()
-    {
-      private final String[] columns = new String[]{lang.getString("SEARCH_TBL_COL_NODE"),lang.getString("SEARCH_TBL_COL_ARTICLETEXT"),lang.getString("SEARCH_TBL_COL_FULLPATH")};
-      public int getColumnCount() { return columns.length; }
-      public String getColumnName(int index)
-      {
-        return columns[index];
-      }
-      public int getRowCount()
-      {
-        JreepadSearcher.JreepadSearchResult[] results = theJreepad.getSearchResults();
-        if(results==null || results.length==0)
-          return 1;
-        else
-          return results.length;
-      }
-      public Object getValueAt(int row, int col)
-      {
-        JreepadSearcher.JreepadSearchResult[] results = theJreepad.getSearchResults();
-        if(results==null || results.length==0)
-          switch(col)
-          {
-            case 2:
-              return "";
-            case 1:
-              return (nodeSearchField.getText()=="" ? lang.getString("SEARCH_TBL_BEFORERESULTS") : lang.getString("SEARCH_TBL_NORESULTS"));
-            default:
-              return "";
-          }
-        else
-          switch(col)
-          {
-            case 2:
-              return results[row].getTreePath();
-            case 1:
-              return results[row].getArticleQuote();
-            default:
-              return results[row].getNode().getTitle();
-          }
-      }
-    };
-    searchResultsTable = new JTable(searchResultsTableModel);
-    searchResultsTable.setCellSelectionEnabled(false);
-    searchResultsTable.setColumnSelectionAllowed(false);
-    searchResultsTable.setRowSelectionAllowed(true);
-    searchResultsTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-    searchResultsTableScrollPane = new JScrollPane(searchResultsTable);
-    vBox.add(searchResultsLabel = new JLabel(lang.getString("SEARCH_RESULTS")));
-    vBox.add(searchResultsTableScrollPane);
-    //
-    // Add mouse listener
-    MouseListener sml = new MouseAdapter(){public void mouseClicked(MouseEvent e){
-                   mouseClickedOnSearchResultsTable(e);}};
-    searchResultsTable.addMouseListener(sml);
-    //
-    searchDialog.getContentPane().add(vBox);
-
-    // Now we'll add some keyboard shortcuts
-    KeyAdapter searchKeyListener = new KeyAdapter(){ public void keyPressed(KeyEvent eek)
-                              {
-                                switch(eek.getKeyCode())
-                                {
-                                  case KeyEvent.VK_ESCAPE:
-                                    closeSearchDialogue();
-                                    break;
-                                  case KeyEvent.VK_W:
-                                    if(eek.isControlDown() || eek.isMetaDown())
-                                      closeSearchDialogue();
-                                    break;
-                                }
-                              }};
-    searchDialog.addKeyListener(searchKeyListener);
-    nodeSearchField.addKeyListener(searchKeyListener);
-    searchCaseCheckBox.addKeyListener(searchKeyListener);
-    searchWhereSelector.addKeyListener(searchKeyListener);
-    searchResultsTable.addKeyListener(searchKeyListener);
-    searchMaxNumSpinner.addKeyListener(searchKeyListener);
-    searchResultsTable.addKeyListener(new KeyAdapter(){ public void keyPressed(KeyEvent eek)
-                              {
-                                switch(eek.getKeyCode())
-                                {
-                                  case KeyEvent.VK_SPACE:
-                                  case KeyEvent.VK_ENTER:
-                                    mouseClickedOnSearchResultsTable(null);
-                                    break;
-                                }
-                              }});
-
-
-    // Finished establishing the search dialogue box
-  }
-
-  private void closeSearchDialogue()
-  {
-    searchDialog.setVisible(false);
-  }
-
-  private void mouseClickedOnSearchResultsTable(MouseEvent e)
-  {
-	 JreepadSearcher.JreepadSearchResult[] results = theJreepad.getSearchResults();
-	 int selectedRow = searchResultsTable.getSelectedRow();
-	 if(results==null || results.length==0 || selectedRow==-1)
-	   return;
-
-	 // Select the node in the tree
-	 theJreepad.getTree().setSelectionPath(results[selectedRow].getTreePath());
-	 theJreepad.getTree().scrollPathToVisible(results[selectedRow].getTreePath());
-  }
-
   public void establishAutosaveDialogue()
   {
     Box vBox, hBox;
@@ -1337,6 +1169,8 @@ public class JreepadViewer extends JFrame // implements ApplicationListener
 	theJreepad = new JreepadView(new JreepadNode("<Untitled node>",theJreepad.getContentForNewNode()));
 	getPrefs().saveLocation = null;
 	content.add(theJreepad);
+    searchDialog.setJreepad(theJreepad);
+
 	setTitleBasedOnFilename("");
 	validate();
 	repaint();
@@ -1378,6 +1212,8 @@ public class JreepadViewer extends JFrame // implements ApplicationListener
 
         getPrefs().saveLocation = getPrefs().openLocation;
         content.add(theJreepad);
+        searchDialog.setJreepad(theJreepad);
+
         addToOpenRecentMenu(getPrefs().openLocation);
         setTitleBasedOnFilename(getPrefs().openLocation.getName());
         validate();
@@ -1511,31 +1347,6 @@ public class JreepadViewer extends JFrame // implements ApplicationListener
     return false;
   } // End of: backupToAction()
 
-  private void openSearchDialog()
-  {
-    searchDialog.setVisible(true);
-    nodeSearchField.requestFocus();
-    nodeSearchField.setSelectionStart(0);
-  } // End of: openSearchDialog()
-
-  private boolean performSearch(String inNodes, String inArticles, int searchWhat /* 0=selected, 1=all */,
-                                boolean orNotAnd, boolean caseSensitive, int maxResults)
-  {
-    // setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-    boolean ret = theJreepad.performSearch(inNodes, inArticles, searchWhat, orNotAnd,
-                                          caseSensitive, maxResults);
-    // setCursor(Cursor.getDefaultCursor());
-    if(!ret)
-    {
-      // JOptionPane.showMessageDialog(searchDialog, "Found nothing.", "Search result..." , JOptionPane.INFORMATION_MESSAGE);
-      searchResultsLabel.setText(lang.getString("SEARCH_RESULTS"));
-    }
-    else
-      searchResultsLabel.setText(lang.getString("SEARCH_RESULTS") + theJreepad.getSearchResults().length + lang.getString("SEARCH_NODES_MATCHED"));
-    searchResultsTableModel.fireTableStructureChanged();
-//    searchResultsTable.repaint();
-    return ret;
-  }
 
   private void setTitleBasedOnFilename(String filename)
   {
@@ -2189,18 +2000,6 @@ lang.getString("HELP_LICENSE") + "\n\n           http://www.gnu.org/copyleft/gpl
       quitAction();
   }
 
-
-  public void doTheSearch()
-  {
-	 getPrefs().searchMaxNum = ((Integer)searchMaxNumSpinner.getValue()).intValue();
-//DSpinner version	 getPrefs().searchMaxNum = searchMaxNumSpinner.getValue();
-
-	 performSearch(nodeSearchField.getText(), nodeSearchField.getText(), // articleSearchField.getText(),
-	 searchWhereSelector.getSelectedIndex(), true /* searchCombinatorSelector.getSelectedIndex()==0 */,
-	 searchCaseCheckBox.isSelected(),
-	 getPrefs().searchMaxNum
-	 );
-  }
 
   protected void systemClipboardToNewNode()
   {
