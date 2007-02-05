@@ -41,8 +41,6 @@ import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTable;
 import javax.swing.JTree;
-import javax.swing.event.CaretEvent;
-import javax.swing.event.CaretListener;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.DocumentEvent;
@@ -53,22 +51,13 @@ import javax.swing.event.TreeModelEvent;
 import javax.swing.event.TreeModelListener;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
-import javax.swing.event.UndoableEditEvent;
-import javax.swing.event.UndoableEditListener;
 import javax.swing.table.DefaultTableModel;
-import javax.swing.text.AbstractDocument;
 import javax.swing.text.BadLocationException;
-import javax.swing.text.BoxView;
-import javax.swing.text.ComponentView;
 import javax.swing.text.Document;
-import javax.swing.text.Element;
-import javax.swing.text.IconView;
-import javax.swing.text.LabelView;
-import javax.swing.text.StyleConstants;
-import javax.swing.text.StyledEditorKit;
-import javax.swing.text.View;
-import javax.swing.text.ViewFactory;
 import javax.swing.tree.TreePath;
+
+import jreepad.editor.ContentChangeListener;
+import jreepad.editor.PlainTextEditor;
 
 import org.philwilson.JTextile;
 
@@ -79,50 +68,6 @@ import edu.stanford.ejalbert.exception.UnsupportedOperatingSystemException;
 
 public class JreepadView extends Box implements TableModelListener
 {
-
-  // Code to ensure that the article word-wraps follows
-  //   - contributed by Michael Labhard based on code found on the web...
-  static class JPEditorKit extends StyledEditorKit
-  {
-	public ViewFactory getViewFactory()
-	{
-      return new JPRTFViewFactory();
-	}
-  }
-
-  static class JPRTFViewFactory implements ViewFactory
-  {
-	public View create(Element elem)
-	{
-      String kind = elem.getName();
-	  if(kind != null)
-		if (kind.equals(AbstractDocument.ContentElementName)) {
-			return new LabelView(elem);
-		} else if (kind.equals(AbstractDocument.ParagraphElementName)) {
-			return new JPParagraphView(elem);
-		} else if (kind.equals(AbstractDocument.SectionElementName)) {
-			return new BoxView(elem, View.Y_AXIS);
-		} else if (kind.equals(StyleConstants.ComponentElementName)) {
-			return new ComponentView(elem);
-		} else if (kind.equals(StyleConstants.IconElementName)) {
-			return new IconView(elem);
-		}
-		// default to text display
-		return new LabelView(elem);
-	}
-  }
-
-  private static short paraRightMargin = 0;
-  static class JPParagraphView extends javax.swing.text.ParagraphView
-  {
-	public JPParagraphView(Element e)
-	{
-	  super(e);
-	  this.setInsets((short)0, (short)0, (short)0, paraRightMargin);
-	}
-  }
-  // Code to ensure that the article word-wraps ends here
-  //   - contributed by Michael Labhard
 
   private static JreepadPrefs prefs;
   private JreepadNode root;
@@ -136,7 +81,7 @@ public class JreepadView extends Box implements TableModelListener
   //    to refer to when you're doing GUI-related stuff
   // It will be equal to one of the content-type-specific panes. Need to set the content of BOTH of these...
 //  private JEditorPane editorPane;
-  private JEditorPane editorPanePlainText;
+  private PlainTextEditor editorPanePlainText;
   private JEditorPane editorPaneHtml;
   private JTable editorPaneCsv;
 
@@ -147,9 +92,6 @@ public class JreepadView extends Box implements TableModelListener
   private JSplitPane splitPane;
 
   private JreepadSearcher searcher;
-
-  // The following boolean should be FALSE while we're changing from node to node, and true otherwise
-  private boolean copyEditorPaneContentToNodeContent = true;
 
   private boolean warnAboutUnsaved = false;
 
@@ -231,35 +173,12 @@ public class JreepadView extends Box implements TableModelListener
     treeView.setViewportView(tree);
 
 
-    editorPanePlainText = new JEditorPanePlus("text/plain", root.getContent());
-    editorPanePlainText.setEditable(true);
+    editorPanePlainText = new PlainTextEditor(root.getArticle());
     editorPaneHtml = new JEditorPanePlus("text/html", root.getContent());
     editorPaneHtml.setEditable(false);
     editorPaneCsv = new JTable(new ArticleTableModel());
     editorPaneCsv.getModel().addTableModelListener(this);
 
-    setEditorPaneKit();
-
-    // Add a listener to make sure the editorpane's content is always stored when it changes
-    editorPanePlainText.addCaretListener(new CaretListener() {
-    				public void caretUpdate(CaretEvent e)
-    				{
-    				  if(!copyEditorPaneContentToNodeContent)
-    				    return; // i.e. we are deactivated while changing from node to node
-    				  if(currentNode.getArticle().getArticleMode() != JreepadArticle.ARTICLEMODE_ORDINARY)
-    				    return; // i.e. we are only relevant when in plain-text mode
-
-    				  if(!editorPanePlainText.getText().equals(currentNode.getContent()))
-    				  {
-    				    // System.out.println("UPDATE - I'd now overwrite node content with editorpane content");
-    				    currentNode.getArticle().setContent(editorPanePlainText.getText());
-    				    setWarnAboutUnsaved(true);
-    				  }
-    				  else
-    				  {
-    				    // System.out.println("  No need to update content.");
-    				  }
-    				}});
     articleView = new JScrollPane(getEditorPaneComponent(), JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
     articleView.addComponentListener(new ComponentListener()
     					{
@@ -289,21 +208,17 @@ public class JreepadView extends Box implements TableModelListener
     					}
     					);
 
+    editorPanePlainText.setContentChangeListener(new ContentChangeListener() {
+    	public void contentChanged()
+    	{
+    		setWarnAboutUnsaved(true);
+    	}
+    });
+
     setCurrentNode(root);
 
     setViewBoth();
     tree.setSelectionRow(0);
-
-    editorPanePlainText.getDocument().addUndoableEditListener(new JreepadUndoableEditListener());
-
-  }
-
-  public void setEditorPaneKit()
-  {
-    if(getPrefs().wrapToWindow)
-      editorPanePlainText.setEditorKit(new JPEditorKit());
- //   else
- //     editorPane.setEditorKit(new javax.swing.text.StyledEditorKit());
   }
 
   public void setViewMode(int mode)
@@ -387,7 +302,8 @@ public class JreepadView extends Box implements TableModelListener
       return;
     }
 
-    copyEditorPaneContentToNodeContent = false; // Deactivate the caret-listener, effectively - ALSO DEACTIVATES UNDO-STORAGE
+    editorPanePlainText.lockEdits(); // Deactivate the caret-listener, effectively - ALSO DEACTIVATES UNDO-STORAGE
+
     if(currentNode != null)
     {
       // Only update the node's stored content if it's a plaintext node
@@ -399,7 +315,7 @@ public class JreepadView extends Box implements TableModelListener
 //    editorPanePlainText.setText(n.getContent());
 //    editorPaneHtml.setText(n.getContent());
     ensureCorrectArticleRenderMode();
-    copyEditorPaneContentToNodeContent = true; // Reactivate the caret listener - ALSO REACTIVATES UNDO-STORAGE
+    editorPanePlainText.unlockEdits(); // Reactivate the caret listener - ALSO REACTIVATES UNDO-STORAGE
   }
 
   public JTree getTree()
@@ -548,16 +464,14 @@ public class JreepadView extends Box implements TableModelListener
     int here = editorPanePlainText.getCaretPosition();
     try
     {
-      editorPanePlainText.setText(doc.getText(0, here) + theDate +
-                              doc.getText(here, doc.getLength() - here));
       editorPaneHtml.setText(doc.getText(0, here) + theDate +
                               doc.getText(here, doc.getLength() - here));
-      editorPanePlainText.setCaretPosition(here + theDate.length());
     }
     catch(BadLocationException e)
     {
       // Simply ignore this
     }
+    editorPanePlainText.insertText(theDate);
   }
 
   public JreepadNode addNodeAbove()
@@ -1154,7 +1068,7 @@ System.out.println(err);
   {
     //DEL storeForUndo();
     currentNode.getArticle().wrapContentToCharWidth(charWidth);
-    editorPanePlainText.setText(currentNode.getContent());
+    editorPanePlainText.reloadArticle();
     editorPaneHtml.setText(currentNode.getContent());
     setWarnAboutUnsaved(true);
   }
@@ -1162,7 +1076,7 @@ System.out.println(err);
   {
     //DEL storeForUndo();
     currentNode.getArticle().stripAllTags();
-    editorPanePlainText.setText(currentNode.getContent());
+    editorPanePlainText.reloadArticle();
     editorPaneHtml.setText(currentNode.getContent());
     setWarnAboutUnsaved(true);
   }
@@ -1173,7 +1087,7 @@ System.out.println(err);
 //    System.out.println("\n\n\nnode content : " + currentNode.getContent()
 //          + "\neditorPanePlainText contains: " + editorPanePlainText.getText());
 
-    copyEditorPaneContentToNodeContent = false; // Disables store-for-undo
+    editorPanePlainText.lockEdits(); // Disables store-for-undo
 
     currentNode.getArticle().setContent(editorPanePlainText.getText());
 /*
@@ -1217,7 +1131,7 @@ System.out.println(err);
     currentNode.getArticle().setArticleMode(newMode);
     ensureCorrectArticleRenderMode();
     getEditorPaneComponent().repaint();
-    copyEditorPaneContentToNodeContent = true; // Re-enables store-for-undo
+    editorPanePlainText.unlockEdits(); // Re-enables store-for-undo
   }
 
   public void ensureCorrectArticleRenderMode()
@@ -1300,7 +1214,7 @@ System.out.println(err);
   {
     String s = a.getContent();
     try{
-      editorPanePlainText.setText(s);
+      editorPanePlainText.setArticle(a);
     }catch(Exception ex){
       // This shouldn't cause a problem. So this try-catch is only for debugging really.
       System.err.println("setEditorPaneText(): Exception during editorPanePlainText.setText(s)");
@@ -1445,70 +1359,5 @@ System.out.println(err);
       setWarnAboutUnsaved(true);
     }
   } // End of class JEditorPanePlus
-
-
-    //This one listens for edits that can be undone.
-    protected class JreepadUndoableEditListener
-                    implements UndoableEditListener {
-        public void undoableEditHappened(UndoableEditEvent e) {
-
-            //System.out.println("Undoable event is " + (e.getEdit().isSignificant()?"":"NOT ") + "significant");
-            //System.out.println("Undoable event source: " + e.getEdit());
-
-            //Remember the edit and update the menus.
-
-            if(copyEditorPaneContentToNodeContent){
-              //System.out.println("Storing undoable event for node " + getCurrentNode().getTitle());
-              //System.out.println("   Event is " + e.getEdit().getPresentationName() );
-              //if(getCurrentNode().lastEditStyle != e.getEdit().getPresentationName()){
-              //  System.out.println("   This is a SIGNIFICANT change.");
-              //}
-              //System.out.println("   Content: " + getCurrentNode().getContent());
-              //System.out.println("   Node undoMgr: " + getCurrentNode().undoMgr);
-              //Thread.currentThread().dumpStack();
-              getCurrentNode().getArticle().getUndoMgr().addEdit(e.getEdit());
-            }
-
-
-
-            //undoAction.updateUndoState();
-            //redoAction.updateRedoState();
-        }
-    }
-
-
-
-
-
-
-
-
-
-/*
-  class ArticleTableColumnModel extends DefaultTableColumnModel {
-   public ArticleTableColumnModel(){
-     super();
-     initColListener();
-   }
-
-   private void initColListener(){
-     addColumnModelListener(new TableColumnModelListener()
-            {
-              public void columnAdded(TableColumnModelEvent e){ storeColumnModel();           }
-              public void columnMarginChanged(ChangeEvent e){ storeColumnModel();             }
-              public void columnMoved(TableColumnModelEvent e){ storeColumnModel();           }
-              public void columnRemoved(TableColumnModelEvent e){ storeColumnModel();         }
-              public void columnSelectionChanged(ListSelectionEvent e){ storeColumnModel();}
-            });
-   }
-
-   private void storeColumnModel()
-   {
-     // Simply store the TableColumnModel in the node, for future reference
-     getCurrentNode().tblColModel = this;
-   }
-
-  } // End of: class ArticleTableColumnModel
-*/
 
 }

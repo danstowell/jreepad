@@ -32,7 +32,7 @@ import java.util.prefs.Preferences;
 
 /*
 
-A class to hold Jreepad's preferences - and hopefully to store them on disk in a nice 
+A class to hold Jreepad's preferences - and hopefully to store them on disk in a nice
 permanent way which can be carried across from different versions
 
 */
@@ -41,39 +41,39 @@ public class JreepadPrefs //implements Serializable
 {
   Preferences prefs;
   File openLocation, saveLocation, importLocation, exportLocation, backupLocation;
-  
+
   boolean seenLicense;
-  
+
   int autoSavePeriod;
   boolean autoSave;
-  
+
   public static final int VIEW_BOTH = 0;
   public static final int VIEW_TREE = 1;
   public static final int VIEW_ARTICLE = 2;
   int viewWhich;
-  
+
   boolean viewToolbar;
-  
+
   int searchMaxNum;
 
   boolean autoDateInArticles;
 
   boolean loadLastFileOnOpen;
-  
+
   String webSearchName;
   String webSearchPrefix;
   String webSearchPostfix;
-  
+
   int defaultSearchMode;
-  
+
   boolean wikiBehaviourActive;
-  
-  static final String[] characterEncodings = 
+
+  static final String[] characterEncodings =
                  new String[]{"ISO-8859-1", "ISO-8859-15", "UTF-8", "UTF-16", "US-ASCII", "8859_15"};
   int fileEncoding;
   String getEncoding()
   {    return characterEncodings[fileEncoding];  }
-  
+
   Vector openRecentList;
   int openRecentListLength;
   File getMostRecentFile() // This is used, specifically, by the command-line "find" tool
@@ -82,17 +82,17 @@ public class JreepadPrefs //implements Serializable
       return null;
     else
       return (File)openRecentList.get(0);
-  }  
-  
+  }
+
   Font treeFont;
   Font articleFont;
-  
+
   int characterWrapWidth;
-  
-  boolean wrapToWindow;
-  
+
+  public boolean wrapToWindow;
+
   int windowLeft, windowTop, windowWidth, windowHeight;
-  
+
   public static final int LINEBREAK_WIN=0;
   public static final int LINEBREAK_MAC=1;
   public static final int LINEBREAK_UNIX=2;
@@ -107,31 +107,31 @@ public class JreepadPrefs //implements Serializable
     }
     return "\r\n";
   }
-  
+
   TreePathCollection treePathCollection;
-  
+
   int htmlExportArticleType;
   boolean htmlExportUrlsToLinks;
   int htmlExportAnchorLinkType;
-  
+
   int dividerLocation;
-  
+
   boolean autoDetectHtmlArticles;
-  
+
   boolean addQuotesToCsvOutput;
-  
+
   static final int FILETYPE_XML = 0;
   static final int FILETYPE_HJT = 1;
   int mainFileType;
   public static final String[] mainFileTypes = {"Jreepad XML","Treepad HJT"};
-  
+
   static final int TOOLBAR_TEXT = 0;
   static final int TOOLBAR_ICON = 1;
   static final int TOOLBAR_OFF = 2;
   int toolbarMode;
-  
+
   boolean showGreenStrip;
-  
+
   JreepadPrefs(Dimension wndSize) {
     // Grab the prefs object from wherever Java's API has put it...
     prefs = Preferences.userNodeForPackage(this.getClass());
@@ -143,31 +143,31 @@ public class JreepadPrefs //implements Serializable
     backupLocation = new File(prefs.get("BACKUPLOCATION", System.getProperty("user.home")));
 
     seenLicense = prefs.getBoolean("SEENLICENSE", false);
-    
+
     autoSavePeriod = prefs.getInt("AUTOSAVEPERIOD", 10);
     autoSave = prefs.getBoolean("AUTOSAVE", false);
-    
+
     viewWhich = prefs.getInt("VIEWWHICH", 0);
-    
+
     viewToolbar = prefs.getBoolean("VIEWTOOLBAR", true);
-    
+
     searchMaxNum = prefs.getInt("SEARCHMAXNUM", 200);
-    
+
     autoDateInArticles = prefs.getBoolean("AUTODATEINARTICLES", true);
-    
+
     loadLastFileOnOpen = prefs.getBoolean("LOADLASTFILEONOPEN", true);
 
-    webSearchName = prefs.get("WEBSEARCHNAME", 
+    webSearchName = prefs.get("WEBSEARCHNAME",
           JreepadViewer.lang.getString("PREFS_DEFAULT_SEARCH_TEXT")); //"Google search for highlighted text";
     webSearchPrefix = prefs.get("WEBSEARCHPREFIX", "www.google.co.uk/search?q=");
     webSearchPostfix = prefs.get("WEBSEARCHPOSTFIX", "&hl=en");
-    
+
     defaultSearchMode = prefs.getInt("DEFAULTSEARCHMODE", 0);
-    
+
     wikiBehaviourActive = prefs.getBoolean("WIKIBEHAVIOURACTIVE", true);
-    
+
     fileEncoding = prefs.getInt("FILEENCODING", 2); // Default to UTF-8
-    
+
     openRecentList = new Vector();
     openRecentListLength = prefs.getInt("OPENRECENTLISTLENGTH", 10);
     String tempFileListItem;
@@ -184,12 +184,12 @@ public class JreepadPrefs //implements Serializable
     String articleFontName = prefs.get("ARTICLEFONTNAME", (new JEditorPane()).getFont().getName());
     int treeFontSize = prefs.getInt("TREEFONTSIZE", (new JTree()).getFont().getSize());
     int articleFontSize = prefs.getInt("ARTICLEFONTSIZE", (new JEditorPane()).getFont().getSize());
-    
+
     treeFont = new Font(treeFontName, Font.PLAIN, treeFontSize);
     articleFont = new Font(articleFontName, Font.PLAIN, articleFontSize);
-    
+
     characterWrapWidth = prefs.getInt("CHARACTERWRAPWIDTH", 80);
-    
+
     wrapToWindow = prefs.getBoolean("WRAPTOWINDOW", true);
 
   //  Toolkit theToolkit = Toolkit.getDefaultToolkit();
@@ -199,11 +199,11 @@ public class JreepadPrefs //implements Serializable
     windowTop    = prefs.getInt("WINDOWTOP", 0);
     windowLeft   = prefs.getInt("WINDOWLEFT", 0);
     if(windowWidth==0 || windowWidth==0){
-    
+
         windowWidth = (int)(wndSize.getWidth() * 0.6f);
         windowHeight = (int)(wndSize.getHeight() * 0.6f);
-    
-        // This bit attempts to ensure that the Jreepad view doesn't get too wide 
+
+        // This bit attempts to ensure that the Jreepad view doesn't get too wide
         //   (e.g. for people with dual-screen systems)
         //   - it limits the width/height proportion to the golden ratio!
         // Can't seem to find anything in the Toolkit which would automatically give us multi-screen info
@@ -211,10 +211,10 @@ public class JreepadPrefs //implements Serializable
           windowWidth = (int)(((float)windowHeight)*1.618034f);
         else if(windowHeight > (int)(((float)windowWidth)*1.618034f) )
           windowHeight = (int)(((float)windowWidth)*1.618034f);
-        
+
         windowTop = windowHeight/3;
-        windowLeft = windowWidth/3;    
-        
+        windowLeft = windowWidth/3;
+
     }
 
     linebreakType   = prefs.getInt("LINEBREAKTYPE", LINEBREAK_WIN);
@@ -223,21 +223,21 @@ public class JreepadPrefs //implements Serializable
 // THIS ISN'T CURRENTLY SAVED TO PREFERENCES IN ANY MEANINGFUL WAY.
 // NEED SOME WAY OF STORING THE TREE STATE WHICH ACTUALLY WORKS.
 treePathCollection = new TreePathCollection(new javax.swing.tree.TreePath[0]);
-    
+
     htmlExportArticleType = prefs.getInt("HTMLEXPORTARTICLETYPE", 0);
     htmlExportUrlsToLinks = prefs.getBoolean("HTMLEXPORTURLSTOLINKS", true);
     htmlExportAnchorLinkType = prefs.getInt("HTMLEXPORTANCHORLINKTYPE", 1);
-    
+
     dividerLocation = prefs.getInt("DIVIDERLOCATION", -1);
-    
+
     autoDetectHtmlArticles = prefs.getBoolean("AUTODETECTHTMLINARTICLES", true);
-    
+
     addQuotesToCsvOutput = prefs.getBoolean("ADDQUOTESTOCSVOUTPUT", false);
-    
+
     mainFileType = prefs.getInt("MAINFILETYPE", FILETYPE_HJT);
-    
+
     toolbarMode = prefs.getInt("TOOLBARMODE", TOOLBAR_ICON);
-    
+
     showGreenStrip = prefs.getBoolean("SHOWGREENSTRIP", true);
 
 
@@ -251,20 +251,20 @@ treePathCollection = new TreePathCollection(new javax.swing.tree.TreePath[0]);
     prefs.put("IMPORTLOCATION", ""+importLocation);
     prefs.put("EXPORTLOCATION", ""+exportLocation);
     prefs.put("BACKUPLOCATION", ""+backupLocation);
-    
+
     prefs.putBoolean("SEENLICENSE", seenLicense);
 
     prefs.putInt("AUTOSAVEPERIOD", autoSavePeriod);
     prefs.putBoolean("AUTOSAVE", autoSave);
-    
+
     prefs.putInt("VIEWWHICH", viewWhich);
-    
+
     prefs.putBoolean("VIEWTOOLBAR", viewToolbar);
-    
+
     prefs.putInt("SEARCHMAXNUM", searchMaxNum);
-    
+
     prefs.putBoolean("AUTODATEINARTICLES", autoDateInArticles);
-    
+
     prefs.putBoolean("LOADLASTFILEONOPEN", loadLastFileOnOpen);
 
     prefs.put("WEBSEARCHNAME", ""+webSearchName);
@@ -272,7 +272,7 @@ treePathCollection = new TreePathCollection(new javax.swing.tree.TreePath[0]);
     prefs.put("WEBSEARCHPOSTFIX", ""+webSearchPostfix);
 
     prefs.putInt("DEFAULTSEARCHMODE", defaultSearchMode);
-    
+
     prefs.putBoolean("WIKIBEHAVIOURACTIVE", wikiBehaviourActive);
 
     prefs.putInt("FILEENCODING",fileEncoding);
@@ -286,9 +286,9 @@ treePathCollection = new TreePathCollection(new javax.swing.tree.TreePath[0]);
     prefs.putInt("TREEFONTSIZE", treeFont.getSize());
     prefs.put("ARTICLEFONTNAME", articleFont.getName());
     prefs.putInt("ARTICLEFONTSIZE", articleFont.getSize());
-    
+
     prefs.putInt("CHARACTERWRAPWIDTH", characterWrapWidth);
-    
+
     prefs.putBoolean("WRAPTOWINDOW", wrapToWindow);
 
     prefs.putInt("WINDOWLEFT", windowLeft);
@@ -297,34 +297,34 @@ treePathCollection = new TreePathCollection(new javax.swing.tree.TreePath[0]);
     prefs.putInt("WINDOWHEIGHT", windowHeight);
 
     prefs.putInt("LINEBREAKTYPE", linebreakType);
-    
+
 // HOW TO SERIALISE? prefs.put(""+treePathCollection);
-    
+
     prefs.putInt("HTMLEXPORTARTICLETYPE", htmlExportArticleType);
     prefs.putBoolean("HTMLEXPORTURLSTOLINKS", htmlExportUrlsToLinks);
     prefs.putInt("HTMLEXPORTANCHORLINKTYPE", htmlExportAnchorLinkType);
-    
+
     prefs.putInt("DIVIDERLOCATION", dividerLocation);
-    
+
     prefs.putBoolean("AUTODETECTHTMLINARTICLES", autoDetectHtmlArticles);
-    
+
     prefs.putBoolean("ADDQUOTESTOCSVOUTPUT", addQuotesToCsvOutput);
-    
+
     prefs.putInt("MAINFILETYPE", mainFileType);
-    
+
     prefs.putInt("TOOLBARMODE", toolbarMode);
-    
+
     prefs.putBoolean("SHOWGREENSTRIP", showGreenStrip);
-    
-    
+
+
     try{
       prefs.flush(); // Encourage the store to be saved
     }catch(Exception err){
     }
   }
 
-/*  
-  // We override the serialization routines so that different versions of our class can read 
+/*
+  // We override the serialization routines so that different versions of our class can read
   // each other's serialized states.
   private void writeObject(java.io.ObjectOutputStream out)
      throws IOException
@@ -334,18 +334,18 @@ treePathCollection = new TreePathCollection(new javax.swing.tree.TreePath[0]);
     out.writeObject(importLocation);
     out.writeObject(exportLocation);
     out.writeObject(backupLocation);
-    
+
     out.writeInt(autoSavePeriod);
     out.writeBoolean(autoSave);
-    
+
     out.writeInt(viewWhich);
-    
+
     out.writeBoolean(viewToolbar);
-    
+
     out.writeInt(searchMaxNum);
-    
+
     out.writeBoolean(autoDateInArticles);
-    
+
     out.writeBoolean(loadLastFileOnOpen);
 
     out.writeObject(webSearchName);
@@ -353,7 +353,7 @@ treePathCollection = new TreePathCollection(new javax.swing.tree.TreePath[0]);
     out.writeObject(webSearchPostfix);
 
     out.writeInt(defaultSearchMode);
-    
+
     out.writeBoolean(wikiBehaviourActive);
 
     out.writeInt(fileEncoding);
@@ -363,9 +363,9 @@ treePathCollection = new TreePathCollection(new javax.swing.tree.TreePath[0]);
 
     out.writeObject(treeFont);
     out.writeObject(articleFont);
-    
+
     out.writeInt(characterWrapWidth);
-    
+
     out.writeBoolean(wrapToWindow);
 
     out.writeInt(windowLeft);
@@ -374,23 +374,23 @@ treePathCollection = new TreePathCollection(new javax.swing.tree.TreePath[0]);
     out.writeInt(windowHeight);
 
     out.writeInt(linebreakType);
-    
+
     out.writeObject(treePathCollection);
-    
+
     out.writeInt(htmlExportArticleType);
     out.writeBoolean(htmlExportUrlsToLinks);
     out.writeInt(htmlExportAnchorLinkType);
-    
+
     out.writeInt(dividerLocation);
-    
+
     out.writeBoolean(autoDetectHtmlArticles);
-    
+
     out.writeBoolean(addQuotesToCsvOutput);
-    
+
     out.writeInt(mainFileType);
-    
+
     out.writeInt(toolbarMode);
-    
+
     out.writeBoolean(showGreenStrip);
   }
   private void readObject(java.io.ObjectInputStream in)
@@ -403,18 +403,18 @@ treePathCollection = new TreePathCollection(new javax.swing.tree.TreePath[0]);
     importLocation = (File)in.readObject();
     exportLocation = (File)in.readObject();
     backupLocation = (File)in.readObject();
-    
+
     autoSavePeriod = in.readInt();
     autoSave = in.readBoolean();
-    
+
     viewWhich = in.readInt();
-    
+
     viewToolbar = in.readBoolean();
-    
+
     searchMaxNum = in.readInt();
-    
+
     autoDateInArticles = in.readBoolean();
-    
+
     loadLastFileOnOpen = in.readBoolean();
 
     webSearchName = (String)in.readObject();
@@ -422,44 +422,44 @@ treePathCollection = new TreePathCollection(new javax.swing.tree.TreePath[0]);
     webSearchPostfix = (String)in.readObject();
 
     defaultSearchMode = in.readInt();
-    
+
     wikiBehaviourActive = in.readBoolean();
- 
+
     fileEncoding = in.readInt();
-    
+
     openRecentList = (Vector)in.readObject();
     openRecentListLength = in.readInt();
 
     treeFont = (Font)in.readObject();
     articleFont = (Font)in.readObject();
-    
+
     characterWrapWidth = in.readInt();
-    
+
     wrapToWindow = in.readBoolean();
-    
+
     windowLeft = in.readInt();
     windowTop = in.readInt();
     windowWidth = in.readInt();
     windowHeight = in.readInt();
 
     linebreakType = in.readInt();
-    
+
     treePathCollection = (TreePathCollection)in.readObject();
-    
+
     htmlExportArticleType = in.readInt();
     htmlExportUrlsToLinks = in.readBoolean();
     htmlExportAnchorLinkType = in.readInt();
-    
+
     dividerLocation = in.readInt();
-    
+
     autoDetectHtmlArticles = in.readBoolean();
-    
+
     addQuotesToCsvOutput = in.readBoolean();
-    
+
     mainFileType = in.readInt();
-    
+
     toolbarMode = in.readInt();
-    
+
     showGreenStrip = in.readBoolean();
    }
    catch(IOException e)
