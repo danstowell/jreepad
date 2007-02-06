@@ -270,12 +270,7 @@ public class JreepadView extends Box
      this.add(articleView);
      articleView.setSize(getSize());
   }
-  /*
-  private void setCurrentNode(DefaultMutableTreeNode node)
-  {
-    setCurrentNode((JreepadNode)(node.getUserObject()));
-  }
-  */
+
   private void setCurrentNode(JreepadNode n)
   {
     boolean isSame = currentNode!=null && n.equals(currentNode);
@@ -301,8 +296,6 @@ public class JreepadView extends Box
     }
     currentNode = n;
     setEditorPaneText(n.getArticle());
-//    editorPanePlainText.setText(n.getContent());
-//    editorPaneHtml.setText(n.getContent());
     ensureCorrectArticleRenderMode();
     editorPanePlainText.unlockEdits(); // Reactivate the caret listener - ALSO REACTIVATES UNDO-STORAGE
   }
@@ -311,11 +304,13 @@ public class JreepadView extends Box
   {
     return tree;
   }
+
   public JreepadNode getRootJreepadNode()
   {
     setCurrentNode(getCurrentNode()); // Ensures any edits have been committed
     return root;
   }
+
   public JreepadNode getCurrentNode()
   {
     return currentNode;
@@ -329,8 +324,6 @@ public class JreepadView extends Box
       ret.append("/" + ((JreepadNode)p[i]).getTitle());
     return ret.toString() + "\"";
   }
-
-
 
   public void indentCurrentNode()
   {
@@ -358,6 +351,7 @@ public class JreepadView extends Box
       tree.setSelectionPath(myPath);
     }
   }
+
   public void outdentCurrentNode()
   {
     if(currentNode.equals(root))
@@ -398,6 +392,7 @@ public class JreepadView extends Box
     treeModel.reload(currentNode.getParent());
     tree.setSelectionPath(nodePath);
   }
+
   public void moveCurrentNodeDown()
   {
     TreePath nodePath = tree.getSelectionPath();
@@ -474,6 +469,7 @@ public class JreepadView extends Box
       tree.startEditingAtPath(newPath);
     return ret;
   }
+
   public JreepadNode addNodeBelow()
   {
     int index = currentNode.getIndex();
@@ -494,6 +490,7 @@ public class JreepadView extends Box
     tree.startEditingAtPath(parentPath.pathByAddingChild(ret));
     return ret;
   }
+
   public JreepadNode addNode()
   {
     //DEL storeForUndo();
@@ -507,6 +504,7 @@ public class JreepadView extends Box
     tree.startEditingAtPath(nodePath.pathByAddingChild(ret));
     return ret;
   }
+
   public JreepadNode removeNode()
   {
     JreepadNode parent = (JreepadNode)currentNode.getParent();
@@ -535,6 +533,7 @@ public class JreepadView extends Box
     treeModel.reload(currentNode);
     // System.out.println(currentNode.toFullString());
   }
+
   public void sortChildrenRecursive()
   {
     //DEL storeForUndo();
@@ -552,6 +551,7 @@ public class JreepadView extends Box
   {
     tree.expandAll(currentNode, tree.getLeadSelectionPath());
   }
+
   public void collapseAllCurrentNode()
   {
     tree.collapseAll(currentNode, tree.getLeadSelectionPath());
@@ -584,6 +584,7 @@ public class JreepadView extends Box
     }
 	return true;
   }
+
   public JreepadSearcher.JreepadSearchResult[] getSearchResults()
   {
     return searcher.getSearchResults();
@@ -648,55 +649,6 @@ public class JreepadView extends Box
     prefs.save();
   }
 
-
-/*
-
-    DEPRECATED - I wrote this before discovering Java's UndoManager.
-
-
-
-  // Stuff concerned with undo
-  public void undoAction()
-  {
-    if(!canWeUndo())
-      return;
-
-    // Swap the old root / selectionpath / expandedpaths for the current ones
-    JreepadNode tempRoot = root;
-    root = oldRootForUndo;
-    oldRootForUndo = tempRoot;
-
-    // Fire a tree-structure-changed event for the entire tree
-    treeModel.setRoot(root);
-    treeModel.reload(root);
-    // Set the correct selection and expanded paths
-    tree.setSelectionPath(oldSelectedPath); // I hope this ends up firing the setCurrentNode() function...
-
-    editorPanePlainText.setText(currentNode.getContent());
-    editorPaneHtml.setText(currentNode.getContent());
-    repaint();
-  }
-  public boolean canWeUndo()
-  {
-    return oldRootForUndo != null;
-  }
-  private void storeForUndo()
-  {
-    // Use JreepadNode.getCopy() on the root node to get a copy of the whole tree
-    oldRootForUndo = root.getCopy();
-    // Also get the tree's entire set of open TreePaths and selected TreePaths
-    oldSelectedPath = tree.getSelectionPath();
-  }
-  void clearUndoCache()
-  {
-    oldRootForUndo = null;
-  }
-  // End of: stuff concerned with undo
-
-*/
-
-
-
   // Stuff concerned with linking
   public void webSearchTextSelectedInArticle()
   {
@@ -740,10 +692,12 @@ System.out.println(err);
 
     webSearchText(url);
   }
+
   public void webSearchText(String text)
   {
     openURL("http://" + getPrefs().webSearchPrefix + text + getPrefs().webSearchPostfix);
   }
+
   public void openURLSelectedInArticle()
   {
     String url = getSelectedTextInArticle();
@@ -776,6 +730,7 @@ System.out.println(err);
     }
     openURL(url);
   }
+
   public static boolean isPureWord(String in)
   {
     char[] c = in.toCharArray();
@@ -784,6 +739,7 @@ System.out.println(err);
         return false;
     return true;
   }
+
   public static boolean isWikiWord(String in)
   {
     if(in.length()>4 && in.startsWith("[[") && in.endsWith("]]"))
@@ -809,6 +765,7 @@ System.out.println(err);
         }
     return uppers>1;
   }
+
   public void openURL(String url)
   {
     if(url==null || url=="")
@@ -981,6 +938,7 @@ System.out.println(err);
     else
       tree.setSelectionPath(tp);
   }
+
   public TreePath findNearestNodeTitled(String text)
   {
     TreePath curPath = tree.getLeadSelectionPath();
@@ -995,10 +953,12 @@ System.out.println(err);
     }
     return null;
   }
+
   public TreePath findChildTitled(String text)
   {
     return findChildTitled(text, tree.getLeadSelectionPath());
   }
+
   public TreePath findChildTitled(String text, TreePath pathToNode)
   {
     JreepadNode myNode = (JreepadNode)pathToNode.getLastPathComponent();
@@ -1026,6 +986,7 @@ System.out.println(err);
   {
     return warnAboutUnsaved;
   }
+
   void setWarnAboutUnsaved(boolean yo)
   {
     warnAboutUnsaved = yo;
@@ -1050,6 +1011,7 @@ System.out.println(err);
     editorPaneCsv.reloadArticle();
     setWarnAboutUnsaved(true);
   }
+
   public void stripAllTags()
   {
     //DEL storeForUndo();
@@ -1064,16 +1026,12 @@ System.out.println(err);
 
   public void setArticleMode(int newMode)
   {
-//    System.out.println("\n\n\nnode content : " + currentNode.getContent()
-//          + "\neditorPanePlainText contains: " + editorPanePlainText.getText());
-
     editorPanePlainText.lockEdits(); // Disables store-for-undo
 
     currentNode.getArticle().setContent(editorPanePlainText.getText());
     switch(newMode)
     {
       case JreepadArticle.ARTICLEMODE_ORDINARY:
-        // DELETEME - PLAINTEXT SHOULD NOT BE AFFECTED BY OTHERS
         editorPanePlainText.reloadArticle();
         break;
       case JreepadArticle.ARTICLEMODE_HTML:
@@ -1146,6 +1104,7 @@ System.out.println(err);
         return null;
     }
   }
+
   void setEditorPaneText(JreepadArticle a)
   {
     editorPanePlainText.setArticle(a);
@@ -1166,34 +1125,26 @@ System.out.println(err);
     public void treeNodesChanged(TreeModelEvent e)
     {
       warnAboutUnsaved = true;
-//      Object[] parentPath = e.getPath(); // Parent of the changed node(s)
-//      int[] children = e.getChildIndices(); // Indices of the changed node(s)
-//      JreepadNode parent = (JreepadNode)(parentPath[parentPath.length-1]);
       tree.repaint();
     }
+
     public void treeNodesInserted(TreeModelEvent e)
     {
       warnAboutUnsaved = true;
-      Object[] parentPath = e.getPath(); // Parent of the new node(s)
-      int[] children = e.getChildIndices(); // Indices of the new node(s)
-      JreepadNode parent = (JreepadNode)(parentPath[parentPath.length-1]);
       tree.expandPath(e.getTreePath());
       tree.scrollPathToVisible(e.getTreePath());
       tree.repaint();
     }
+
     public void treeNodesRemoved(TreeModelEvent e)
     {
       warnAboutUnsaved = true;
-      Object[] parentPath = e.getPath(); // Parent of the removed node(s)
-      int[] children = e.getChildIndices(); // Indices the node(s) had before they were removed
-      JreepadNode parent = (JreepadNode)(parentPath[parentPath.length-1]);
       tree.repaint();
     }
+
     public void treeStructureChanged(TreeModelEvent e)
     {
       warnAboutUnsaved = true;
-      Object[] parentPath = e.getPath(); // Parent of the changed node(s)
-      JreepadNode parent = (JreepadNode)(parentPath[parentPath.length-1]);
       tree.repaint();
     }
   } // End of: class JreepadTreeModelListener
