@@ -118,7 +118,7 @@ public class JreepadPrefs //implements Serializable
 
   boolean autoDetectHtmlArticles;
 
-  boolean addQuotesToCsvOutput;
+  public boolean addQuotesToCsvOutput;
 
   static final int FILETYPE_XML = 0;
   static final int FILETYPE_HJT = 1;

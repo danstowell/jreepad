@@ -19,10 +19,6 @@ The full license can be read online here:
 
 package jreepad;
 
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.event.ComponentEvent;
-import java.awt.event.ComponentListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.io.BufferedReader;
@@ -38,30 +34,25 @@ import javax.swing.JComponent;
 import javax.swing.JOptionPane;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
-import javax.swing.JTable;
 import javax.swing.JTree;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
-import javax.swing.event.TableModelEvent;
-import javax.swing.event.TableModelListener;
 import javax.swing.event.TreeModelEvent;
 import javax.swing.event.TreeModelListener;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
-import javax.swing.table.DefaultTableModel;
 import javax.swing.text.BadLocationException;
 import javax.swing.tree.TreePath;
 
 import jreepad.editor.ContentChangeListener;
 import jreepad.editor.HtmlViewer;
 import jreepad.editor.PlainTextEditor;
+import jreepad.editor.TableViewer;
 import jreepad.editor.TextileViewer;
 import edu.stanford.ejalbert.BrowserLauncher;
 import edu.stanford.ejalbert.exception.BrowserLaunchingExecutionException;
 import edu.stanford.ejalbert.exception.BrowserLaunchingInitializingException;
 import edu.stanford.ejalbert.exception.UnsupportedOperatingSystemException;
 
-public class JreepadView extends Box implements TableModelListener
+public class JreepadView extends Box
 {
 
   private static JreepadPrefs prefs;
@@ -79,7 +70,7 @@ public class JreepadView extends Box implements TableModelListener
   private PlainTextEditor editorPanePlainText;
   private HtmlViewer editorPaneHtml;
   private TextileViewer editorPaneTextile;
-  private JTable editorPaneCsv;
+  private TableViewer editorPaneCsv;
 
   private JComponent currentArticleView;
 
@@ -174,8 +165,7 @@ public class JreepadView extends Box implements TableModelListener
     editorPanePlainText = new PlainTextEditor(root.getArticle());
     editorPaneHtml = new HtmlViewer(root.getArticle());
     editorPaneTextile = new TextileViewer(root.getArticle());
-    editorPaneCsv = new JTable(new ArticleTableModel());
-    editorPaneCsv.getModel().addTableModelListener(this);
+    editorPaneCsv = new TableViewer(root.getArticle());
 
     articleView = new JScrollPane(getEditorPaneComponent(), JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
 
@@ -637,11 +627,7 @@ public class JreepadView extends Box implements TableModelListener
     switch(currentNode.getArticle().getArticleMode())
     {
       case JreepadArticle.ARTICLEMODE_CSV:
-        int x = editorPaneCsv.getSelectedColumn();
-        int y = editorPaneCsv.getSelectedRow();
-        if(x==-1 || y ==-1)
-          return "";
-        return editorPaneCsv.getValueAt(y,x).toString();
+        return editorPaneCsv.getSelectedText();
       case JreepadArticle.ARTICLEMODE_HTML:
         return editorPaneHtml.getSelectedText();
       case JreepadArticle.ARTICLEMODE_TEXTILEHTML:
@@ -1061,6 +1047,7 @@ System.out.println(err);
     editorPanePlainText.reloadArticle();
     editorPaneHtml.reloadArticle();
     editorPaneTextile.reloadArticle();
+    editorPaneCsv.reloadArticle();
     setWarnAboutUnsaved(true);
   }
   public void stripAllTags()
@@ -1070,6 +1057,7 @@ System.out.println(err);
     editorPanePlainText.reloadArticle();
     editorPaneHtml.reloadArticle();
     editorPaneTextile.reloadArticle();
+    editorPaneCsv.reloadArticle();
     setWarnAboutUnsaved(true);
   }
 
@@ -1095,7 +1083,7 @@ System.out.println(err);
         editorPaneTextile.reloadArticle();
         break;
       case JreepadArticle.ARTICLEMODE_CSV:
-        articleToJTable(currentNode.getArticle());
+    	editorPaneCsv.reloadArticle();
         break;
       default:
         return;
@@ -1109,40 +1097,6 @@ System.out.println(err);
   public void ensureCorrectArticleRenderMode()
   {
     articleView.setViewportView(getEditorPaneComponent());
-  }
-
-  public void articleToJTable()
-  {
-    String[][] rowData = currentNode.getArticle().interpretContentAsCsv();
-    String[] columnNames = null;
-
-//    System.out.println("articleToJTable(): rows=" + rowData.length + ", cols="+rowData[0].length);
-    initJTable(rowData, columnNames);
-  }
-  public void articleToJTable(JreepadArticle a)
-  {
-    String[][] rowData = a.interpretContentAsCsv();
-    String[] columnNames = new String[rowData[0].length];
-    for(int i=0; i<columnNames.length; i++)
-      columnNames[i] = " ";
-
-//    System.out.println("articleToJTable(s): rows=" + rowData.length + ", cols="+rowData[0].length);
-    initJTable(rowData, columnNames);
-  }
-
-  private void initJTable(String[][] rowData, String[] columnNames)
-  {
-    editorPaneCsv = new JTable(new ArticleTableModel(rowData, columnNames));
-//    editorPaneCsv = new JTable(new ArticleTableModel(rowData, columnNames),
-//             (getCurrentNode().tblColModel==null ? new ArticleTableColumnModel(): getCurrentNode().tblColModel));
-//    editorPaneCsv = new JTable(rowData, columnNames);
-//    editorPaneCsv.setModel(new ArticleTableModel());
-    editorPaneCsv.getModel().addTableModelListener(this);
-    editorPaneCsv.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
-    editorPaneCsv.setGridColor(Color.GRAY);
-    editorPaneCsv.setShowGrid(true);
-    editorPaneCsv.setShowVerticalLines(true);
-    editorPaneCsv.setShowHorizontalLines(true);
   }
 
   // The following functions allow us to use either a JEditorPane or a JTable to display article data
@@ -1186,7 +1140,7 @@ System.out.println(err);
       case JreepadArticle.ARTICLEMODE_TEXTILEHTML:
         return editorPaneTextile.getText();
       case JreepadArticle.ARTICLEMODE_CSV:
-		return jTableContentToCsv();
+		return editorPaneCsv.getText();
       default:
         System.err.println("getEditorPaneText() says: JreepadNode.getArticleMode() returned an unrecognised value");
         return null;
@@ -1197,8 +1151,7 @@ System.out.println(err);
     editorPanePlainText.setArticle(a);
     editorPaneHtml.setArticle(a);
     editorPaneTextile.setArticle(a);
-    if (a.getArticleMode() == JreepadArticle.ARTICLEMODE_CSV)
-        articleToJTable(a);
+	editorPaneCsv.setArticle(a);
   }
   // End of: functions which should allow us to switch between JEditorPane and JTable
 
@@ -1206,29 +1159,6 @@ System.out.println(err);
   public void editNodeTitleAction()
   {
     tree.startEditingAtPath(tree.getSelectionPath());
-  }
-
-  public String jTableContentToCsv()
-  {
-	int w = editorPaneCsv.getColumnCount();
-	int h = editorPaneCsv.getRowCount();
-	StringBuffer csv = new StringBuffer();
-	String quoteMark = getPrefs().addQuotesToCsvOutput ? "\"" : "";
-	for(int i=0; i<h; i++)
-	{
-	  for(int j=0; j<(w-1); j++)
-		csv.append(quoteMark + (String)editorPaneCsv.getValueAt(i,j) + quoteMark + ",");
-	  csv.append(quoteMark + (String)editorPaneCsv.getValueAt(i,w-1) + quoteMark + "\n");
-	}
-	return csv.toString();
-  }
-
-  // Called by the TableModelListener interface
-  public void tableChanged(TableModelEvent e)
-  {
-    // System.out.println(" -- tableChanged() -- ");
-    if(currentNode.getArticle().getArticleMode() == JreepadArticle.ARTICLEMODE_CSV)
-      currentNode.getArticle().setContent(jTableContentToCsv());
   }
 
   class JreepadTreeModelListener implements TreeModelListener
@@ -1267,19 +1197,4 @@ System.out.println(err);
       tree.repaint();
     }
   } // End of: class JreepadTreeModelListener
-
-
-  class ArticleTableModel extends DefaultTableModel {
-   public ArticleTableModel(Object[][] data,  Object[] columnNames){
-     super(data, columnNames);
-   }
-   public ArticleTableModel(){
-     super();
-   }
-
-   public boolean isCellEditable(int row, int col) {
-     return false;
-   }
-  } // End of: class ArticleTableModel
-
 }
