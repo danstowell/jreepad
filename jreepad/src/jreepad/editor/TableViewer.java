@@ -21,6 +21,7 @@ package jreepad.editor;
 
 import java.awt.Color;
 
+import javax.swing.JComponent;
 import javax.swing.JTable;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableModel;
@@ -33,29 +34,29 @@ import jreepad.JreepadView;
  * The table view pane.
  * Converts CSV content to table view.
  */
-public class TableViewer extends JTable
+public class TableViewer extends AbstractArticleView
 {
-	private JreepadArticle article;
+	private JTable table;
 
 	public TableViewer(JreepadArticle article)
 	{
-		super(getTableModel(article));
-		this.article = article;
-		setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
-		setGridColor(Color.GRAY);
-		setShowGrid(true);
-		setShowVerticalLines(true);
-		setShowHorizontalLines(true);
+		super(article);
+		table = new JTable(getTableModel(article));
+		table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+		table.setGridColor(Color.GRAY);
+		table.setShowGrid(true);
+		table.setShowVerticalLines(true);
+		table.setShowHorizontalLines(true);
 	}
 
-	public void setArticle(JreepadArticle article)
+	public JComponent getComponent()
 	{
-		this.article = article;
-		reloadArticle();
+		return table;
 	}
+
 	public void reloadArticle()
 	{
-		setModel(getTableModel(article));
+		table.setModel(getTableModel(article));
 	}
 
 	private static TableModel getTableModel(JreepadArticle a)
@@ -69,28 +70,26 @@ public class TableViewer extends JTable
 
 	public String getText()
 	{
-		int w = getColumnCount();
-		int h = getRowCount();
+		int w = table.getColumnCount();
+		int h = table.getRowCount();
 		StringBuffer csv = new StringBuffer();
 		String quoteMark = getPrefs().addQuotesToCsvOutput ? "\"" : "";
 		for (int i = 0; i < h; i++)
 		{
 			for (int j = 0; j < (w - 1); j++)
-				csv.append(quoteMark + (String) getValueAt(i, j) + quoteMark
-						+ ",");
-			csv.append(quoteMark + (String) getValueAt(i, w - 1) + quoteMark
-					+ "\n");
+				csv.append(quoteMark + (String) table.getValueAt(i, j) + quoteMark + ",");
+			csv.append(quoteMark + (String) table.getValueAt(i, w - 1) + quoteMark + "\n");
 		}
 		return csv.toString();
 	}
 
 	public String getSelectedText()
 	{
-        int x = getSelectedColumn();
-        int y = getSelectedRow();
+        int x = table.getSelectedColumn();
+        int y = table.getSelectedRow();
         if(x==-1 || y ==-1)
           return "";
-        return getValueAt(y,x).toString();
+        return table.getValueAt(y,x).toString();
 	}
 
 	public static JreepadPrefs getPrefs()

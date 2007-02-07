@@ -1010,7 +1010,7 @@ public class JreepadView extends Box
     	  currentArticleView = editorPaneTextile.getComponent();
     	  break;
       case JreepadArticle.ARTICLEMODE_CSV:
-    	  currentArticleView = editorPaneCsv;
+    	  currentArticleView = editorPaneCsv.getComponent();
     	  break;
       default:
         System.err.println("getEditorPaneComponent() says: JreepadNode.getArticleMode() returned an unrecognised value");
