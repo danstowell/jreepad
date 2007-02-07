@@ -273,30 +273,16 @@ public class JreepadView extends Box
 
   private void setCurrentNode(JreepadNode n)
   {
-    boolean isSame = currentNode!=null && n.equals(currentNode);
-         //System.out.println("setCurrentNode() activated: sameness test = "+isSame);
-    //
-    //    This "isSame" test should stop the caret jumping to the end of the text when we press Save.
-    //
-    if(isSame)
-    {
-      // Only update the node's stored content if it's a plaintext node
-      if(currentNode.getArticle().getArticleMode() == JreepadArticle.ARTICLEMODE_ORDINARY)
-        currentNode.getArticle().setContent(getEditorPaneText());
+    //    This should stop the caret jumping to the end of the text when we press Save.
+    if (currentNode == n)
       return;
-    }
 
     editorPanePlainText.lockEdits(); // Deactivate the caret-listener, effectively - ALSO DEACTIVATES UNDO-STORAGE
 
-    if(currentNode != null)
-    {
-      // Only update the node's stored content if it's a plaintext node
-      if(currentNode.getArticle().getArticleMode() == JreepadArticle.ARTICLEMODE_ORDINARY)
-        currentNode.getArticle().setContent(getEditorPaneText());
-    }
     currentNode = n;
     setEditorPaneText(n.getArticle());
     ensureCorrectArticleRenderMode();
+
     editorPanePlainText.unlockEdits(); // Reactivate the caret listener - ALSO REACTIVATES UNDO-STORAGE
   }
 
@@ -307,7 +293,6 @@ public class JreepadView extends Box
 
   public JreepadNode getRootJreepadNode()
   {
-    setCurrentNode(getCurrentNode()); // Ensures any edits have been committed
     return root;
   }
 
@@ -659,33 +644,7 @@ public class JreepadView extends Box
       url = currentNode.getTitle();
 
     if((url == null) && (currentNode.getArticle().getArticleMode()==JreepadArticle.ARTICLEMODE_ORDINARY))
-    {
-      try
-      {
-
-      String text = getEditorPaneText();
-      int startpos = editorPanePlainText.getCaretPosition();
-      int endpos = startpos;
-      if(text.length()>0)
-      {
-        // Select the character before/after the current position, and grow it until we hit whitespace...
-        while(startpos>0 && !Character.isWhitespace(editorPanePlainText.getText(startpos-1,1).charAt(0)))
-          startpos--;
-        while(endpos<(text.length()) && !Character.isWhitespace(editorPanePlainText.getText(endpos,1).charAt(0)))
-          endpos++;
-        if(endpos>startpos)
-        {
-          editorPanePlainText.setSelectionStart(startpos);
-          editorPanePlainText.setSelectionEnd(endpos);
-          url = editorPanePlainText.getSelectedText();
-        }
-      }
-      }
-      catch(BadLocationException err)
-      {
-System.out.println(err);
-      }
-    }
+      url = editorPanePlainText.selectWordUnderCursor();
 
     if(url==null || !(url.length()>0))
       url = currentNode.getTitle();
@@ -702,32 +661,7 @@ System.out.println(err);
   {
     String url = getSelectedTextInArticle();
     if((url == null) && (currentNode.getArticle().getArticleMode()==JreepadArticle.ARTICLEMODE_ORDINARY))
-    {
-      try
-      {
-
-      String text = getEditorPaneText();
-      int startpos = editorPanePlainText.getCaretPosition();
-      int endpos = startpos;
-      if(text != null)
-      {
-        // Select the character before/after the current position, and grow it until we hit whitespace...
-        while(startpos>0 && !Character.isWhitespace(editorPanePlainText.getText(startpos-1,1).charAt(0)))
-          startpos--;
-        while(endpos<(text.length()) && !Character.isWhitespace(editorPanePlainText.getText(endpos,1).charAt(0)))
-          endpos++;
-        if(endpos>startpos)
-        {
-          editorPanePlainText.setSelectionStart(startpos);
-          editorPanePlainText.setSelectionEnd(endpos);
-          url = editorPanePlainText.getSelectedText();
-        }
-      }
-      }
-      catch(BadLocationException err)
-      {
-      }
-    }
+      url = editorPanePlainText.selectWordUnderCursor();
     openURL(url);
   }
 
@@ -1028,7 +962,6 @@ System.out.println(err);
   {
     editorPanePlainText.lockEdits(); // Disables store-for-undo
 
-    currentNode.getArticle().setContent(editorPanePlainText.getText());
     switch(newMode)
     {
       case JreepadArticle.ARTICLEMODE_ORDINARY:

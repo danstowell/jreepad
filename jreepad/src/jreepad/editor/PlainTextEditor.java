@@ -122,6 +122,35 @@ public class PlainTextEditor extends JEditorPane implements CaretListener, Undoa
 			contentChangeListener.contentChanged();
 	}
 
+	public String selectWordUnderCursor()
+	{
+		try
+		{
+			String text = getText();
+			int startpos = getCaretPosition();
+			int endpos = startpos;
+			if (text.length() > 0)
+			{
+				// Select the character before/after the current position, and
+				// grow it until we hit whitespace...
+				while (startpos > 0 && !Character.isWhitespace(getText(startpos - 1, 1).charAt(0)))
+					startpos--;
+				while (endpos < (text.length()) && !Character.isWhitespace(getText(endpos, 1).charAt(0)))
+					endpos++;
+				if (endpos > startpos)
+				{
+					setSelectionStart(startpos);
+					setSelectionEnd(endpos);
+					return getSelectedText();
+				}
+			}
+		}
+		catch (BadLocationException e)
+		{
+		}
+		return "";
+	}
+
 	public void caretUpdate(CaretEvent e)
 	{
 		if (editLocked)
