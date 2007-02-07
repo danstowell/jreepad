@@ -30,7 +30,6 @@ import java.util.Vector;
 
 import javax.swing.Box;
 import javax.swing.BoxLayout;
-import javax.swing.JComponent;
 import javax.swing.JOptionPane;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
@@ -41,6 +40,7 @@ import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
 import javax.swing.tree.TreePath;
 
+import jreepad.editor.ArticleView;
 import jreepad.editor.ContentChangeListener;
 import jreepad.editor.HtmlViewer;
 import jreepad.editor.PlainTextEditor;
@@ -60,7 +60,7 @@ public class JreepadView extends Box
   private JreepadTreeModel treeModel;
   private TreeView tree;
   private JScrollPane treeView;
-  private JScrollPane articleView;
+  private JScrollPane articlePane;
 
   // editorPane is supposed to represent the pane currently displayed/edited - so it's the one
   //    to refer to when you're doing GUI-related stuff
@@ -71,7 +71,7 @@ public class JreepadView extends Box
   private TextileViewer editorPaneTextile;
   private TableViewer editorPaneCsv;
 
-  private JComponent currentArticleView;
+  private ArticleView currentArticleView;
 
 
   // Undo features
@@ -165,8 +165,16 @@ public class JreepadView extends Box
     editorPaneHtml = new HtmlViewer(root.getArticle());
     editorPaneTextile = new TextileViewer(root.getArticle());
     editorPaneCsv = new TableViewer(root.getArticle());
+    currentArticleView = editorPanePlainText;
 
-    articleView = new JScrollPane(getEditorPaneComponent(), JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+    editorPanePlainText.setContentChangeListener(new ContentChangeListener() {
+    	public void contentChanged()
+    	{
+    		setWarnAboutUnsaved(true);
+    	}
+    });
+
+    articlePane = new JScrollPane(editorPanePlainText.getComponent(), JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
 
     /* XXX Is this really needed?
     articleView.addComponentListener(new ComponentListener()
@@ -198,13 +206,6 @@ public class JreepadView extends Box
     					);
     */
 
-    editorPanePlainText.setContentChangeListener(new ContentChangeListener() {
-    	public void contentChanged()
-    	{
-    		setWarnAboutUnsaved(true);
-    	}
-    });
-
     setCurrentNode(root);
 
     setViewBoth();
@@ -235,8 +236,8 @@ public class JreepadView extends Box
         return;
     }
       setSize(getSize());
-      currentArticleView.setPreferredSize(articleView.getViewport().getExtentSize());
-      currentArticleView.setSize(articleView.getViewport().getExtentSize());
+      currentArticleView.getComponent().setPreferredSize(articlePane.getViewport().getExtentSize());
+      currentArticleView.getComponent().setSize(articlePane.getViewport().getExtentSize());
       validate();
       repaint();
 //      System.out.println("editorPane size: " + editorPane.getSize());
@@ -250,14 +251,14 @@ public class JreepadView extends Box
   {
     ensureCorrectArticleRenderMode();
     splitPane.setLeftComponent(treeView);
-    splitPane.setRightComponent(articleView);
+    splitPane.setRightComponent(articlePane);
     this.add(splitPane);
 //      editorPane.setSize(articleView.getSize());
 //      editorPane.setSize(articleView.getViewport().getViewSize());
   }
   private void setViewTreeOnly()
   {   this.remove(splitPane);
-      this.remove(articleView);
+      this.remove(articlePane);
       this.add(treeView);
       treeView.setSize(getSize());
   }
@@ -266,8 +267,8 @@ public class JreepadView extends Box
      this.remove(splitPane);
      this.remove(treeView);
      ensureCorrectArticleRenderMode();
-     this.add(articleView);
-     articleView.setSize(getSize());
+     this.add(articlePane);
+     articlePane.setSize(getSize());
   }
 
   private void setCurrentNode(JreepadNode n)
@@ -276,13 +277,13 @@ public class JreepadView extends Box
     if (currentNode == n)
       return;
 
-    editorPanePlainText.lockEdits(); // Deactivate the caret-listener, effectively - ALSO DEACTIVATES UNDO-STORAGE
+    ArticleView oldView = currentArticleView;
+    oldView.lockEdits(); // Deactivate the caret-listener, effectively - ALSO DEACTIVATES UNDO-STORAGE
 
     currentNode = n;
-    setEditorPaneText(n.getArticle());
     ensureCorrectArticleRenderMode();
 
-    editorPanePlainText.unlockEdits(); // Reactivate the caret listener - ALSO REACTIVATES UNDO-STORAGE
+    oldView.unlockEdits(); // Reactivate the caret listener - ALSO REACTIVATES UNDO-STORAGE
   }
 
   public JTree getTree()
@@ -498,7 +499,6 @@ public class JreepadView extends Box
       //DEL storeForUndo();
       int index = parent.getIndex(currentNode);
       JreepadNode ret = parent.removeChild(index);
-      setCurrentNode(parent);
 
       tree.setSelectionPath(parentPath);
       treeModel.nodesWereRemoved(parent, new int[]{index}, new Object[]{ret});
@@ -607,22 +607,6 @@ public class JreepadView extends Box
     tree.expandPath(tree.getSelectionPath());
   }
 
-  public String getSelectedTextInArticle()
-  {
-    switch(currentNode.getArticle().getArticleMode())
-    {
-      case JreepadArticle.ARTICLEMODE_CSV:
-        return editorPaneCsv.getSelectedText();
-      case JreepadArticle.ARTICLEMODE_HTML:
-        return editorPaneHtml.getSelectedText();
-      case JreepadArticle.ARTICLEMODE_TEXTILEHTML:
-    	  return editorPaneTextile.getSelectedText();
-      case JreepadArticle.ARTICLEMODE_ORDINARY:
-      default:
-        return editorPanePlainText.getSelectedText();
-    }
-  }
-
   public static JreepadPrefs getPrefs()
   {
     return prefs;
@@ -637,7 +621,7 @@ public class JreepadView extends Box
   public void webSearchTextSelectedInArticle()
   {
     // JComponent treeOrArticle;
-    String url = getSelectedTextInArticle();
+    String url = currentArticleView.getSelectedText();
 
     if(url==null || url.length()==0)
       url = currentNode.getTitle();
@@ -658,7 +642,7 @@ public class JreepadView extends Box
 
   public void openURLSelectedInArticle()
   {
-    String url = getSelectedTextInArticle();
+    String url = currentArticleView.getSelectedText();
     if((url == null) && (currentNode.getArticle().getArticleMode()==JreepadArticle.ARTICLEMODE_ORDINARY))
       url = editorPanePlainText.selectWordUnderCursor();
     openURL(url);
@@ -938,10 +922,7 @@ public class JreepadView extends Box
   {
     //DEL storeForUndo();
     currentNode.getArticle().wrapContentToCharWidth(charWidth);
-    editorPanePlainText.reloadArticle();
-    editorPaneHtml.reloadArticle();
-    editorPaneTextile.reloadArticle();
-    editorPaneCsv.reloadArticle();
+    currentArticleView.reloadArticle();
     setWarnAboutUnsaved(true);
   }
 
@@ -949,103 +930,45 @@ public class JreepadView extends Box
   {
     //DEL storeForUndo();
     currentNode.getArticle().stripAllTags();
-    editorPanePlainText.reloadArticle();
-    editorPaneHtml.reloadArticle();
-    editorPaneTextile.reloadArticle();
-    editorPaneCsv.reloadArticle();
+    currentArticleView.reloadArticle();
     setWarnAboutUnsaved(true);
   }
 
-
   public void setArticleMode(int newMode)
   {
-    editorPanePlainText.lockEdits(); // Disables store-for-undo
+	ArticleView oldView = currentArticleView;
+    oldView.lockEdits(); // Disables store-for-undo
 
-    switch(newMode)
-    {
-      case JreepadArticle.ARTICLEMODE_ORDINARY:
-        editorPanePlainText.reloadArticle();
-        break;
-      case JreepadArticle.ARTICLEMODE_HTML:
-        editorPaneHtml.reloadArticle();
-        break;
-      case JreepadArticle.ARTICLEMODE_TEXTILEHTML:
-        editorPaneTextile.reloadArticle();
-        break;
-      case JreepadArticle.ARTICLEMODE_CSV:
-    	editorPaneCsv.reloadArticle();
-        break;
-      default:
-        return;
-    }
     currentNode.getArticle().setArticleMode(newMode);
     ensureCorrectArticleRenderMode();
-    getEditorPaneComponent().repaint();
-    editorPanePlainText.unlockEdits(); // Re-enables store-for-undo
+    currentArticleView.getComponent().repaint();
+
+    oldView.unlockEdits(); // Re-enables store-for-undo
   }
 
   public void ensureCorrectArticleRenderMode()
   {
-    articleView.setViewportView(getEditorPaneComponent());
-  }
-
-  // The following functions allow us to use either a JEditorPane or a JTable to display article data
-  JComponent getEditorPaneComponent()
-  {
-    if(currentNode==null)
-    {
-      currentArticleView = editorPanePlainText.getComponent();
-      return currentArticleView; // This is a bit of a hack - it shouldn't really even be called to act on null
-    }
-
     switch(currentNode.getArticle().getArticleMode())
     {
       case JreepadArticle.ARTICLEMODE_ORDINARY:
-    	  currentArticleView = editorPanePlainText.getComponent();
+    	  currentArticleView = editorPanePlainText;
     	  break;
       case JreepadArticle.ARTICLEMODE_HTML:
-    	  currentArticleView = editorPaneHtml.getComponent();
+    	  currentArticleView = editorPaneHtml;
     	  break;
       case JreepadArticle.ARTICLEMODE_TEXTILEHTML:
-    	  currentArticleView = editorPaneTextile.getComponent();
+    	  currentArticleView = editorPaneTextile;
     	  break;
       case JreepadArticle.ARTICLEMODE_CSV:
-    	  currentArticleView = editorPaneCsv.getComponent();
+    	  currentArticleView = editorPaneCsv;
     	  break;
       default:
         System.err.println("getEditorPaneComponent() says: JreepadNode.getArticleMode() returned an unrecognised value");
-        return null;
+        currentArticleView = null;
     }
-    return currentArticleView;
+    currentArticleView.setArticle(currentNode.getArticle());
+    articlePane.setViewportView(currentArticleView.getComponent());
   }
-
-  String getEditorPaneText()
-  {
-    switch(currentNode.getArticle().getArticleMode())
-    {
-      case JreepadArticle.ARTICLEMODE_ORDINARY:
-        return editorPanePlainText.getText();
-      case JreepadArticle.ARTICLEMODE_HTML:
-        return editorPaneHtml.getText();
-      case JreepadArticle.ARTICLEMODE_TEXTILEHTML:
-        return editorPaneTextile.getText();
-      case JreepadArticle.ARTICLEMODE_CSV:
-		return editorPaneCsv.getText();
-      default:
-        System.err.println("getEditorPaneText() says: JreepadNode.getArticleMode() returned an unrecognised value");
-        return null;
-    }
-  }
-
-  void setEditorPaneText(JreepadArticle a)
-  {
-    editorPanePlainText.setArticle(a);
-    editorPaneHtml.setArticle(a);
-    editorPaneTextile.setArticle(a);
-	editorPaneCsv.setArticle(a);
-  }
-  // End of: functions which should allow us to switch between JEditorPane and JTable
-
 
   public void editNodeTitleAction()
   {
