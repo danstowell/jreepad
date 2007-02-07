@@ -19,46 +19,47 @@ The full license can be read online here:
 
 package jreepad.editor;
 
+import javax.swing.JComponent;
+import javax.swing.JEditorPane;
+
 import jreepad.JreepadArticle;
 
 /**
- * Abstract implementation of ArticleView.
- * Several basic methods are implemented.
+ * Abstract article view in the form of a JEditorPane.
  *
  * @author <a href="mailto:pewu@losthive.org">Przemek Więch</a>
- * @version $Id: AbstractArticleView.java,v 1.2 2007-02-07 21:10:43 pewu Exp $
+ * @version $Id: EditorPaneView.java,v 1.1 2007-02-07 21:10:43 pewu Exp $
  */
-public abstract class AbstractArticleView implements ArticleView
+public abstract class EditorPaneView extends AbstractArticleView
 {
-	protected JreepadArticle article;
 
-	// The following boolean should be TRUE while we're changing from node to
-	// node, and false otherwise
-	protected boolean editLocked = false;
+	protected JEditorPane editorPane;
 
-	public AbstractArticleView(JreepadArticle article)
+	public EditorPaneView(String type, JreepadArticle article)
 	{
-		this.article = article;
-	}
-
-	public void lockEdits()
-	{
-		editLocked = true;
-	}
-
-	public void unlockEdits()
-	{
-		editLocked = false;
-	}
-
-	public void saveArticle()
-	{
-		article.setContent(getText());
-	}
-
-	public void setArticle(JreepadArticle article)
-	{
-		this.article = article;
+		super(article);
+		editorPane = new JEditorPane(type, "");
 		reloadArticle();
 	}
+
+	public void reloadArticle()
+	{
+		editorPane.setText(article.getContent());
+	}
+
+	public JComponent getComponent()
+	{
+		return editorPane;
+	}
+
+	public String getText()
+	{
+		return editorPane.getText();
+	}
+
+	public String getSelectedText()
+	{
+		return editorPane.getSelectedText();
+	}
+
 }

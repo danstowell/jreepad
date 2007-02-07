@@ -24,7 +24,7 @@ import org.philwilson.JTextile;
 import jreepad.JreepadArticle;
 
 /**
- * The plain text editor pane.
+ * The Textile viewer pane.
  */
 public class TextileViewer extends HtmlViewer
 {
@@ -37,7 +37,7 @@ public class TextileViewer extends HtmlViewer
     {
     	try
     	{
-    		setText(JTextile.textile(article.getContent()));
+    		editorPane.setText(JTextile.textile(article.getContent()));
     	}
     	catch (Exception e)
     	{

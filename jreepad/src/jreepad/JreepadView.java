@@ -1004,10 +1004,10 @@ public class JreepadView extends Box
     	  currentArticleView = editorPanePlainText.getComponent();
     	  break;
       case JreepadArticle.ARTICLEMODE_HTML:
-    	  currentArticleView = editorPaneHtml;
+    	  currentArticleView = editorPaneHtml.getComponent();
     	  break;
       case JreepadArticle.ARTICLEMODE_TEXTILEHTML:
-    	  currentArticleView = editorPaneTextile;
+    	  currentArticleView = editorPaneTextile.getComponent();
     	  break;
       case JreepadArticle.ARTICLEMODE_CSV:
     	  currentArticleView = editorPaneCsv;

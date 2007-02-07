@@ -19,33 +19,16 @@ The full license can be read online here:
 
 package jreepad.editor;
 
-import javax.swing.JEditorPane;
-
 import jreepad.JreepadArticle;
 
 /**
- * The plain text editor pane.
+ * The plain HTML viewer pane.
  */
-public class HtmlViewer extends JEditorPane
+public class HtmlViewer extends EditorPaneView
 {
-	protected JreepadArticle article;
-
 	public HtmlViewer(JreepadArticle article)
 	{
-		super("text/html", "");
-		this.article = article;
-		setEditable(false);
-		reloadArticle();
-	}
-
-    public void reloadArticle()
-    {
-    	setText(article.getContent());
-    }
-
-	public void setArticle(JreepadArticle article)
-	{
-		this.article = article;
-		reloadArticle();
+		super("text/html", article);
+		editorPane.setEditable(false);
 	}
 }

@@ -19,8 +19,6 @@ The full license can be read online here:
 
 package jreepad.editor;
 
-import javax.swing.JComponent;
-import javax.swing.JEditorPane;
 import javax.swing.event.CaretEvent;
 import javax.swing.event.CaretListener;
 import javax.swing.event.UndoableEditEvent;
@@ -45,16 +43,13 @@ import jreepad.JreepadView;
 /**
  * The plain text editor pane.
  */
-public class PlainTextEditor extends AbstractArticleView implements CaretListener, UndoableEditListener
+public class PlainTextEditor extends EditorPaneView implements CaretListener, UndoableEditListener
 {
-	private JEditorPane editorPane;
-
 	private ContentChangeListener contentChangeListener = null;
 
 	public PlainTextEditor(JreepadArticle article)
 	{
-		super(article);
-		editorPane = new JEditorPane("text/plain", article.getContent());
+		super("text/plain", article);
 		editorPane.setEditable(true);
 
 		if (getPrefs().wrapToWindow)
@@ -82,27 +77,7 @@ public class PlainTextEditor extends AbstractArticleView implements CaretListene
 		}
 	}
 
-    public void reloadArticle()
-    {
-    	editorPane.setText(article.getContent());
-    }
-
-	public JComponent getComponent()
-	{
-		return editorPane;
-	}
-
-	public String getText()
-	{
-		return editorPane.getText();
-	}
-
-	public String getSelectedText()
-	{
-		return editorPane.getSelectedText();
-	}
-
-	public void setContentChangeListener(ContentChangeListener listener)
+    public void setContentChangeListener(ContentChangeListener listener)
 	{
 		contentChangeListener = listener;
 	}
