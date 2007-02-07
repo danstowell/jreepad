@@ -19,6 +19,7 @@ The full license can be read online here:
 
 package jreepad.editor;
 
+import javax.swing.JComponent;
 import javax.swing.JEditorPane;
 import javax.swing.event.CaretEvent;
 import javax.swing.event.CaretListener;
@@ -44,40 +45,36 @@ import jreepad.JreepadView;
 /**
  * The plain text editor pane.
  */
-public class PlainTextEditor extends JEditorPane implements CaretListener, UndoableEditListener
+public class PlainTextEditor extends AbstractArticleView implements CaretListener, UndoableEditListener
 {
-	private JreepadArticle article;
+	private JEditorPane editorPane;
 
 	private ContentChangeListener contentChangeListener = null;
 
-	// The following boolean should be TRUE while we're changing from node to
-	// node, and false otherwise
-	private boolean editLocked = false;
-
 	public PlainTextEditor(JreepadArticle article)
 	{
-		super("text/plain", article.getContent());
-		this.article = article;
-		setEditable(true);
+		super(article);
+		editorPane = new JEditorPane("text/plain", article.getContent());
+		editorPane.setEditable(true);
 
 		if (getPrefs().wrapToWindow)
-			setEditorKit(new JPEditorKit());
+			editorPane.setEditorKit(new JPEditorKit());
 
 		// Add a listener to make sure the editorpane's content is always stored
 		// when it changes
-		addCaretListener(this);
-	    getDocument().addUndoableEditListener(this);
+		editorPane.addCaretListener(this);
+		editorPane.getDocument().addUndoableEditListener(this);
 	}
 
     public void insertText(String text)
 	{
-		Document doc = getDocument();
-		int here = getCaretPosition();
+		Document doc = editorPane.getDocument();
+		int here = editorPane.getCaretPosition();
 		try
 		{
-			setText(doc.getText(0, here) + text
+			editorPane.setText(doc.getText(0, here) + text
 					+ doc.getText(here, doc.getLength() - here));
-			setCaretPosition(here + text.length());
+			editorPane.setCaretPosition(here + text.length());
 		}
 		catch (BadLocationException e)
 		{
@@ -87,28 +84,22 @@ public class PlainTextEditor extends JEditorPane implements CaretListener, Undoa
 
     public void reloadArticle()
     {
-    	setText(article.getContent());
+    	editorPane.setText(article.getContent());
     }
 
-	public void setArticle(JreepadArticle article)
+	public JComponent getComponent()
 	{
-		this.article = article;
-		setText(article.getContent());
+		return editorPane;
 	}
 
-	public void lockEdits()
+	public String getText()
 	{
-		editLocked = true;
+		return editorPane.getText();
 	}
 
-	public void unlockEdits()
+	public String getSelectedText()
 	{
-		editLocked = false;
-	}
-
-	public boolean isEditLocked()
-	{
-		return editLocked;
+		return editorPane.getSelectedText();
 	}
 
 	public void setContentChangeListener(ContentChangeListener listener)
@@ -126,21 +117,21 @@ public class PlainTextEditor extends JEditorPane implements CaretListener, Undoa
 	{
 		try
 		{
-			String text = getText();
-			int startpos = getCaretPosition();
+			String text = editorPane.getText();
+			int startpos = editorPane.getCaretPosition();
 			int endpos = startpos;
 			if (text.length() > 0)
 			{
 				// Select the character before/after the current position, and
 				// grow it until we hit whitespace...
-				while (startpos > 0 && !Character.isWhitespace(getText(startpos - 1, 1).charAt(0)))
+				while (startpos > 0 && !Character.isWhitespace(editorPane.getText(startpos - 1, 1).charAt(0)))
 					startpos--;
-				while (endpos < (text.length()) && !Character.isWhitespace(getText(endpos, 1).charAt(0)))
+				while (endpos < (text.length()) && !Character.isWhitespace(editorPane.getText(endpos, 1).charAt(0)))
 					endpos++;
 				if (endpos > startpos)
 				{
-					setSelectionStart(startpos);
-					setSelectionEnd(endpos);
+					editorPane.setSelectionStart(startpos);
+					editorPane.setSelectionEnd(endpos);
 					return getSelectedText();
 				}
 			}
@@ -158,11 +149,11 @@ public class PlainTextEditor extends JEditorPane implements CaretListener, Undoa
 		if (article.getArticleMode() != JreepadArticle.ARTICLEMODE_ORDINARY)
 			return; // i.e. we are only relevant when in plain-text mode
 
-		if (!getText().equals(article.getContent()))
+		if (!editorPane.getText().equals(article.getContent()))
 		{
 			// System.out.println("UPDATE - I'd now overwrite node content with
 			// editorpane content");
-			article.setContent(getText());
+			article.setContent(editorPane.getText());
 			notifyContentChangeListener();
 		}
 		else

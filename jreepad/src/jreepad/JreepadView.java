@@ -39,7 +39,6 @@ import javax.swing.event.TreeModelEvent;
 import javax.swing.event.TreeModelListener;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
-import javax.swing.text.BadLocationException;
 import javax.swing.tree.TreePath;
 
 import jreepad.editor.ContentChangeListener;
@@ -995,14 +994,14 @@ public class JreepadView extends Box
   {
     if(currentNode==null)
     {
-      currentArticleView = editorPanePlainText;
+      currentArticleView = editorPanePlainText.getComponent();
       return currentArticleView; // This is a bit of a hack - it shouldn't really even be called to act on null
     }
 
     switch(currentNode.getArticle().getArticleMode())
     {
       case JreepadArticle.ARTICLEMODE_ORDINARY:
-    	  currentArticleView = editorPanePlainText;
+    	  currentArticleView = editorPanePlainText.getComponent();
     	  break;
       case JreepadArticle.ARTICLEMODE_HTML:
     	  currentArticleView = editorPaneHtml;
