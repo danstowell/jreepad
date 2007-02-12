@@ -369,6 +369,7 @@ public class JreepadViewer extends JFrame // implements ApplicationListener
         {
           theJreepad.expandPaths(getPrefs().treePathCollection.paths);
         }
+    theJreepad.returnFocusToTree();
   }
 
   // Used by the constructor
