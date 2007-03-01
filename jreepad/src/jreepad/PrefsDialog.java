@@ -1,9 +1,11 @@
 package jreepad;
 
 import java.awt.Component;
+import java.awt.Dimension;
 import java.awt.Frame;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.text.SimpleDateFormat;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -12,6 +14,7 @@ import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JSpinner;
 import javax.swing.JTextField;
@@ -31,6 +34,7 @@ public class PrefsDialog extends JDialog
     private JComboBox fileEncodingSelector;
     private JComboBox fileFormatSelector;
     private JCheckBox showGreenStripCheckBox;
+    private JTextField dateFormatField;
     private JComboBox defaultSearchModeSelector;
     private JSpinner wrapWidthSpinner;
     private Box webSearchPrefsBox;
@@ -93,6 +97,14 @@ public class PrefsDialog extends JDialog
             getPrefs().showGreenStrip));
         showGreenStripCheckBox.setAlignmentX(Component.LEFT_ALIGNMENT);
         showGreenStripCheckBox.setHorizontalAlignment(SwingConstants.LEFT);
+
+        hBox = Box.createHorizontalBox();
+        hBox.setAlignmentX(Component.LEFT_ALIGNMENT);
+        hBox.add(new JLabel(JreepadViewer.lang.getString("PREFS_DATEFORMAT_LABEL"), SwingConstants.LEFT));
+        dateFormatField = new JTextField(getPrefs().dateFormat, 30);
+        hBox.add(dateFormatField);
+        hBox.add(new JLabel("(" + JreepadViewer.lang.getString("PREFS_DATEFORMAT_LABEL2") + ")", SwingConstants.LEFT));
+        genPrefVBox.add(hBox);
 
         JPanel genPanel = new JPanel();
         genPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -264,6 +276,21 @@ public class PrefsDialog extends JDialog
                         .getSelectedIndex();
                     // getPrefs().addQuotesToCsvOutput = quoteCsvCheckBox.isSelected();
                     getPrefs().showGreenStrip = showGreenStripCheckBox.isSelected();
+
+                    String dateFormat = dateFormatField.getText();
+                    try
+                    {
+                    	new SimpleDateFormat(dateFormat);
+                    }
+                    catch (IllegalArgumentException ex)
+                    {
+                    	JOptionPane.showMessageDialog(PrefsDialog.this,
+                            JreepadViewer.lang.getString("MSG_INVALID_DATEFORMAT"),
+                            JreepadViewer.lang.getString("TITLE_INVALID_DATEFORMAT") ,
+                            JOptionPane.ERROR_MESSAGE);
+                    	return;
+                    }
+                    getPrefs().dateFormat = dateFormat;
 
                     // If exporting as HTML then we ignore this checkbox
                     if (htmlExportModeSelector.getSelectedIndex() != 2)

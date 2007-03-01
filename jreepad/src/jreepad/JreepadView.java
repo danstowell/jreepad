@@ -26,6 +26,9 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Vector;
 
 import javax.swing.Box;
@@ -416,10 +419,27 @@ public class JreepadView extends Box
       return "";
   }
 
-  private java.text.DateFormat dateFormat = java.text.DateFormat.getDateInstance();
   private String getCurrentDate()
   {
-    return dateFormat.format(new java.util.Date());
+	DateFormat dateFormat = null;
+	String format = getPrefs().dateFormat;
+
+    if (!format.equals(""))
+    {
+	  try
+	  {
+	    dateFormat = new SimpleDateFormat(format);
+	  }
+	  catch (IllegalArgumentException e)
+	  {
+		  // Default format will be set
+		  // TODO: Log this
+	  }
+    }
+    if (dateFormat == null)
+	  dateFormat = DateFormat.getDateInstance();
+
+    return dateFormat.format(new Date());
   }
 
   public void insertDate()

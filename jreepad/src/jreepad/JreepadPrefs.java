@@ -132,6 +132,11 @@ public class JreepadPrefs //implements Serializable
 
   boolean showGreenStrip;
 
+  /**
+   * Date format string used to format inserted date.
+   */
+  public String dateFormat;
+
   JreepadPrefs(Dimension wndSize) {
     // Grab the prefs object from wherever Java's API has put it...
     prefs = Preferences.userNodeForPackage(this.getClass());
@@ -240,7 +245,7 @@ treePathCollection = new TreePathCollection(new javax.swing.tree.TreePath[0]);
 
     showGreenStrip = prefs.getBoolean("SHOWGREENSTRIP", true);
 
-
+    dateFormat = prefs.get("DATEFORMAT", "");
   }
 
 
@@ -315,6 +320,8 @@ treePathCollection = new TreePathCollection(new javax.swing.tree.TreePath[0]);
     prefs.putInt("TOOLBARMODE", toolbarMode);
 
     prefs.putBoolean("SHOWGREENSTRIP", showGreenStrip);
+
+    prefs.put("DATEFORMAT", dateFormat);
 
 
     try{
