@@ -101,76 +101,15 @@ public class JreepadViewer extends JFrame // implements ApplicationListener
   private JTextField nodeUrlDisplayField;
   private JButton nodeUrlDisplayOkButton;
 
-  private JMenuBar menuBar;
-  private JMenu fileMenu;
-  private JMenuItem newMenuItem;
-  private JMenuItem openMenuItem;
+
     private JMenu openRecentMenu;
-  private JMenuItem saveMenuItem;
-  private JMenuItem saveAsMenuItem;
-  private JMenuItem backupToMenuItem;
-  private JMenuItem printSubtreeMenuItem;
-  private JMenuItem printArticleMenuItem;
-    private JMenu importMenu;
-    private JMenuItem importHjtMenuItem;
-    private JMenuItem importTextMenuItem;
-    private JMenuItem importTextAsListMenuItem;
-    private JMenu exportMenu;
-    private JMenuItem exportHjtMenuItem;
-    private JMenuItem exportHtmlMenuItem;
-    private JMenuItem exportSimpleXmlMenuItem;
-    private JMenuItem exportListMenuItem;
-    private JMenuItem exportTextMenuItem;
-    private JMenuItem exportSubtreeTextMenuItem;
-  private JMenuItem quitMenuItem;
-  private JMenu editMenu;
-  private JMenuItem newFromClipboardMenuItem;
   private JMenuItem undoMenuItem;
   private JMenuItem redoMenuItem;
-  private JMenuItem editNodeTitleMenuItem;
-  private JMenuItem addAboveMenuItem;
-  private JMenuItem addBelowMenuItem;
-  private JMenuItem addChildMenuItem;
-  private JMenuItem deleteMenuItem;
-  private JMenuItem upMenuItem;
-  private JMenuItem downMenuItem;
-  private JMenuItem indentMenuItem;
-  private JMenuItem outdentMenuItem;
-  private JMenuItem expandAllMenuItem;
-  private JMenuItem collapseAllMenuItem;
-  private JMenuItem sortMenuItem;
-  private JMenuItem sortRecursiveMenuItem;
-  private JMenu searchMenu;
-  private JMenuItem searchMenuItem;
   private JMenuItem webSearchMenuItem;
-  private JMenuItem launchUrlMenuItem;
-  private JMenuItem thisNodesUrlMenuItem;
   private JMenuItem characterWrapArticleMenuItem;
-  private JMenuItem stripTagsMenuItem;
-  private JMenuItem insertDateMenuItem;
-  private JMenu viewMenu;
-  private JMenuItem viewBothMenuItem;
-  private JMenuItem viewTreeMenuItem;
-  private JMenuItem viewArticleMenuItem;
-  private JMenu viewToolbarMenu;
 	private JCheckBoxMenuItem viewToolbarIconsMenuItem;
 	private JCheckBoxMenuItem viewToolbarTextMenuItem;
 	private JCheckBoxMenuItem viewToolbarOffMenuItem;
-  // private JMenuItem renderHtmlMenuItem;
-  private JMenuItem articleViewModeMenuItem;
-    private JMenuItem articleViewModeTextMenuItem;
-    private JMenuItem articleViewModeHtmlMenuItem;
-    private JMenuItem articleViewModeCsvMenuItem;
-    private JMenuItem articleViewModeTextileMenuItem;
-  private JMenu optionsMenu;
-  private JMenuItem autoSaveMenuItem;
-  private JMenuItem prefsMenuItem;
-  private JMenu helpMenu;
-  private JMenuItem keyboardHelpMenuItem;
-  private JMenuItem linksHelpMenuItem;
-  private JMenuItem dragDropHelpMenuItem;
-  private JMenuItem aboutMenuItem;
-  private JMenuItem licenseMenuItem;
 
   private ColouredStrip funkyGreenStrip;
 
@@ -373,189 +312,370 @@ public class JreepadViewer extends JFrame // implements ApplicationListener
   }
 
   // Used by the constructor
-  public void establishMenus()
+  private void establishMenus()
   {
     // Create the menu bar
-    menuBar = new JMenuBar();
-    //
-    fileMenu = new JMenu(lang.getString("MENU_FILE")); //"File");
-    editMenu = new JMenu(lang.getString("MENU_EDIT")); //"Edit");
-    searchMenu = new JMenu(lang.getString("MENU_ACTIONS")); //"Actions");
-    viewMenu = new JMenu(lang.getString("MENU_VIEW")); //"View");
-    optionsMenu = new JMenu(lang.getString("MENU_OPTIONS")); //"Options");
-    helpMenu = new JMenu(lang.getString("MENU_HELP")); //"Help");
-    //
-    newMenuItem = new JMenuItem(lang.getString("MENUITEM_NEW")); //"New");
-    newMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { newAction();}});
-    fileMenu.add(newMenuItem);
-//    newWindowMenuItem = new JMenuItem("New window");
-//    newWindowMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { new JreepadViewer();}});
-//    fileMenu.add(newWindowMenuItem);
-    openMenuItem = new JMenuItem(lang.getString("MENUITEM_OPEN")); //"Open");
-    openMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {openAction();}});
-    fileMenu.add(openMenuItem);
-      openRecentMenu = new JMenu(lang.getString("MENUITEM_OPENRECENT")); //"Open recent");
-      updateOpenRecentMenu();
-      fileMenu.add(openRecentMenu);
-    saveMenuItem = new JMenuItem(lang.getString("MENUITEM_SAVE")); //"Save");
-    saveMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {saveAction();}});
-    fileMenu.add(saveMenuItem);
-    saveAsMenuItem = new JMenuItem(lang.getString("MENUITEM_SAVEAS")); //"Save as...");
-    saveAsMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {saveAsAction();}});
-    fileMenu.add(saveAsMenuItem);
-    backupToMenuItem = new JMenuItem(lang.getString("MENUITEM_BACKUPTO")); //"Backup to...");
-    backupToMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {backupToAction();}});
-    fileMenu.add(backupToMenuItem);
-	fileMenu.add(new JSeparator());
+	JMenuBar menuBar = new JMenuBar();
 
-	printSubtreeMenuItem = new JMenuItem(lang.getString("MENUITEM_PRINTSUBTREE")); //"Print subtree");
-	printSubtreeMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {subtreeToBrowserForPrintAction();}});
-	fileMenu.add(printSubtreeMenuItem);
-	printArticleMenuItem = new JMenuItem(lang.getString("MENUITEM_PRINTARTICLE")); //"Print article");
-	printArticleMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {articleToBrowserForPrintAction();}});
-	fileMenu.add(printArticleMenuItem);
+    // Add menus
+    menuBar.add(createFileMenu());
+	menuBar.add(createEditMenu());
+	menuBar.add(createActionsMenu());
+	menuBar.add(createViewMenu());
+    menuBar.add(createOptionsMenu());
+    menuBar.add(createHelpMenu());
+    setJMenuBar(menuBar);
+  }
 
-    fileMenu.add(new JSeparator());
-      importMenu = new JMenu(lang.getString("MENUITEM_IMPORT")); //"Import...");
-      fileMenu.add(importMenu);
-      importHjtMenuItem = new JMenuItem(lang.getString("MENUITEM_IMPORT_HJT")); //"...Treepad file as subtree");
-      importHjtMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {importAction(FILE_FORMAT_HJT);}});
-      importMenu.add(importHjtMenuItem);
-      importTextMenuItem = new JMenuItem(lang.getString("MENUITEM_IMPORT_TEXTFILES")); //"...text file(s) as child node(s)");
-      importTextMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {importAction(FILE_FORMAT_TEXT);}});
-      importMenu.add(importTextMenuItem);
-      importTextAsListMenuItem = new JMenuItem(lang.getString("MENUITEM_IMPORT_TEXTLIST")); //"...text list file, one-child-per-line");
-      importTextAsListMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {importAction(FILE_FORMAT_TEXTASLIST);}});
-      importMenu.add(importTextAsListMenuItem);
-      //
-      exportMenu = new JMenu(lang.getString("MENUITEM_EXPORT")); //"Export selected...");
-      fileMenu.add(exportMenu);
-      exportHjtMenuItem = new JMenuItem(lang.getString("MENUITEM_EXPORT_HJT")); //"...subtree to Treepad HJT file");
-      exportHjtMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {exportAction(FILE_FORMAT_HJT);}});
-      exportMenu.add(exportHjtMenuItem);
-      exportHtmlMenuItem = new JMenuItem(lang.getString("MENUITEM_EXPORT_HTML")); //"...subtree to HTML");
-      exportHtmlMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {
-     //DELETE             		    htmlExportOkChecker = false;
-     //DELETE             		    htmlExportDialog.setVisible(true);
-     //DELETE             		    if(htmlExportOkChecker)
-                  		      exportAction(FILE_FORMAT_HTML);}});
-      exportMenu.add(exportHtmlMenuItem);
-      exportSimpleXmlMenuItem = new JMenuItem(lang.getString("MENUITEM_EXPORT_XML")); //"...subtree to XML");
-      exportSimpleXmlMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {exportAction(FILE_FORMAT_XML);}});
-      exportMenu.add(exportSimpleXmlMenuItem);
-      exportListMenuItem = new JMenuItem(lang.getString("MENUITEM_EXPORT_TEXTLIST")); //"...subtree to text list (node titles only)");
-      exportListMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {exportAction(FILE_FORMAT_TEXTASLIST);}});
-      exportMenu.add(exportListMenuItem);
-      exportMenu.add(new JSeparator());
-      exportTextMenuItem = new JMenuItem(lang.getString("MENUITEM_EXPORT_ARTICLE")); //"...article to text file");
-      exportTextMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {exportAction(FILE_FORMAT_TEXT);}});
-      exportMenu.add(exportTextMenuItem);
-      exportSubtreeTextMenuItem = new JMenuItem(lang.getString("MENUITEM_EXPORT_ARTICLES")); //"...subtree articles to text file");
-      exportSubtreeTextMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {exportAction(FILE_FORMAT_ARTICLESTOTEXT);}});
-      exportMenu.add(exportSubtreeTextMenuItem);
-    fileMenu.add(new JSeparator());
-    if(!MAC_OS_X)
-    {
-      quitMenuItem = new JMenuItem(lang.getString("MENUITEM_QUIT")); //"Quit");
-      quitMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { quitAction(); }});
-      fileMenu.add(quitMenuItem);
-      quitMenuItem.setMnemonic('Q');
-      quitMenuItem.setAccelerator(KeyStroke.getKeyStroke('Q', MENU_MASK));
-    }
-    //
-    undoMenuItem = new JMenuItem(lang.getString("MENUITEM_UNDO")); //"Undo");
-    undoMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {
-        undoAction();
-        updateUndoRedoMenuState();}});
-    redoMenuItem = new JMenuItem(lang.getString("MENUITEM_REDO")); //"Redo");
-    redoMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {
-        redoAction();
-        updateUndoRedoMenuState();}});
-    editMenu.add(undoMenuItem);
-    editMenu.add(redoMenuItem);
-    editMenu.add(new JSeparator());
-    addAboveMenuItem = new JMenuItem(lang.getString("MENUITEM_ADDABOVE")); //"Add sibling above");
-    addAboveMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { theJreepad.addNodeAbove(); /* theJreepad.returnFocusToTree(); */ setWarnAboutUnsaved(true); updateWindowTitle();}});
-    editMenu.add(addAboveMenuItem);
-    addBelowMenuItem = new JMenuItem(lang.getString("MENUITEM_ADDBELOW")); //"Add sibling below");
-    addBelowMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { theJreepad.addNodeBelow(); /* theJreepad.returnFocusToTree(); */ setWarnAboutUnsaved(true); updateWindowTitle();}});
-    editMenu.add(addBelowMenuItem);
-    addChildMenuItem = new JMenuItem(lang.getString("MENUITEM_ADDCHILD")); //"Add child");
-    addChildMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { theJreepad.addNode(); /* theJreepad.returnFocusToTree(); */ setWarnAboutUnsaved(true);updateWindowTitle(); }});
-    editMenu.add(addChildMenuItem);
-    editMenu.add(new JSeparator());
-    newFromClipboardMenuItem = new JMenuItem(lang.getString("MENUITEM_NEWFROMCLIPBOARD")); //"New node from clipboard");
-    newFromClipboardMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { systemClipboardToNewNode(); }});
-    editMenu.add(newFromClipboardMenuItem);
-    editMenu.add(new JSeparator());
-    editNodeTitleMenuItem = new JMenuItem(lang.getString("MENUITEM_EDITNODETITLE")); //"Edit node title");
-    editNodeTitleMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { theJreepad.editNodeTitleAction(); }});
-    editMenu.add(editNodeTitleMenuItem);
-    editMenu.add(new JSeparator());
-    deleteMenuItem = new JMenuItem(lang.getString("MENUITEM_DELETENODE")); //"Delete node");
-    deleteMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { deleteNodeAction(); }});
-    editMenu.add(deleteMenuItem);
-    editMenu.add(new JSeparator());
-    upMenuItem = new JMenuItem(lang.getString("MENUITEM_MOVEUP")); //"Move node up");
-    upMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { theJreepad.moveCurrentNodeUp(); theJreepad.returnFocusToTree(); setWarnAboutUnsaved(true);updateWindowTitle(); }});
-    editMenu.add(upMenuItem);
-    downMenuItem = new JMenuItem(lang.getString("MENUITEM_MOVEDOWN")); //"Move node down");
-    downMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { theJreepad.moveCurrentNodeDown(); theJreepad.returnFocusToTree(); setWarnAboutUnsaved(true);updateWindowTitle(); }});
-    editMenu.add(downMenuItem);
-    editMenu.add(new JSeparator());
-    indentMenuItem = new JMenuItem(lang.getString("MENUITEM_MOVEIN")); //"Indent node (demote)");
-    indentMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { theJreepad.indentCurrentNode(); theJreepad.returnFocusToTree(); setWarnAboutUnsaved(true);updateWindowTitle(); }});
-    editMenu.add(indentMenuItem);
-    outdentMenuItem = new JMenuItem(lang.getString("MENUITEM_MOVEOUT")); //"Outdent node (promote)");
-    outdentMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { theJreepad.outdentCurrentNode(); theJreepad.returnFocusToTree(); setWarnAboutUnsaved(true);updateWindowTitle(); }});
-    editMenu.add(outdentMenuItem);
-    editMenu.add(new JSeparator());
-    expandAllMenuItem = new JMenuItem(lang.getString("MENUITEM_EXPAND")); //"Expand subtree");
-    expandAllMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { theJreepad.expandAllCurrentNode(); }});
-    editMenu.add(expandAllMenuItem);
-    collapseAllMenuItem = new JMenuItem(lang.getString("MENUITEM_COLLAPSE")); //"Collapse subtree");
-    collapseAllMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { theJreepad.collapseAllCurrentNode(); }});
-    editMenu.add(collapseAllMenuItem);
-    //
-    searchMenuItem = new JMenuItem(lang.getString("MENUITEM_SEARCH")); //"Search");
-    searchMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { searchDialog.open(); }});
-    searchMenu.add(searchMenuItem);
-    launchUrlMenuItem = new JMenuItem(lang.getString("MENUITEM_FOLLOWLINK")); //"Follow highlighted link");
-    launchUrlMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { theJreepad.openURLSelectedInArticle(); }});
-    searchMenu.add(launchUrlMenuItem);
-    webSearchMenuItem = new JMenuItem(getPrefs().webSearchName);
-    webSearchMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { theJreepad.webSearchTextSelectedInArticle(); }});
-    searchMenu.add(webSearchMenuItem);
-    searchMenu.add(new JSeparator());
-    characterWrapArticleMenuItem = new JMenuItem(lang.getString("MENUITEM_HARDWRAP1") + getPrefs().characterWrapWidth + lang.getString("MENUITEM_HARDWRAP2")); //);
-    characterWrapArticleMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { wrapContentToCharWidth(); }});
-    searchMenu.add(characterWrapArticleMenuItem);
-    stripTagsMenuItem = new JMenuItem(lang.getString("MENUITEM_STRIPTAGS")); //"Strip <tags> from article");
-    stripTagsMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { stripAllTags(); }});
-    searchMenu.add(stripTagsMenuItem);
-    insertDateMenuItem = new JMenuItem(lang.getString("MENUITEM_INSERTDATE")); //"Insert date");
-    insertDateMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { insertDate(); }});
-    searchMenu.add(insertDateMenuItem);
-    searchMenu.add(new JSeparator());
-    sortMenuItem = new JMenuItem(lang.getString("MENUITEM_SORTONELEVEL")); //"Sort children (one level)");
-    sortMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { theJreepad.sortChildren(); setWarnAboutUnsaved(true);updateWindowTitle(); }});
-    searchMenu.add(sortMenuItem);
-    sortRecursiveMenuItem = new JMenuItem(lang.getString("MENUITEM_SORTALLLEVELS")); //"Sort children (all levels)");
-    sortRecursiveMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { theJreepad.sortChildrenRecursive(); setWarnAboutUnsaved(true);updateWindowTitle(); }});
-    searchMenu.add(sortRecursiveMenuItem);
-    //
-    viewBothMenuItem = new JMenuItem(lang.getString("MENUITEM_VIEWBOTH")); //"Both tree and article");
+  /**
+   * Creates the File menu.
+   */
+  private JMenu createFileMenu()
+  {
+	  JMenu fileMenu = new JMenu(lang.getString("MENU_FILE")); //"File");
+	  fileMenu.setMnemonic(KeyEvent.VK_F);
+
+	  JMenuItem newMenuItem = new JMenuItem(lang.getString("MENUITEM_NEW")); //"New");
+	  newMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { newAction();}});
+	  fileMenu.add(newMenuItem);
+
+	  JMenuItem openMenuItem = new JMenuItem(lang.getString("MENUITEM_OPEN")); //"Open");
+	  openMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {openAction();}});
+	  fileMenu.add(openMenuItem);
+
+	  openRecentMenu = new JMenu(lang.getString("MENUITEM_OPENRECENT")); //"Open recent");
+	  updateOpenRecentMenu();
+	  fileMenu.add(openRecentMenu);
+
+	  JMenuItem saveMenuItem = new JMenuItem(lang.getString("MENUITEM_SAVE")); //"Save");
+	  saveMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {saveAction();}});
+	  fileMenu.add(saveMenuItem);
+
+	  JMenuItem saveAsMenuItem = new JMenuItem(lang.getString("MENUITEM_SAVEAS")); //"Save as...");
+	  saveAsMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {saveAsAction();}});
+	  fileMenu.add(saveAsMenuItem);
+
+	  JMenuItem backupToMenuItem = new JMenuItem(lang.getString("MENUITEM_BACKUPTO")); //"Backup to...");
+	  backupToMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {backupToAction();}});
+	  fileMenu.add(backupToMenuItem);
+
+	  fileMenu.add(new JSeparator());
+
+	  JMenuItem printSubtreeMenuItem = new JMenuItem(lang.getString("MENUITEM_PRINTSUBTREE")); //"Print subtree");
+	  printSubtreeMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {subtreeToBrowserForPrintAction();}});
+	  fileMenu.add(printSubtreeMenuItem);
+
+	  JMenuItem printArticleMenuItem = new JMenuItem(lang.getString("MENUITEM_PRINTARTICLE")); //"Print article");
+	  printArticleMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {articleToBrowserForPrintAction();}});
+	  fileMenu.add(printArticleMenuItem);
+
+	  fileMenu.add(new JSeparator());
+	  JMenu importMenu = new JMenu(lang.getString("MENUITEM_IMPORT")); //"Import...");
+	  fileMenu.add(importMenu);
+
+	  JMenuItem importHjtMenuItem = new JMenuItem(lang.getString("MENUITEM_IMPORT_HJT")); //"...Treepad file as subtree");
+	  importHjtMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {importAction(FILE_FORMAT_HJT);}});
+	  importMenu.add(importHjtMenuItem);
+
+	  JMenuItem importTextMenuItem = new JMenuItem(lang.getString("MENUITEM_IMPORT_TEXTFILES")); //"...text file(s) as child node(s)");
+	  importTextMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {importAction(FILE_FORMAT_TEXT);}});
+	  importMenu.add(importTextMenuItem);
+
+	  JMenuItem importTextAsListMenuItem = new JMenuItem(lang.getString("MENUITEM_IMPORT_TEXTLIST")); //"...text list file, one-child-per-line");
+	  importTextAsListMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {importAction(FILE_FORMAT_TEXTASLIST);}});
+	  importMenu.add(importTextAsListMenuItem);
+
+	  fileMenu.add(createExportMenu());
+
+	  fileMenu.add(new JSeparator());
+	  if(!MAC_OS_X)
+	  {
+		  JMenuItem quitMenuItem = new JMenuItem(lang.getString("MENUITEM_QUIT")); //"Quit");
+		  quitMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { quitAction(); }});
+		  fileMenu.add(quitMenuItem);
+		  quitMenuItem.setMnemonic('Q');
+		  quitMenuItem.setAccelerator(KeyStroke.getKeyStroke('Q', MENU_MASK));
+	  }
+
+	  newMenuItem.setMnemonic('N');
+	  newMenuItem.setAccelerator(KeyStroke.getKeyStroke('N', MENU_MASK));
+	  openMenuItem.setMnemonic('O');
+	  openMenuItem.setAccelerator(KeyStroke.getKeyStroke('O', MENU_MASK));
+	  openRecentMenu.setMnemonic('R');
+	  saveMenuItem.setMnemonic('S');
+	  saveMenuItem.setAccelerator(KeyStroke.getKeyStroke('S', MENU_MASK));
+	  saveAsMenuItem.setMnemonic('A');
+	  printSubtreeMenuItem.setMnemonic('P');
+	  printSubtreeMenuItem.setAccelerator(KeyStroke.getKeyStroke('P', MENU_MASK));
+	  printArticleMenuItem.setAccelerator(KeyStroke.getKeyStroke('P', MENU_MASK | java.awt.Event.SHIFT_MASK));
+	  backupToMenuItem.setMnemonic('B');
+	  importMenu.setMnemonic('I');
+	  importHjtMenuItem.setMnemonic('f');
+	  importTextMenuItem.setMnemonic('t');
+	  importTextAsListMenuItem.setMnemonic('l');
+
+	  return fileMenu;
+  }
+
+  /**
+   * Creates the Export submenu.
+   */
+  private JMenu createExportMenu()
+  {
+	  JMenu exportMenu = new JMenu(lang.getString("MENUITEM_EXPORT")); //"Export selected...");
+
+	  JMenuItem exportHjtMenuItem = new JMenuItem(lang.getString("MENUITEM_EXPORT_HJT")); //"...subtree to Treepad HJT file");
+	  exportHjtMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {exportAction(FILE_FORMAT_HJT);}});
+	  exportMenu.add(exportHjtMenuItem);
+
+	  JMenuItem exportHtmlMenuItem = new JMenuItem(lang.getString("MENUITEM_EXPORT_HTML")); //"...subtree to HTML");
+	  exportHtmlMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {exportAction(FILE_FORMAT_HTML);}});
+	  exportMenu.add(exportHtmlMenuItem);
+
+	  JMenuItem exportSimpleXmlMenuItem = new JMenuItem(lang.getString("MENUITEM_EXPORT_XML")); //"...subtree to XML");
+	  exportSimpleXmlMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {exportAction(FILE_FORMAT_XML);}});
+	  exportMenu.add(exportSimpleXmlMenuItem);
+
+	  JMenuItem exportListMenuItem = new JMenuItem(lang.getString("MENUITEM_EXPORT_TEXTLIST")); //"...subtree to text list (node titles only)");
+	  exportListMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {exportAction(FILE_FORMAT_TEXTASLIST);}});
+	  exportMenu.add(exportListMenuItem);
+
+	  exportMenu.add(new JSeparator());
+
+	  JMenuItem exportTextMenuItem = new JMenuItem(lang.getString("MENUITEM_EXPORT_ARTICLE")); //"...article to text file");
+	  exportTextMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {exportAction(FILE_FORMAT_TEXT);}});
+	  exportMenu.add(exportTextMenuItem);
+
+	  JMenuItem exportSubtreeTextMenuItem = new JMenuItem(lang.getString("MENUITEM_EXPORT_ARTICLES")); //"...subtree articles to text file");
+	  exportSubtreeTextMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {exportAction(FILE_FORMAT_ARTICLESTOTEXT);}});
+	  exportMenu.add(exportSubtreeTextMenuItem);
+
+	  exportMenu.setMnemonic('E');
+	  exportHjtMenuItem.setMnemonic('f');
+	  exportHtmlMenuItem.setMnemonic('h');
+	  exportSimpleXmlMenuItem.setMnemonic('x');
+	  exportTextMenuItem.setMnemonic('t');
+
+	  return exportMenu;
+  }
+
+  /**
+   * Creates the Edit menu.
+   */
+  private JMenu createEditMenu()
+  {
+	  JMenu editMenu = new JMenu(lang.getString("MENU_EDIT")); //"Edit");
+	  editMenu.setMnemonic(KeyEvent.VK_E);
+
+	  undoMenuItem = new JMenuItem(lang.getString("MENUITEM_UNDO")); //"Undo");
+	  undoMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {
+		  undoAction();
+		  updateUndoRedoMenuState();}});
+	  editMenu.add(undoMenuItem);
+
+	  redoMenuItem = new JMenuItem(lang.getString("MENUITEM_REDO")); //"Redo");
+	  redoMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {
+		  redoAction();
+		  updateUndoRedoMenuState();}});
+	  editMenu.add(redoMenuItem);
+
+	  editMenu.add(new JSeparator());
+
+	  JMenuItem addAboveMenuItem = new JMenuItem(lang.getString("MENUITEM_ADDABOVE")); //"Add sibling above");
+	  addAboveMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { theJreepad.addNodeAbove(); /* theJreepad.returnFocusToTree(); */ setWarnAboutUnsaved(true); updateWindowTitle();}});
+	  editMenu.add(addAboveMenuItem);
+
+	  JMenuItem addBelowMenuItem = new JMenuItem(lang.getString("MENUITEM_ADDBELOW")); //"Add sibling below");
+	  addBelowMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { theJreepad.addNodeBelow(); /* theJreepad.returnFocusToTree(); */ setWarnAboutUnsaved(true); updateWindowTitle();}});
+	  editMenu.add(addBelowMenuItem);
+
+	  JMenuItem addChildMenuItem = new JMenuItem(lang.getString("MENUITEM_ADDCHILD")); //"Add child");
+	  addChildMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { theJreepad.addNode(); /* theJreepad.returnFocusToTree(); */ setWarnAboutUnsaved(true);updateWindowTitle(); }});
+	  editMenu.add(addChildMenuItem);
+
+	  editMenu.add(new JSeparator());
+
+	  JMenuItem newFromClipboardMenuItem = new JMenuItem(lang.getString("MENUITEM_NEWFROMCLIPBOARD")); //"New node from clipboard");
+	  newFromClipboardMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { systemClipboardToNewNode(); }});
+	  editMenu.add(newFromClipboardMenuItem);
+
+	  editMenu.add(new JSeparator());
+
+	  JMenuItem editNodeTitleMenuItem = new JMenuItem(lang.getString("MENUITEM_EDITNODETITLE")); //"Edit node title");
+	  editNodeTitleMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { theJreepad.editNodeTitleAction(); }});
+	  editMenu.add(editNodeTitleMenuItem);
+
+	  editMenu.add(new JSeparator());
+
+	  JMenuItem deleteMenuItem = new JMenuItem(lang.getString("MENUITEM_DELETENODE")); //"Delete node");
+	  deleteMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { deleteNodeAction(); }});
+	  editMenu.add(deleteMenuItem);
+
+	  editMenu.add(new JSeparator());
+
+	  JMenuItem upMenuItem = new JMenuItem(lang.getString("MENUITEM_MOVEUP")); //"Move node up");
+	  upMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { theJreepad.moveCurrentNodeUp(); theJreepad.returnFocusToTree(); setWarnAboutUnsaved(true);updateWindowTitle(); }});
+	  editMenu.add(upMenuItem);
+
+	  JMenuItem downMenuItem = new JMenuItem(lang.getString("MENUITEM_MOVEDOWN")); //"Move node down");
+	  downMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { theJreepad.moveCurrentNodeDown(); theJreepad.returnFocusToTree(); setWarnAboutUnsaved(true);updateWindowTitle(); }});
+	  editMenu.add(downMenuItem);
+
+	  editMenu.add(new JSeparator());
+
+	  JMenuItem indentMenuItem = new JMenuItem(lang.getString("MENUITEM_MOVEIN")); //"Indent node (demote)");
+	  indentMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { theJreepad.indentCurrentNode(); theJreepad.returnFocusToTree(); setWarnAboutUnsaved(true);updateWindowTitle(); }});
+	  editMenu.add(indentMenuItem);
+
+	  JMenuItem outdentMenuItem = new JMenuItem(lang.getString("MENUITEM_MOVEOUT")); //"Outdent node (promote)");
+	  outdentMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { theJreepad.outdentCurrentNode(); theJreepad.returnFocusToTree(); setWarnAboutUnsaved(true);updateWindowTitle(); }});
+	  editMenu.add(outdentMenuItem);
+
+	  editMenu.add(new JSeparator());
+
+	  JMenuItem expandAllMenuItem = new JMenuItem(lang.getString("MENUITEM_EXPAND")); //"Expand subtree");
+	  expandAllMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { theJreepad.expandAllCurrentNode(); }});
+	  editMenu.add(expandAllMenuItem);
+
+	  JMenuItem collapseAllMenuItem = new JMenuItem(lang.getString("MENUITEM_COLLAPSE")); //"Collapse subtree");
+	  collapseAllMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { theJreepad.collapseAllCurrentNode(); }});
+	  editMenu.add(collapseAllMenuItem);
+
+	  undoMenuItem.setMnemonic('u');
+	  undoMenuItem.setAccelerator(KeyStroke.getKeyStroke('Z', MENU_MASK));
+	  redoMenuItem.setMnemonic('r');
+	  redoMenuItem.setAccelerator(KeyStroke.getKeyStroke('Z', MENU_MASK | java.awt.event.InputEvent.SHIFT_MASK));
+	  addAboveMenuItem.setMnemonic('a');
+	  addAboveMenuItem.setAccelerator(KeyStroke.getKeyStroke('T', MENU_MASK));
+	  addBelowMenuItem.setMnemonic('b');
+	  addBelowMenuItem.setAccelerator(KeyStroke.getKeyStroke('B', MENU_MASK));
+	  addChildMenuItem.setMnemonic('c');
+	  addChildMenuItem.setAccelerator(KeyStroke.getKeyStroke('D', MENU_MASK));
+	  newFromClipboardMenuItem.setAccelerator(KeyStroke.getKeyStroke('M', MENU_MASK));
+	  upMenuItem.setMnemonic('u');
+	  upMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_UP, MENU_MASK | java.awt.Event.ALT_MASK));
+	  downMenuItem.setMnemonic('d');
+	  downMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_DOWN, MENU_MASK | java.awt.Event.ALT_MASK));
+	  indentMenuItem.setMnemonic('i');
+	  indentMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_RIGHT, MENU_MASK | java.awt.Event.ALT_MASK));
+	  outdentMenuItem.setMnemonic('o');
+	  outdentMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_LEFT, MENU_MASK | java.awt.Event.ALT_MASK));
+	  expandAllMenuItem.setMnemonic('x');
+	  expandAllMenuItem.setAccelerator(KeyStroke.getKeyStroke('=', MENU_MASK));
+	  collapseAllMenuItem.setMnemonic('l');
+	  collapseAllMenuItem.setAccelerator(KeyStroke.getKeyStroke('-', MENU_MASK));
+	  deleteMenuItem.setMnemonic('k');
+	  deleteMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_DELETE, MENU_MASK));
+
+	  undoMenuItem.setMnemonic('u');
+	  undoMenuItem.setAccelerator(KeyStroke.getKeyStroke('Z', MENU_MASK));
+	  redoMenuItem.setMnemonic('r');
+	  redoMenuItem.setAccelerator(KeyStroke.getKeyStroke('Z', MENU_MASK | java.awt.event.InputEvent.SHIFT_MASK));
+	  addAboveMenuItem.setMnemonic('a');
+	  addAboveMenuItem.setAccelerator(KeyStroke.getKeyStroke('T', MENU_MASK));
+	  addBelowMenuItem.setMnemonic('b');
+	  addBelowMenuItem.setAccelerator(KeyStroke.getKeyStroke('B', MENU_MASK));
+	  addChildMenuItem.setMnemonic('c');
+	  addChildMenuItem.setAccelerator(KeyStroke.getKeyStroke('D', MENU_MASK));
+	  newFromClipboardMenuItem.setAccelerator(KeyStroke.getKeyStroke('M', MENU_MASK));
+	  upMenuItem.setMnemonic('u');
+	  upMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_UP, MENU_MASK | java.awt.Event.ALT_MASK));
+	  downMenuItem.setMnemonic('d');
+	  downMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_DOWN, MENU_MASK | java.awt.Event.ALT_MASK));
+	  indentMenuItem.setMnemonic('i');
+	  indentMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_RIGHT, MENU_MASK | java.awt.Event.ALT_MASK));
+	  outdentMenuItem.setMnemonic('o');
+	  outdentMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_LEFT, MENU_MASK | java.awt.Event.ALT_MASK));
+	  expandAllMenuItem.setMnemonic('x');
+	  expandAllMenuItem.setAccelerator(KeyStroke.getKeyStroke('=', MENU_MASK));
+	  collapseAllMenuItem.setMnemonic('l');
+	  collapseAllMenuItem.setAccelerator(KeyStroke.getKeyStroke('-', MENU_MASK));
+	  deleteMenuItem.setMnemonic('k');
+	  deleteMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_DELETE, MENU_MASK));
+
+	  return editMenu;
+  }
+
+  /**
+   * Creates the Actions menu.
+   */
+  private JMenu createActionsMenu()
+  {
+	JMenu actionsMenu = new JMenu(lang.getString("MENU_ACTIONS")); // "Actions");
+	actionsMenu.setMnemonic(KeyEvent.VK_T);
+
+	JMenuItem searchMenuItem = new JMenuItem(lang.getString("MENUITEM_SEARCH")); //"Search");
+	searchMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { searchDialog.open(); }});
+	actionsMenu.add(searchMenuItem);
+
+	JMenuItem launchUrlMenuItem = new JMenuItem(lang.getString("MENUITEM_FOLLOWLINK")); //"Follow highlighted link");
+	launchUrlMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { theJreepad.openURLSelectedInArticle(); }});
+	actionsMenu.add(launchUrlMenuItem);
+
+	webSearchMenuItem = new JMenuItem(getPrefs().webSearchName);
+	webSearchMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { theJreepad.webSearchTextSelectedInArticle(); }});
+	actionsMenu.add(webSearchMenuItem);
+
+	actionsMenu.add(new JSeparator());
+
+	characterWrapArticleMenuItem = new JMenuItem(lang.getString("MENUITEM_HARDWRAP1") + getPrefs().characterWrapWidth + lang.getString("MENUITEM_HARDWRAP2")); //);
+	characterWrapArticleMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { wrapContentToCharWidth(); }});
+	actionsMenu.add(characterWrapArticleMenuItem);
+
+	JMenuItem stripTagsMenuItem = new JMenuItem(lang.getString("MENUITEM_STRIPTAGS")); //"Strip <tags> from article");
+	stripTagsMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { stripAllTags(); }});
+	actionsMenu.add(stripTagsMenuItem);
+
+	JMenuItem insertDateMenuItem = new JMenuItem(lang.getString("MENUITEM_INSERTDATE")); //"Insert date");
+	insertDateMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { insertDate(); }});
+	actionsMenu.add(insertDateMenuItem);
+
+	actionsMenu.add(new JSeparator());
+
+	JMenuItem sortMenuItem = new JMenuItem(lang.getString("MENUITEM_SORTONELEVEL")); //"Sort children (one level)");
+	sortMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { theJreepad.sortChildren(); setWarnAboutUnsaved(true);updateWindowTitle(); }});
+	actionsMenu.add(sortMenuItem);
+
+	JMenuItem sortRecursiveMenuItem = new JMenuItem(lang.getString("MENUITEM_SORTALLLEVELS")); //"Sort children (all levels)");
+	sortRecursiveMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { theJreepad.sortChildrenRecursive(); setWarnAboutUnsaved(true);updateWindowTitle(); }});
+	actionsMenu.add(sortRecursiveMenuItem);
+
+	searchMenuItem.setMnemonic('s');
+	searchMenuItem.setAccelerator(KeyStroke.getKeyStroke('F', MENU_MASK));
+	webSearchMenuItem.setMnemonic('g');
+	webSearchMenuItem.setAccelerator(KeyStroke.getKeyStroke('G', MENU_MASK));
+    characterWrapArticleMenuItem.setAccelerator(KeyStroke.getKeyStroke('R', MENU_MASK));
+    characterWrapArticleMenuItem.setMnemonic('r');
+	launchUrlMenuItem.setAccelerator(KeyStroke.getKeyStroke('L', MENU_MASK));
+	launchUrlMenuItem.setMnemonic('l');
+	stripTagsMenuItem.setAccelerator(KeyStroke.getKeyStroke('T', MENU_MASK));
+	stripTagsMenuItem.setMnemonic('t');
+	insertDateMenuItem.setAccelerator(KeyStroke.getKeyStroke('E', MENU_MASK));
+	insertDateMenuItem.setMnemonic('e');
+
+	return actionsMenu;
+  }
+
+  /**
+   * Creates the View menu.
+   */
+  private JMenu createViewMenu()
+  {
+    JMenu viewMenu = new JMenu(lang.getString("MENU_VIEW")); //"View");
+    viewMenu.setMnemonic('V');
+
+    JMenuItem viewBothMenuItem = new JMenuItem(lang.getString("MENUITEM_VIEWBOTH")); //"Both tree and article");
     viewBothMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { setViewMode(JreepadPrefs.VIEW_BOTH); }});
     viewMenu.add(viewBothMenuItem);
-    viewTreeMenuItem = new JMenuItem(lang.getString("MENUITEM_VIEWTREE")); //"Tree");
+    JMenuItem viewTreeMenuItem = new JMenuItem(lang.getString("MENUITEM_VIEWTREE")); //"Tree");
     viewTreeMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { setViewMode(JreepadPrefs.VIEW_TREE); }});
     viewMenu.add(viewTreeMenuItem);
-    viewArticleMenuItem = new JMenuItem(lang.getString("MENUITEM_VIEWARTICLE")); //"Article");
+    JMenuItem viewArticleMenuItem = new JMenuItem(lang.getString("MENUITEM_VIEWARTICLE")); //"Article");
     viewArticleMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { setViewMode(JreepadPrefs.VIEW_ARTICLE); }});
     viewMenu.add(viewArticleMenuItem);
     viewMenu.add(new JSeparator());
 
-    viewToolbarMenu = new JMenu(lang.getString("MENUITEM_TOOLBAR")); //"Toolbar");
+    JMenu viewToolbarMenu = new JMenu(lang.getString("MENUITEM_TOOLBAR")); //"Toolbar");
     viewMenu.add(viewToolbarMenu);
 	  viewToolbarIconsMenuItem = new JCheckBoxMenuItem(lang.getString("MENUITEM_TOOLBAR_ICONS")); //"Icons", true);
 	  viewToolbarIconsMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {
@@ -577,26 +697,26 @@ public class JreepadViewer extends JFrame // implements ApplicationListener
 
     viewMenu.add(new JSeparator());
 
-    articleViewModeMenuItem = new JMenu(lang.getString("MENUITEM_ARTICLEFORMAT")); //"View this article as...");
-	  articleViewModeTextMenuItem = new JMenuItem(lang.getString("MENUITEM_ARTICLEFORMAT_TEXT")); //"Text");
+    JMenuItem articleViewModeMenuItem = new JMenu(lang.getString("MENUITEM_ARTICLEFORMAT")); //"View this article as...");
+    JMenuItem articleViewModeTextMenuItem = new JMenuItem(lang.getString("MENUITEM_ARTICLEFORMAT_TEXT")); //"Text");
 	  articleViewModeTextMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {
 				theJreepad.setArticleMode(JreepadArticle.ARTICLEMODE_ORDINARY);
 				updateUndoRedoMenuState();
 					   }});
 	  articleViewModeMenuItem.add(articleViewModeTextMenuItem);
-	  articleViewModeHtmlMenuItem = new JMenuItem(lang.getString("MENUITEM_ARTICLEFORMAT_HTML")); //"HTML");
+	  JMenuItem articleViewModeHtmlMenuItem = new JMenuItem(lang.getString("MENUITEM_ARTICLEFORMAT_HTML")); //"HTML");
 	  articleViewModeHtmlMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {
 				theJreepad.setArticleMode(JreepadArticle.ARTICLEMODE_HTML);
 				updateUndoRedoMenuState();
 					   }});
 	  articleViewModeMenuItem.add(articleViewModeHtmlMenuItem);
-	  articleViewModeCsvMenuItem = new JMenuItem(lang.getString("MENUITEM_ARTICLEFORMAT_CSV")); //"Table (comma-separated data)");
+	  JMenuItem articleViewModeCsvMenuItem = new JMenuItem(lang.getString("MENUITEM_ARTICLEFORMAT_CSV")); //"Table (comma-separated data)");
 	  articleViewModeCsvMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {
 				theJreepad.setArticleMode(JreepadArticle.ARTICLEMODE_CSV);
 				updateUndoRedoMenuState();
 					   }});
 	  articleViewModeMenuItem.add(articleViewModeCsvMenuItem);
-	  articleViewModeTextileMenuItem = new JMenuItem(lang.getString("MENUITEM_ARTICLEFORMAT_TEXTILE"));
+	  JMenuItem articleViewModeTextileMenuItem = new JMenuItem(lang.getString("MENUITEM_ARTICLEFORMAT_TEXTILE"));
 	  articleViewModeTextileMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {
 				theJreepad.setArticleMode(JreepadArticle.ARTICLEMODE_TEXTILEHTML);
 				updateUndoRedoMenuState();
@@ -606,124 +726,11 @@ public class JreepadViewer extends JFrame // implements ApplicationListener
 
 
     viewMenu.add(new JSeparator());
-    thisNodesUrlMenuItem = new JMenuItem(lang.getString("MENUITEM_NODEADDRESS")); //"\"node://\" address for current node");
+    JMenuItem thisNodesUrlMenuItem = new JMenuItem(lang.getString("MENUITEM_NODEADDRESS")); //"\"node://\" address for current node");
     thisNodesUrlMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { getTreepadNodeUrl(); }});
     viewMenu.add(thisNodesUrlMenuItem);
-    //
-    autoSaveMenuItem = new JMenuItem(lang.getString("MENUITEM_AUTOSAVE_PREFS")); //"Autosave...");
-    autoSaveMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { showAutoSaveDialog(); }});
-    optionsMenu.add(autoSaveMenuItem);
-    prefsMenuItem = new JMenuItem(lang.getString("MENUITEM_PREFS")); //"Preferences");
-    prefsMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {
-                                            // updateFontsInPrefsBox();
-                                            showPrefsDialog(); }});
-    optionsMenu.add(prefsMenuItem);
-    //
-    keyboardHelpMenuItem = new JMenuItem(lang.getString("MENUITEM_KEYBOARDSHORTCUTS")); //"Keyboard shortcuts");
-    keyboardHelpMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e)
-    		{ keyboardHelp();
-    		}});
-    helpMenu.add(keyboardHelpMenuItem);
-    linksHelpMenuItem = new JMenuItem(lang.getString("MENUITEM_LINKSHELP")); //"Help with links");
-    linksHelpMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e)
-    		{ linksHelp();
-    		}});
-    helpMenu.add(linksHelpMenuItem);
-    dragDropHelpMenuItem = new JMenuItem(lang.getString("MENUITEM_DRAGDROPHELP")); //"Help with drag-and-drop");
-    dragDropHelpMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e)
-    		{ dragDropHelp();
-    		}});
-    helpMenu.add(dragDropHelpMenuItem);
-    helpMenu.add(new JSeparator());
-    if(!MAC_OS_X)
-    {
-      aboutMenuItem = new JMenuItem(lang.getString("MENUITEM_ABOUT")); //"About Jreepad");
-      aboutMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e)
-            {
-              aboutAction();
-            }});
-      aboutMenuItem.setMnemonic('a');
-      helpMenu.add(aboutMenuItem);
-    }
-    licenseMenuItem = new JMenuItem(lang.getString("MENUITEM_LICENSE")); //"License");
-    licenseMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e)
-            {
-              showLicense();
-            }});
-    helpMenu.add(licenseMenuItem);
-    //
-    menuBar.add(fileMenu);
-    menuBar.add(editMenu);
-    menuBar.add(searchMenu);
-    menuBar.add(viewMenu);
-    menuBar.add(optionsMenu);
-    menuBar.add(helpMenu);
-    setJMenuBar(menuBar);
-    //
-    // Now the mnemonics...
-    fileMenu.setMnemonic('F');
-    newMenuItem.setMnemonic('N');
-    newMenuItem.setAccelerator(KeyStroke.getKeyStroke('N', MENU_MASK));
-    openMenuItem.setMnemonic('O');
-    openMenuItem.setAccelerator(KeyStroke.getKeyStroke('O', MENU_MASK));
-    openRecentMenu.setMnemonic('R');
-    saveMenuItem.setMnemonic('S');
-    saveMenuItem.setAccelerator(KeyStroke.getKeyStroke('S', MENU_MASK));
-    saveAsMenuItem.setMnemonic('A');
-    printSubtreeMenuItem.setMnemonic('P');
-    printSubtreeMenuItem.setAccelerator(KeyStroke.getKeyStroke('P', MENU_MASK));
-    printArticleMenuItem.setAccelerator(KeyStroke.getKeyStroke('P', MENU_MASK | java.awt.Event.SHIFT_MASK));
-    backupToMenuItem.setMnemonic('B');
-    importMenu.setMnemonic('I');
-    importHjtMenuItem.setMnemonic('f');
-    importTextMenuItem.setMnemonic('t');
-    importTextAsListMenuItem.setMnemonic('l');
-    exportMenu.setMnemonic('E');
-    exportHjtMenuItem.setMnemonic('f');
-    exportHtmlMenuItem.setMnemonic('h');
-    exportSimpleXmlMenuItem.setMnemonic('x');
-    exportTextMenuItem.setMnemonic('t');
-    editMenu.setMnemonic('E');
-    undoMenuItem.setMnemonic('u');
-    undoMenuItem.setAccelerator(KeyStroke.getKeyStroke('Z', MENU_MASK));
-    redoMenuItem.setMnemonic('r');
-    redoMenuItem.setAccelerator(KeyStroke.getKeyStroke('Z', MENU_MASK | java.awt.event.InputEvent.SHIFT_MASK));
-    addAboveMenuItem.setMnemonic('a');
-    addAboveMenuItem.setAccelerator(KeyStroke.getKeyStroke('T', MENU_MASK));
-    addBelowMenuItem.setMnemonic('b');
-    addBelowMenuItem.setAccelerator(KeyStroke.getKeyStroke('B', MENU_MASK));
-    addChildMenuItem.setMnemonic('c');
-    addChildMenuItem.setAccelerator(KeyStroke.getKeyStroke('D', MENU_MASK));
-    newFromClipboardMenuItem.setAccelerator(KeyStroke.getKeyStroke('M', MENU_MASK));
-    upMenuItem.setMnemonic('u');
-    upMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_UP, MENU_MASK | java.awt.Event.ALT_MASK));
-    downMenuItem.setMnemonic('d');
-    downMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_DOWN, MENU_MASK | java.awt.Event.ALT_MASK));
-    indentMenuItem.setMnemonic('i');
-    indentMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_RIGHT, MENU_MASK | java.awt.Event.ALT_MASK));
-    outdentMenuItem.setMnemonic('o');
-    outdentMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_LEFT, MENU_MASK | java.awt.Event.ALT_MASK));
-    expandAllMenuItem.setMnemonic('x');
-    expandAllMenuItem.setAccelerator(KeyStroke.getKeyStroke('=', MENU_MASK));
-    collapseAllMenuItem.setMnemonic('l');
-    collapseAllMenuItem.setAccelerator(KeyStroke.getKeyStroke('-', MENU_MASK));
-    deleteMenuItem.setMnemonic('k');
-    deleteMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_DELETE, MENU_MASK));
-    searchMenu.setMnemonic('t');
-    searchMenuItem.setMnemonic('s');
-    searchMenuItem.setAccelerator(KeyStroke.getKeyStroke('F', MENU_MASK));
-    webSearchMenuItem.setMnemonic('g');
-    webSearchMenuItem.setAccelerator(KeyStroke.getKeyStroke('G', MENU_MASK));
-    launchUrlMenuItem.setAccelerator(KeyStroke.getKeyStroke('L', MENU_MASK));
-    launchUrlMenuItem.setMnemonic('l');
-    stripTagsMenuItem.setAccelerator(KeyStroke.getKeyStroke('T', MENU_MASK));
-    stripTagsMenuItem.setMnemonic('t');
-    insertDateMenuItem.setAccelerator(KeyStroke.getKeyStroke('E', MENU_MASK));
-    insertDateMenuItem.setMnemonic('e');
-    characterWrapArticleMenuItem.setAccelerator(KeyStroke.getKeyStroke('R', MENU_MASK));
-    characterWrapArticleMenuItem.setMnemonic('r');
+
     thisNodesUrlMenuItem.setMnemonic('n');
-    viewMenu.setMnemonic('V');
     viewBothMenuItem.setMnemonic('b');
     viewTreeMenuItem.setMnemonic('t');
     viewArticleMenuItem.setMnemonic('a');
@@ -738,15 +745,77 @@ public class JreepadViewer extends JFrame // implements ApplicationListener
     articleViewModeCsvMenuItem.setAccelerator(KeyStroke.getKeyStroke('9', MENU_MASK));
     articleViewModeTextileMenuItem.setAccelerator(KeyStroke.getKeyStroke('0', MENU_MASK));
     viewToolbarMenu.setMnemonic('o');
-    optionsMenu.setMnemonic('O');
-    autoSaveMenuItem.setMnemonic('a');
-    prefsMenuItem.setMnemonic('p');
-    helpMenu.setMnemonic('H');
-    keyboardHelpMenuItem.setMnemonic('k');
-    dragDropHelpMenuItem.setMnemonic('d');
-    linksHelpMenuItem.setMnemonic('l');
-    licenseMenuItem.setMnemonic('i');
-    // Finished creating the menu bar
+
+    return viewMenu;
+  }
+
+  /**
+   * Creates the Options menu.
+   */
+  private JMenu createOptionsMenu()
+  {
+      JMenu optionsMenu = new JMenu(lang.getString("MENU_OPTIONS")); //"Options");
+      optionsMenu.setMnemonic('O');
+
+      JMenuItem autoSaveMenuItem = new JMenuItem(lang.getString("MENUITEM_AUTOSAVE_PREFS")); //"Autosave...");
+      autoSaveMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { showAutoSaveDialog(); }});
+      optionsMenu.add(autoSaveMenuItem);
+      JMenuItem prefsMenuItem = new JMenuItem(lang.getString("MENUITEM_PREFS")); //"Preferences");
+      prefsMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {
+                                              // updateFontsInPrefsBox();
+                                              showPrefsDialog(); }});
+      optionsMenu.add(prefsMenuItem);
+
+      autoSaveMenuItem.setMnemonic('a');
+      prefsMenuItem.setMnemonic('p');
+
+      return optionsMenu;
+  }
+
+  private JMenu createHelpMenu()
+  {
+      JMenu helpMenu = new JMenu(lang.getString("MENU_HELP")); //"Help");
+      helpMenu.setMnemonic('H');
+
+      JMenuItem keyboardHelpMenuItem = new JMenuItem(lang.getString("MENUITEM_KEYBOARDSHORTCUTS")); //"Keyboard shortcuts");
+      keyboardHelpMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e)
+            { keyboardHelp();
+            }});
+      helpMenu.add(keyboardHelpMenuItem);
+      JMenuItem linksHelpMenuItem = new JMenuItem(lang.getString("MENUITEM_LINKSHELP")); //"Help with links");
+      linksHelpMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e)
+            { linksHelp();
+            }});
+      helpMenu.add(linksHelpMenuItem);
+      JMenuItem dragDropHelpMenuItem = new JMenuItem(lang.getString("MENUITEM_DRAGDROPHELP")); //"Help with drag-and-drop");
+      dragDropHelpMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e)
+            { dragDropHelp();
+            }});
+      helpMenu.add(dragDropHelpMenuItem);
+      helpMenu.add(new JSeparator());
+      if(!MAC_OS_X)
+      {
+        JMenuItem aboutMenuItem = new JMenuItem(lang.getString("MENUITEM_ABOUT")); //"About Jreepad");
+        aboutMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e)
+              {
+                aboutAction();
+              }});
+        aboutMenuItem.setMnemonic('a');
+        helpMenu.add(aboutMenuItem);
+      }
+      JMenuItem licenseMenuItem = new JMenuItem(lang.getString("MENUITEM_LICENSE")); //"License");
+      licenseMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e)
+              {
+                showLicense();
+              }});
+      helpMenu.add(licenseMenuItem);
+
+      keyboardHelpMenuItem.setMnemonic('k');
+      dragDropHelpMenuItem.setMnemonic('d');
+      linksHelpMenuItem.setMnemonic('l');
+      licenseMenuItem.setMnemonic('i');
+
+      return helpMenu;
   }
 
   // Used by the constructor
