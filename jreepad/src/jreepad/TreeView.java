@@ -42,7 +42,8 @@ import javax.swing.tree.TreeSelectionModel;
  */
 public class TreeView extends JTree
 {
-    private JreepadTreeModel treeModel;
+    private static final String UNTITLED_NODE_TEXT = "<Untitled node>";
+	private JreepadTreeModel treeModel;
 
     public TreeView(JreepadTreeModel treeModel)
     {
@@ -67,18 +68,17 @@ public class TreeView extends JTree
             {
                 public void editingCanceled(ChangeEvent e)
                 {
-                    ensureNodeTitleIsNotEmpty(e);
+                    ensureNodeTitleIsNotEmpty();
                 }
 
                 public void editingStopped(ChangeEvent e)
                 {
-                    ensureNodeTitleIsNotEmpty(e);
+                    ensureNodeTitleIsNotEmpty();
                 }
             });
 
         // Add mouse listener - this will be used to implement drag-and-drop, context menu (?), etc
         addMouseListener(new TreeViewMouseListener());
-
     }
 
     public void cancelEditing()
@@ -86,36 +86,25 @@ public class TreeView extends JTree
         super.cancelEditing(); // if we can override this perhaps we can prevent blank nodes...?
         JreepadNode lastEditedNode = (JreepadNode)(getSelectionPath().getLastPathComponent());
         if (lastEditedNode.getTitle().equals(""))
-            lastEditedNode.setTitle("<Untitled node>");
+            lastEditedNode.setTitle(UNTITLED_NODE_TEXT);
     }
 
-    private void ensureNodeTitleIsNotEmpty(ChangeEvent e)
-    {
-      TreeCellEditor theEditor = (TreeCellEditor)getCellEditor();
-      String newTitle = (String)(theEditor.getCellEditorValue());
+    private void ensureNodeTitleIsNotEmpty()
+	{
+		TreeCellEditor theEditor = getCellEditor();
+		String newTitle = (String) (theEditor.getCellEditorValue());
 
-//      JreepadNode thatNode = (JreepadNode)(tree.getEditingPath().getLastPathComponent());
-//      System.out.println("ensureNodeTitleIsNotEmpty(): Event source = " + e.getSource());
-//      System.out.println("ensureNodeTitleIsNotEmpty(): thatNode = " + thatNode);
-//      System.out.println("getCellEditorValue() = " + newTitle);
-
-      if(newTitle.equals(""))
-      {
-        theEditor.getTreeCellEditorComponent(this, "<Untitled node>", true, true, false, 1);
-//        thatNode.setTitle("<Untitled node>");
-      }
-    }
+		if (newTitle.equals(""))
+			theEditor.getTreeCellEditorComponent(this, UNTITLED_NODE_TEXT,
+					true, true, false, 1);
+	}
 
     public void moveNode(JreepadNode node, JreepadNode newParent)
     {
         // First we need to make sure that the node is not a parent of the new parent
         // - otherwise things would go really wonky!
         if (node.isNodeDescendant(newParent))
-        {
             return;
-        }
-
-        // DEL storeForUndo();
 
         JreepadNode oldParent = node.getParentNode();
 
@@ -128,18 +117,13 @@ public class TreeView extends JTree
             enumer = getExpandedDescendants(getSelectionPath());
             expanded = new Vector();
             while (enumer.hasMoreElements())
-            {
-                expanded.add((TreePath)enumer.nextElement());
-                // System.out.println(expanded.lastElement());
-            }
+                expanded.add(enumer.nextElement());
         }
 
-        node.removeFromParent();
-        newParent.add(node);
+        newParent.add(node); // Also removes from old parent
 
         treeModel.reload(oldParent);
         treeModel.reload(newParent);
-        // treeModel.reload((TreeNode)tree.getPathForRow(0).getLastPathComponent());
 
         // If the destination node didn't previously have any children, then we'll expand it
         //   if(newParent.getChildCount()==1)
