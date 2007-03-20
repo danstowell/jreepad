@@ -20,23 +20,64 @@ The full license can be read online here:
 
 package jreepad;
 
-import javax.swing.*;
-import javax.swing.undo.*;
-import java.awt.*;
-import java.awt.event.*;
-import java.io.*;
-import java.util.*;
+import java.awt.Color;
+import java.awt.Container;
+import java.awt.Cursor;
+import java.awt.Dimension;
+import java.awt.Event;
+import java.awt.Toolkit;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.Transferable;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.io.DataOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.Reader;
+import java.lang.reflect.Method;
 import java.net.URL;
-import java.awt.datatransfer.*;
+import java.util.ListIterator;
+import java.util.ResourceBundle;
+import java.util.Vector;
 
-//import javax.swing.plaf.metal.MetalIconFactory; // For icons
-
-import edu.stanford.ejalbert.BrowserLauncher;
-import edu.stanford.ejalbert.exception.BrowserLaunchingExecutionException;
-import edu.stanford.ejalbert.exception.BrowserLaunchingInitializingException;
-import edu.stanford.ejalbert.exception.UnsupportedOperatingSystemException;
-
-import java.lang.reflect.*;
+import javax.swing.AbstractAction;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.Icon;
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JCheckBoxMenuItem;
+import javax.swing.JComboBox;
+import javax.swing.JDialog;
+import javax.swing.JFileChooser;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JSeparator;
+import javax.swing.JSpinner;
+import javax.swing.JTextField;
+import javax.swing.KeyStroke;
+import javax.swing.SpinnerNumberModel;
+import javax.swing.UIManager;
+import javax.swing.filechooser.FileFilter;
+import javax.swing.undo.CannotRedoException;
+import javax.swing.undo.CannotUndoException;
+import javax.swing.undo.UndoManager;
 
 import jreepad.io.AutoDetectReader;
 import jreepad.io.HtmlWriter;
@@ -44,6 +85,12 @@ import jreepad.io.JreepadReader;
 import jreepad.io.JreepadWriter;
 import jreepad.io.TreepadWriter;
 import jreepad.io.XmlWriter;
+import jreepad.ui.ExtensionFileFilter;
+import jreepad.ui.SaveFileChooser;
+import edu.stanford.ejalbert.BrowserLauncher;
+import edu.stanford.ejalbert.exception.BrowserLaunchingExecutionException;
+import edu.stanford.ejalbert.exception.BrowserLaunchingInitializingException;
+import edu.stanford.ejalbert.exception.UnsupportedOperatingSystemException;
 
 public class JreepadViewer extends JFrame // implements ApplicationListener
 {
@@ -75,7 +122,6 @@ public class JreepadViewer extends JFrame // implements ApplicationListener
 
   private JButton newIconButton;
   private JButton openIconButton;
-  private JButton saveIconButton;
   private JButton addAboveIconButton;
   private JButton addBelowIconButton;
   private JButton addIconButton;
@@ -129,6 +175,16 @@ public class JreepadViewer extends JFrame // implements ApplicationListener
   presumably we use 0x4A524545
   */
   public static final int appleAppCode = 0x4A524545;
+
+  /**
+   * File filter for Jreepad XML .jree files.
+   */
+  private static final FileFilter JREEPAD_FILE_FILTER = new ExtensionFileFilter("Jreepad XML file (*.jree)", "jree");
+
+  /**
+   * File filter for Treepad .hjt files.
+   */
+  private static final FileFilter TREEPAD_FILE_FILTER = new ExtensionFileFilter("Treepad file (*.hjt)", "hjt");
 
   public JreepadViewer()
   {
@@ -210,8 +266,8 @@ public class JreepadViewer extends JFrame // implements ApplicationListener
     					        yield();
     					        // ...then if the saveLocation != null, trigger saveAction()
     					        if(getPrefs().autoSave && getPrefs().saveLocation != null)
-    					          saveAction();
-    					        else
+                                  new SaveAction().actionPerformed(null);
+                                else
 								  updateWindowTitle();
     					      }
     					      catch(InterruptedException e){}
@@ -347,13 +403,8 @@ public class JreepadViewer extends JFrame // implements ApplicationListener
 	  updateOpenRecentMenu();
 	  fileMenu.add(openRecentMenu);
 
-	  JMenuItem saveMenuItem = new JMenuItem(lang.getString("MENUITEM_SAVE")); //"Save");
-	  saveMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {saveAction();}});
-	  fileMenu.add(saveMenuItem);
-
-	  JMenuItem saveAsMenuItem = new JMenuItem(lang.getString("MENUITEM_SAVEAS")); //"Save as...");
-	  saveAsMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {saveAsAction();}});
-	  fileMenu.add(saveAsMenuItem);
+      fileMenu.add(new SaveAction()); // Save
+      fileMenu.add(new SaveAction(true)); // Save As
 
 	  JMenuItem backupToMenuItem = new JMenuItem(lang.getString("MENUITEM_BACKUPTO")); //"Backup to...");
 	  backupToMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {backupToAction();}});
@@ -402,9 +453,6 @@ public class JreepadViewer extends JFrame // implements ApplicationListener
 	  openMenuItem.setMnemonic('O');
 	  openMenuItem.setAccelerator(KeyStroke.getKeyStroke('O', MENU_MASK));
 	  openRecentMenu.setMnemonic('R');
-	  saveMenuItem.setMnemonic('S');
-	  saveMenuItem.setAccelerator(KeyStroke.getKeyStroke('S', MENU_MASK));
-	  saveAsMenuItem.setMnemonic('A');
 	  printSubtreeMenuItem.setMnemonic('P');
 	  printSubtreeMenuItem.setAccelerator(KeyStroke.getKeyStroke('P', MENU_MASK));
 	  printArticleMenuItem.setAccelerator(KeyStroke.getKeyStroke('P', MENU_MASK | java.awt.Event.SHIFT_MASK));
@@ -915,10 +963,9 @@ public class JreepadViewer extends JFrame // implements ApplicationListener
 		openIconButton.setIcon(this.getIcon("Open16.gif"));
 
 		// Save current
-	    saveIconButton = new JButton();
-	    saveIconButton.setToolTipText(lang.getString("TOOLBAR_SAVE"));
+	    JButton saveIconButton = new JButton(new SaveAction());
 	    saveIconButton.setBorderPainted(false);
-	    saveIconButton.setIcon(this.getIcon("Save16.gif"));
+        saveIconButton.setText(null); // Ignore action text
 
 		// Insert node before
 	    addAboveIconButton = new JButton(lang.getString("TOOLBAR_ADDABOVE"));
@@ -983,8 +1030,6 @@ public class JreepadViewer extends JFrame // implements ApplicationListener
                                public void actionPerformed(ActionEvent e){ newAction(); } });
     openIconButton.addActionListener(new ActionListener(){
                                public void actionPerformed(ActionEvent e){ openAction(); } });
-    saveIconButton.addActionListener(new ActionListener(){
-                               public void actionPerformed(ActionEvent e){ saveAction(); } });
     upIconButton.addActionListener(new ActionListener(){
                                public void actionPerformed(ActionEvent e){ theJreepad.moveCurrentNodeUp(); repaint();
 		  theJreepad.returnFocusToTree();
@@ -1223,18 +1268,35 @@ public class JreepadViewer extends JFrame // implements ApplicationListener
 
   }
 
+  /**
+   * Ask the user whether to save the current file.
+   * @param prompt  message to display
+   * @return true if the user clicked "Yes" and the save was successful or the user clicked "No" or the file didn't need to be saved;
+   *         false if the user clicked "Cancel" or the save failed
+   */
+  private boolean askAndSave(String prompt)
+  {
+    if (!warnAboutUnsaved())
+      return true;
+    int answer = JOptionPane.showConfirmDialog(this, prompt,
+                       "Save?" , JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE);
+    if(answer == JOptionPane.CANCEL_OPTION)
+      return false;
+    if(answer == JOptionPane.YES_OPTION)
+    {
+      SaveAction saveAction = new SaveAction();
+      saveAction.actionPerformed(null);
+      if (!saveAction.isSuccessful())
+        return false;
+    }
+    return true;
+  }
+
   private void newAction()
   {
-    if(warnAboutUnsaved())
-    {
-	  int answer = JOptionPane.showConfirmDialog(this, lang.getString("PROMPT_SAVE_BEFORE_NEW"),
-	                   "Save?" , JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE);
-      if(answer == JOptionPane.CANCEL_OPTION)
-        return;
-      else if(answer == JOptionPane.YES_OPTION)
-        if(!saveAction())
-          return; // This cancels "New" if the save action failed or was cancelled
-    }
+    if (!askAndSave(lang.getString("PROMPT_SAVE_BEFORE_NEW")))
+      return;
+
 	content.remove(theJreepad);
 	theJreepad = new JreepadView(new JreepadNode("<Untitled node>",theJreepad.getContentForNewNode()));
 	getPrefs().saveLocation = null;
@@ -1251,16 +1313,8 @@ public class JreepadViewer extends JFrame // implements ApplicationListener
 
   private void openAction()
   {
-    if(warnAboutUnsaved())
-    {
-	  int answer = JOptionPane.showConfirmDialog(this, lang.getString("PROMPT_SAVE_BEFORE_OPEN"),
-	                   "Save?" , JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE);
-      if(answer == JOptionPane.CANCEL_OPTION)
-        return;
-      else if(answer == JOptionPane.YES_OPTION)
-        if(!saveAction())
-          return; // This cancels quit if the save action failed or was cancelled
-    }
+    if (!askAndSave(lang.getString("PROMPT_SAVE_BEFORE_OPEN")))
+      return;
 
     fileChooser.setCurrentDirectory(getPrefs().openLocation);
     if(fileChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION)
@@ -1301,91 +1355,103 @@ public class JreepadViewer extends JFrame // implements ApplicationListener
   } // End of: openHjtFile()
 
 
-  private boolean saveAction()
+  private class SaveAction extends AbstractAction
   {
-    if(getPrefs().saveLocation==null || (getPrefs().saveLocation.isFile() && !getPrefs().saveLocation.canWrite()))
-    {
-      return saveAsAction();
-    }
-    try
-    {
-      setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+    private boolean askForFilename;
 
-      // Write to either HJT or XML
-      JreepadWriter writer;
-	  if(getPrefs().mainFileType==JreepadPrefs.FILETYPE_XML)
-        writer = new XmlWriter(getPrefs().getEncoding());
-	  else
-        writer = new TreepadWriter(getPrefs().getEncoding());
-      OutputStream fos = new FileOutputStream(getPrefs().saveLocation);
-      writer.write(fos, theJreepad.getRootJreepadNode());
-      fos.close();
+    private boolean successful = false;
 
-      if(MAC_OS_X){
-        com.apple.eio.FileManager.setFileTypeAndCreator(getPrefs().saveLocation.toString(),
-                appleAppCode, appleAppCode);
-      }
-      setWarnAboutUnsaved(false);
-      updateWindowTitle();
-      savePreferencesFile();
-      setCursor(Cursor.getDefaultCursor());
-      return true;
-    }
-    catch(IOException err)
+    public SaveAction()
     {
-      setCursor(Cursor.getDefaultCursor());
-      JOptionPane.showMessageDialog(this, err, lang.getString("TITLE_FILE_ERROR") , JOptionPane.ERROR_MESSAGE);
+        this(false);
     }
-    return false;
-  }
-  private boolean saveAsAction()
-  {
-    try
+
+    public SaveAction(boolean askForFilename)
     {
-      fileChooser.setCurrentDirectory(getPrefs().saveLocation);
-      fileChooser.setSelectedFile(new File(theJreepad.getRootJreepadNode().getTitle() +
-                   (getPrefs().mainFileType==JreepadPrefs.FILETYPE_XML?".jree":".hjt")       ));
-      if(fileChooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION && checkOverwrite(fileChooser.getSelectedFile()))
-      {
-        if(fileChooser.getSelectedFile().isFile() && !fileChooser.getSelectedFile().canWrite())
+        super(askForFilename ? lang.getString("MENUITEM_SAVEAS") : lang.getString("MENUITEM_SAVE"),
+                getIcon("Save16.gif"));
+        this.askForFilename = askForFilename;
+
+        if (askForFilename)
         {
-          JOptionPane.showMessageDialog(this, lang.getString("MSG_FILE_NOT_WRITEABLE"), lang.getString("TITLE_FILE_ERROR") , JOptionPane.ERROR_MESSAGE);
-          return saveAsAction();
+            putValue(MNEMONIC_KEY, new Integer(KeyEvent.VK_A));
+            putValue(ACCELERATOR_KEY, KeyStroke.getKeyStroke('A', MENU_MASK));
         }
-
-        setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-        getPrefs().saveLocation = fileChooser.getSelectedFile();
-
-        // Write to either HJT or XML
-        JreepadWriter writer;
-        if(getPrefs().mainFileType == JreepadPrefs.FILETYPE_XML)
-          writer = new XmlWriter(getPrefs().getEncoding());
         else
-          writer = new TreepadWriter(getPrefs().getEncoding());
-        OutputStream fos = new FileOutputStream(getPrefs().saveLocation);
-        writer.write(fos, theJreepad.getRootJreepadNode());
-        fos.close();
-
-        if(MAC_OS_X){
-          com.apple.eio.FileManager.setFileTypeAndCreator(getPrefs().saveLocation.toString(),
-                appleAppCode, appleAppCode);
+        {
+            putValue(MNEMONIC_KEY, new Integer(KeyEvent.VK_S));
+            putValue(ACCELERATOR_KEY, KeyStroke.getKeyStroke('S', MENU_MASK));
+            putValue(SHORT_DESCRIPTION, lang.getString("TOOLBAR_SAVE"));
         }
-        setWarnAboutUnsaved(false);
-        setTitleBasedOnFilename(getPrefs().saveLocation.getName());
-        savePreferencesFile();
-        setCursor(Cursor.getDefaultCursor());
-        return true;
-      }
-      else
-        return false;
     }
-    catch(IOException err)
+
+    public void actionPerformed(ActionEvent e)
     {
-      setCursor(Cursor.getDefaultCursor());
-      JOptionPane.showMessageDialog(this, err, lang.getString("TITLE_FILE_ERROR") , JOptionPane.ERROR_MESSAGE);
+        int fileType = getPrefs().mainFileType;
+        if(askForFilename || getPrefs().saveLocation==null || (getPrefs().saveLocation.isFile() && !getPrefs().saveLocation.canWrite()))
+        {
+          // Ask for filename
+          JFileChooser fileChooser = new SaveFileChooser();
+          fileChooser.setCurrentDirectory(getPrefs().saveLocation);
+          fileChooser.addChoosableFileFilter(JREEPAD_FILE_FILTER);
+          fileChooser.addChoosableFileFilter(TREEPAD_FILE_FILTER);
+          if (getPrefs().mainFileType == JreepadPrefs.FILETYPE_XML)
+              fileChooser.setFileFilter(JREEPAD_FILE_FILTER);
+          else
+              fileChooser.setFileFilter(TREEPAD_FILE_FILTER);
+
+          fileChooser.setSelectedFile(new File(theJreepad.getRootJreepadNode().getTitle() +
+                       (fileType==JreepadPrefs.FILETYPE_XML?".jree":".hjt")));
+          if(fileChooser.showSaveDialog(JreepadViewer.this) != JFileChooser.APPROVE_OPTION)
+          {
+              successful = false;
+              return; // No file chosen
+          }
+          getPrefs().saveLocation = fileChooser.getSelectedFile();
+          if (fileChooser.getFileFilter() == JREEPAD_FILE_FILTER)
+              fileType = JreepadPrefs.FILETYPE_XML;
+          else if (fileChooser.getFileFilter() == TREEPAD_FILE_FILTER)
+              fileType = JreepadPrefs.FILETYPE_HJT;
+        }
+
+        // Save the file
+        try
+        {
+          setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+
+          // Write to either HJT or XML
+          JreepadWriter writer;
+          if(fileType == JreepadPrefs.FILETYPE_XML)
+            writer = new XmlWriter(getPrefs().getEncoding());
+          else
+            writer = new TreepadWriter(getPrefs().getEncoding());
+          OutputStream fos = new FileOutputStream(getPrefs().saveLocation);
+          writer.write(fos, theJreepad.getRootJreepadNode());
+          fos.close();
+
+          if(MAC_OS_X){
+            com.apple.eio.FileManager.setFileTypeAndCreator(getPrefs().saveLocation.toString(),
+                    appleAppCode, appleAppCode);
+          }
+          setWarnAboutUnsaved(false);
+          updateWindowTitle();
+          savePreferencesFile();
+          setCursor(Cursor.getDefaultCursor());
+          successful = true;
+        }
+        catch(IOException err)
+        {
+          setCursor(Cursor.getDefaultCursor());
+          JOptionPane.showMessageDialog(JreepadViewer.this, err, lang.getString("TITLE_FILE_ERROR") , JOptionPane.ERROR_MESSAGE);
+          successful = false;
+        }
     }
-    return false;
-  } // End of: saveAsAction()
+
+    public boolean isSuccessful()
+    {
+        return successful;
+    }
+  }
 
   private boolean backupToAction()
   {
@@ -1664,16 +1730,8 @@ public class JreepadViewer extends JFrame // implements ApplicationListener
     //    {
     //
 
-    if(warnAboutUnsaved())
-    {
-	  int answer = JOptionPane.showConfirmDialog(this, lang.getString("PROMPT_SAVE_BEFORE_QUIT"),
-	                   lang.getString("TITLE_SAVEPROMPT") , JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE);
-      if(answer == JOptionPane.CANCEL_OPTION)
-        return;
-      else if(answer == JOptionPane.YES_OPTION)
-        if(!saveAction())
-          return; // This cancels quit if the save action failed or was cancelled
-    }
+    if (!askAndSave(lang.getString("PROMPT_SAVE_BEFORE_QUIT")))
+      return;
 
     // Save preferences - including window position and size, and open/closed state of the current tree's nodes
     getPrefs().treePathCollection = new TreePathCollection(theJreepad.getAllExpandedPaths());
@@ -1854,9 +1912,11 @@ public class JreepadViewer extends JFrame // implements ApplicationListener
   private boolean checkOverwrite(File theFile)
   {
     // If file doesn't already exist then fine
-    if(!theFile.isFile()) return true;
+    if(theFile == null || !theFile.exists())
+        return true;
+
     // Else we need to confirm
-    return (JOptionPane.showConfirmDialog(this, lang.getString("PROMPT_CONFIRM_OVERWRITE1")+theFile.getName()+lang.getString("PROMPT_CONFIRM_OVERWRITE2"),
+    return (JOptionPane.showConfirmDialog(this, lang.getString("PROMPT_CONFIRM_OVERWRITE1")+" "+theFile.getName()+" "+lang.getString("PROMPT_CONFIRM_OVERWRITE2"),
                 lang.getString("TITLE_CONFIRM_OVERWRITE"),
                 JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION);
   }
@@ -2345,7 +2405,6 @@ lang.getString("HELP_LICENSE") + "\n\n           http://www.gnu.org/copyleft/gpl
 //      g.fillRect(0,0,getWidth(),getHeight());
 //    }
   }
-
 
 
 
