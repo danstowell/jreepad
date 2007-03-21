@@ -426,7 +426,6 @@ public class JreepadView extends Box
     TreePath parentPath = tree.getSelectionPath().getParentPath();
     JreepadNode parent = currentNode.getParentNode();
     JreepadNode ret = parent.addChild(index);
-    ret.getArticle().setContent(JreepadArticle.getNewContent());
     treeModel.nodesWereInserted(parent, new int[]{index});
     TreePath newPath = (parentPath.pathByAddingChild(ret));
     if(newPath!=null)
@@ -449,7 +448,6 @@ public class JreepadView extends Box
     TreePath parentPath = tree.getSelectionPath().getParentPath();
     JreepadNode parent = currentNode.getParentNode();
     JreepadNode ret = parent.addChild(index+1);
-    ret.getArticle().setContent(JreepadArticle.getNewContent());
     treeModel.nodesWereInserted(parent, new int[]{index+1});
     tree.startEditingAtPath(parentPath.pathByAddingChild(ret));
     return ret;
@@ -459,7 +457,6 @@ public class JreepadView extends Box
   {
     //DEL storeForUndo();
     JreepadNode ret = currentNode.addChild();
-    ret.getArticle().setContent(JreepadArticle.getNewContent());
     TreePath nodePath = tree.getSelectionPath();
     treeModel.nodesWereInserted(currentNode, new int[]{currentNode.getIndex(ret)});
 
@@ -892,7 +889,6 @@ public class JreepadView extends Box
     //DEL storeForUndo();
     currentNode.getArticle().wrapContentToCharWidth(charWidth);
     currentArticleView.reloadArticle();
-    treeModel.setContentSaved(false);
   }
 
   public void stripAllTags()
@@ -900,7 +896,6 @@ public class JreepadView extends Box
     //DEL storeForUndo();
     currentNode.getArticle().stripAllTags();
     currentArticleView.reloadArticle();
-    treeModel.setContentSaved(false);
   }
 
   public void setArticleMode(int newMode)

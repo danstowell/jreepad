@@ -26,10 +26,7 @@ import java.util.Enumeration;
 import java.util.Vector;
 
 import javax.swing.JTree;
-import javax.swing.event.CellEditorListener;
-import javax.swing.event.ChangeEvent;
 import javax.swing.tree.DefaultTreeCellRenderer;
-import javax.swing.tree.TreeCellEditor;
 import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeSelectionModel;
 
@@ -42,7 +39,6 @@ import javax.swing.tree.TreeSelectionModel;
  */
 public class TreeView extends JTree
 {
-    private static final String UNTITLED_NODE_TEXT = "<Untitled node>";
 	private JreepadTreeModel treeModel;
 
     public TreeView(JreepadTreeModel treeModel)
@@ -61,43 +57,9 @@ public class TreeView extends JTree
         renderer.setLeafIcon(null);
         setCellRenderer(renderer);
 
-
-        // Fiddle with the cell editor - to ensure that when editing a new node, you shouldn't be
-        // able to leave a blank title
-        getCellEditor().addCellEditorListener(new CellEditorListener()
-            {
-                public void editingCanceled(ChangeEvent e)
-                {
-                    ensureNodeTitleIsNotEmpty();
-                }
-
-                public void editingStopped(ChangeEvent e)
-                {
-                    ensureNodeTitleIsNotEmpty();
-                }
-            });
-
         // Add mouse listener - this will be used to implement drag-and-drop, context menu (?), etc
         addMouseListener(new TreeViewMouseListener());
     }
-
-    public void cancelEditing()
-    {
-        super.cancelEditing(); // if we can override this perhaps we can prevent blank nodes...?
-        JreepadNode lastEditedNode = (JreepadNode)(getSelectionPath().getLastPathComponent());
-        if (lastEditedNode.getTitle().equals(""))
-            lastEditedNode.setTitle(UNTITLED_NODE_TEXT);
-    }
-
-    private void ensureNodeTitleIsNotEmpty()
-	{
-		TreeCellEditor theEditor = getCellEditor();
-		String newTitle = (String) (theEditor.getCellEditorValue());
-
-		if (newTitle.equals(""))
-			theEditor.getTreeCellEditorComponent(this, UNTITLED_NODE_TEXT,
-					true, true, false, 1);
-	}
 
     public void moveNode(JreepadNode node, JreepadNode newParent)
     {

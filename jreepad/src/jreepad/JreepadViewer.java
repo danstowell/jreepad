@@ -534,15 +534,15 @@ public class JreepadViewer extends JFrame // implements ApplicationListener
 	  editMenu.add(new JSeparator());
 
 	  JMenuItem addAboveMenuItem = new JMenuItem(lang.getString("MENUITEM_ADDABOVE")); //"Add sibling above");
-	  addAboveMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { theJreepad.addNodeAbove(); /* theJreepad.returnFocusToTree(); */ document.setContentSaved(false); updateWindowTitle();}});
+	  addAboveMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { theJreepad.addNodeAbove(); updateWindowTitle();}});
 	  editMenu.add(addAboveMenuItem);
 
 	  JMenuItem addBelowMenuItem = new JMenuItem(lang.getString("MENUITEM_ADDBELOW")); //"Add sibling below");
-	  addBelowMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { theJreepad.addNodeBelow(); /* theJreepad.returnFocusToTree(); */ document.setContentSaved(false); updateWindowTitle();}});
+	  addBelowMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { theJreepad.addNodeBelow(); updateWindowTitle();}});
 	  editMenu.add(addBelowMenuItem);
 
 	  JMenuItem addChildMenuItem = new JMenuItem(lang.getString("MENUITEM_ADDCHILD")); //"Add child");
-	  addChildMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { theJreepad.addNode(); /* theJreepad.returnFocusToTree(); */ document.setContentSaved(false);updateWindowTitle(); }});
+	  addChildMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { theJreepad.addNode(); updateWindowTitle(); }});
 	  editMenu.add(addChildMenuItem);
 
 	  editMenu.add(new JSeparator());
@@ -566,21 +566,21 @@ public class JreepadViewer extends JFrame // implements ApplicationListener
 	  editMenu.add(new JSeparator());
 
 	  JMenuItem upMenuItem = new JMenuItem(lang.getString("MENUITEM_MOVEUP")); //"Move node up");
-	  upMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { theJreepad.moveCurrentNodeUp(); theJreepad.returnFocusToTree(); document.setContentSaved(false);updateWindowTitle(); }});
+	  upMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { theJreepad.moveCurrentNodeUp(); theJreepad.returnFocusToTree(); updateWindowTitle(); }});
 	  editMenu.add(upMenuItem);
 
 	  JMenuItem downMenuItem = new JMenuItem(lang.getString("MENUITEM_MOVEDOWN")); //"Move node down");
-	  downMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { theJreepad.moveCurrentNodeDown(); theJreepad.returnFocusToTree(); document.setContentSaved(false);updateWindowTitle(); }});
+	  downMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { theJreepad.moveCurrentNodeDown(); theJreepad.returnFocusToTree(); updateWindowTitle(); }});
 	  editMenu.add(downMenuItem);
 
 	  editMenu.add(new JSeparator());
 
 	  JMenuItem indentMenuItem = new JMenuItem(lang.getString("MENUITEM_MOVEIN")); //"Indent node (demote)");
-	  indentMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { theJreepad.indentCurrentNode(); theJreepad.returnFocusToTree(); document.setContentSaved(false);updateWindowTitle(); }});
+	  indentMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { theJreepad.indentCurrentNode(); theJreepad.returnFocusToTree(); updateWindowTitle(); }});
 	  editMenu.add(indentMenuItem);
 
 	  JMenuItem outdentMenuItem = new JMenuItem(lang.getString("MENUITEM_MOVEOUT")); //"Outdent node (promote)");
-	  outdentMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { theJreepad.outdentCurrentNode(); theJreepad.returnFocusToTree(); document.setContentSaved(false);updateWindowTitle(); }});
+	  outdentMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { theJreepad.outdentCurrentNode(); theJreepad.returnFocusToTree(); updateWindowTitle(); }});
 	  editMenu.add(outdentMenuItem);
 
 	  editMenu.add(new JSeparator());
@@ -685,11 +685,11 @@ public class JreepadViewer extends JFrame // implements ApplicationListener
 	actionsMenu.add(new JSeparator());
 
 	JMenuItem sortMenuItem = new JMenuItem(lang.getString("MENUITEM_SORTONELEVEL")); //"Sort children (one level)");
-	sortMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { theJreepad.sortChildren(); document.setContentSaved(false);updateWindowTitle(); }});
+	sortMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { theJreepad.sortChildren(); updateWindowTitle(); }});
 	actionsMenu.add(sortMenuItem);
 
 	JMenuItem sortRecursiveMenuItem = new JMenuItem(lang.getString("MENUITEM_SORTALLLEVELS")); //"Sort children (all levels)");
-	sortRecursiveMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { theJreepad.sortChildrenRecursive(); document.setContentSaved(false);updateWindowTitle(); }});
+	sortRecursiveMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { theJreepad.sortChildrenRecursive(); updateWindowTitle(); }});
 	actionsMenu.add(sortRecursiveMenuItem);
 
 	searchMenuItem.setMnemonic('s');
@@ -930,25 +930,25 @@ public class JreepadViewer extends JFrame // implements ApplicationListener
 
     // Add the actions to the toolbar buttons
     upButton.addActionListener(new ActionListener(){
-                               public void actionPerformed(ActionEvent e){ theJreepad.moveCurrentNodeUp(); repaint();  theJreepad.returnFocusToTree(); document.setContentSaved(false);updateWindowTitle();} });
+                               public void actionPerformed(ActionEvent e){ theJreepad.moveCurrentNodeUp(); repaint();  theJreepad.returnFocusToTree(); updateWindowTitle();} });
     downButton.addActionListener(new ActionListener(){
-                               public void actionPerformed(ActionEvent e){ theJreepad.moveCurrentNodeDown(); repaint();  theJreepad.returnFocusToTree(); document.setContentSaved(false);updateWindowTitle();} });
+                               public void actionPerformed(ActionEvent e){ theJreepad.moveCurrentNodeDown(); repaint();  theJreepad.returnFocusToTree(); updateWindowTitle();} });
 
 
     indentButton.addActionListener(new ActionListener(){
-                               public void actionPerformed(ActionEvent e){ theJreepad.indentCurrentNode(); repaint();  theJreepad.returnFocusToTree(); document.setContentSaved(false);updateWindowTitle();} });
+                               public void actionPerformed(ActionEvent e){ theJreepad.indentCurrentNode(); repaint();  theJreepad.returnFocusToTree(); updateWindowTitle();} });
     outdentButton.addActionListener(new ActionListener(){
-                               public void actionPerformed(ActionEvent e){ theJreepad.outdentCurrentNode(); repaint(); theJreepad.returnFocusToTree(); document.setContentSaved(false);updateWindowTitle(); } });
+                               public void actionPerformed(ActionEvent e){ theJreepad.outdentCurrentNode(); repaint(); theJreepad.returnFocusToTree(); updateWindowTitle(); } });
 
 
 
 
     addAboveButton.addActionListener(new ActionListener(){
-                               public void actionPerformed(ActionEvent e){ theJreepad.addNodeAbove(); repaint(); /* theJreepad.returnFocusToTree(); */ document.setContentSaved(false);updateWindowTitle();} });
+                               public void actionPerformed(ActionEvent e){ theJreepad.addNodeAbove(); repaint(); updateWindowTitle();} });
     addBelowButton.addActionListener(new ActionListener(){
-                               public void actionPerformed(ActionEvent e){ theJreepad.addNodeBelow(); repaint(); /* theJreepad.returnFocusToTree(); */ document.setContentSaved(false);updateWindowTitle();} });
+                               public void actionPerformed(ActionEvent e){ theJreepad.addNodeBelow(); repaint(); updateWindowTitle();} });
     addButton.addActionListener(new ActionListener(){
-                               public void actionPerformed(ActionEvent e){ theJreepad.addNode(); repaint(); /* theJreepad.returnFocusToTree(); */ document.setContentSaved(false);updateWindowTitle();} });
+                               public void actionPerformed(ActionEvent e){ theJreepad.addNode(); repaint(); updateWindowTitle();} });
     removeButton.addActionListener(new ActionListener(){
                                public void actionPerformed(ActionEvent e){ deleteNodeAction(); } });
 
@@ -1037,31 +1037,31 @@ public class JreepadViewer extends JFrame // implements ApplicationListener
     upIconButton.addActionListener(new ActionListener(){
                                public void actionPerformed(ActionEvent e){ theJreepad.moveCurrentNodeUp(); repaint();
 		  theJreepad.returnFocusToTree();
-		  document.setContentSaved(false);updateWindowTitle();} });
+          updateWindowTitle();} });
     downIconButton.addActionListener(new ActionListener(){
                                public void actionPerformed(ActionEvent e){ theJreepad.moveCurrentNodeDown(); repaint();
 		  theJreepad.returnFocusToTree();
-		  document.setContentSaved(false);updateWindowTitle();} });
+		  updateWindowTitle();} });
     indentIconButton.addActionListener(new ActionListener(){
                                public void actionPerformed(ActionEvent e){ theJreepad.indentCurrentNode(); repaint();
 		  theJreepad.returnFocusToTree();
-		  document.setContentSaved(false);updateWindowTitle();} });
+		  updateWindowTitle();} });
     outdentIconButton.addActionListener(new ActionListener(){
                                public void actionPerformed(ActionEvent e){ theJreepad.outdentCurrentNode(); repaint();
 		  theJreepad.returnFocusToTree();
-		  document.setContentSaved(false);updateWindowTitle(); } });
+		  updateWindowTitle(); } });
     addAboveIconButton.addActionListener(new ActionListener(){
                                public void actionPerformed(ActionEvent e){ theJreepad.addNodeAbove(); repaint(); /*
 		  theJreepad.returnFocusToTree(); */
-		  document.setContentSaved(false);updateWindowTitle();} });
+		  updateWindowTitle();} });
     addBelowIconButton.addActionListener(new ActionListener(){
                                public void actionPerformed(ActionEvent e){ theJreepad.addNodeBelow(); repaint(); /*
 		  theJreepad.returnFocusToTree(); */
-		  document.setContentSaved(false);updateWindowTitle();} });
+		  updateWindowTitle();} });
     addIconButton.addActionListener(new ActionListener(){
                                public void actionPerformed(ActionEvent e){ theJreepad.addNode(); repaint(); /*
 		  theJreepad.returnFocusToTree(); */
-		  document.setContentSaved(false);updateWindowTitle();} });
+		  updateWindowTitle();} });
     removeIconButton.addActionListener(new ActionListener(){
                                public void actionPerformed(ActionEvent e){ deleteNodeAction(); } });
     // Finished establishing the iconic buttons
@@ -1546,7 +1546,6 @@ public class JreepadViewer extends JFrame // implements ApplicationListener
 			JOptionPane.showMessageDialog(this,  "Unknown which format to import - coding error! Oops!",lang.getString("TITLE_MISC_ERROR") , JOptionPane.ERROR_MESSAGE);
 			return;
 		}
-	    document.setContentSaved(false);
 	    updateWindowTitle();
       }
       fileChooser.setMultiSelectionEnabled(false);
@@ -1904,7 +1903,6 @@ public class JreepadViewer extends JFrame // implements ApplicationListener
                JOptionPane.YES_NO_OPTION) != JOptionPane.YES_OPTION) return;
     theJreepad.removeNode();
     theJreepad.returnFocusToTree();
-    document.setContentSaved(false);
     updateWindowTitle();
   }
 
