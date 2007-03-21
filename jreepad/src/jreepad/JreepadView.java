@@ -26,9 +26,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.Vector;
 
 import javax.swing.Box;
@@ -84,8 +81,6 @@ public class JreepadView extends Box
 
   private JreepadSearcher searcher;
 
-  private boolean warnAboutUnsaved = false;
-
   // Things concerned with the "undo" function
  //OLD ATTEMPT private JreepadNode oldRootForUndo, oldCurrentNodeForUndo;
  //OLD ATTEMPT private TreePath[] oldExpandedPaths;
@@ -93,10 +88,10 @@ public class JreepadView extends Box
 
   public JreepadView()
   {
-    this(new JreepadNode("<Untitled node>", ""));
+    this(new JreepadTreeModel());
   }
 
-  public JreepadView(JreepadNode root)
+  public JreepadView(JreepadTreeModel treeModel)
   {
     super(BoxLayout.X_AXIS);
     treeView = new JScrollPane();
@@ -117,9 +112,9 @@ public class JreepadView extends Box
 					 }
 					 );
 
-    this.root = root;
+    this.treeModel = treeModel;
+    root = (JreepadNode)treeModel.getRoot();
 
-    treeModel = new JreepadTreeModel(root);
     treeModel.addTreeModelListener(new JreepadTreeModelListener());
 
     tree = new TreeView(treeModel);
@@ -173,7 +168,7 @@ public class JreepadView extends Box
     editorPanePlainText.setContentChangeListener(new ContentChangeListener() {
     	public void contentChanged()
     	{
-    		setWarnAboutUnsaved(true);
+            JreepadView.this.treeModel.setContentSaved(false);
     	}
     });
 
@@ -294,11 +289,6 @@ public class JreepadView extends Box
     return tree;
   }
 
-  public JreepadNode getRootJreepadNode()
-  {
-    return root;
-  }
-
   public JreepadNode getCurrentNode()
   {
     return currentNode;
@@ -411,44 +401,13 @@ public class JreepadView extends Box
 //         JOptionPane.INFORMATION_MESSAGE);
   }
 
-  protected String getContentForNewNode()
-  {
-    if(prefs.autoDateInArticles)
-      return getCurrentDate(); // java.text.DateFormat.getDateInstance().format(new java.util.Date());
-    else
-      return "";
-  }
-
-  private String getCurrentDate()
-  {
-	DateFormat dateFormat = null;
-	String format = getPrefs().dateFormat;
-
-    if (!format.equals(""))
-    {
-	  try
-	  {
-	    dateFormat = new SimpleDateFormat(format);
-	  }
-	  catch (IllegalArgumentException e)
-	  {
-		  // Default format will be set
-		  // TODO: Log this
-	  }
-    }
-    if (dateFormat == null)
-	  dateFormat = DateFormat.getDateInstance();
-
-    return dateFormat.format(new Date());
-  }
-
   public void insertDate()
   {
     if(currentNode.getArticle().getArticleMode() != JreepadArticle.ARTICLEMODE_ORDINARY)
       return; // May want to fix this later - allow other modes to have the date inserted...
 
     //DEL storeForUndo();
-    String theDate = getCurrentDate();
+    String theDate = JreepadArticle.getCurrentDate();
     editorPanePlainText.insertText(theDate);
   }
 
@@ -467,7 +426,7 @@ public class JreepadView extends Box
     TreePath parentPath = tree.getSelectionPath().getParentPath();
     JreepadNode parent = currentNode.getParentNode();
     JreepadNode ret = parent.addChild(index);
-    ret.getArticle().setContent(getContentForNewNode());
+    ret.getArticle().setContent(JreepadArticle.getNewContent());
     treeModel.nodesWereInserted(parent, new int[]{index});
     TreePath newPath = (parentPath.pathByAddingChild(ret));
     if(newPath!=null)
@@ -490,7 +449,7 @@ public class JreepadView extends Box
     TreePath parentPath = tree.getSelectionPath().getParentPath();
     JreepadNode parent = currentNode.getParentNode();
     JreepadNode ret = parent.addChild(index+1);
-    ret.getArticle().setContent(getContentForNewNode());
+    ret.getArticle().setContent(JreepadArticle.getNewContent());
     treeModel.nodesWereInserted(parent, new int[]{index+1});
     tree.startEditingAtPath(parentPath.pathByAddingChild(ret));
     return ret;
@@ -500,7 +459,7 @@ public class JreepadView extends Box
   {
     //DEL storeForUndo();
     JreepadNode ret = currentNode.addChild();
-    ret.getArticle().setContent(getContentForNewNode());
+    ret.getArticle().setContent(JreepadArticle.getNewContent());
     TreePath nodePath = tree.getSelectionPath();
     treeModel.nodesWereInserted(currentNode, new int[]{currentNode.getIndex(ret)});
 
@@ -919,16 +878,6 @@ public class JreepadView extends Box
   }
   // End of: Searching (for wikilike action)
 
-  public boolean warnAboutUnsaved()
-  {
-    return warnAboutUnsaved;
-  }
-
-  void setWarnAboutUnsaved(boolean yo)
-  {
-    warnAboutUnsaved = yo;
-  }
-
 //  public void setTreeFont(Font f)
 //  {
 //    ((DefaultTreeCellRenderer)tree.getCellRenderer()).setFont(f);
@@ -943,7 +892,7 @@ public class JreepadView extends Box
     //DEL storeForUndo();
     currentNode.getArticle().wrapContentToCharWidth(charWidth);
     currentArticleView.reloadArticle();
-    setWarnAboutUnsaved(true);
+    treeModel.setContentSaved(false);
   }
 
   public void stripAllTags()
@@ -951,7 +900,7 @@ public class JreepadView extends Box
     //DEL storeForUndo();
     currentNode.getArticle().stripAllTags();
     currentArticleView.reloadArticle();
-    setWarnAboutUnsaved(true);
+    treeModel.setContentSaved(false);
   }
 
   public void setArticleMode(int newMode)
@@ -999,13 +948,13 @@ public class JreepadView extends Box
   {
     public void treeNodesChanged(TreeModelEvent e)
     {
-      warnAboutUnsaved = true;
+      treeModel.setContentSaved(false);
       tree.repaint();
     }
 
     public void treeNodesInserted(TreeModelEvent e)
     {
-      warnAboutUnsaved = true;
+      treeModel.setContentSaved(false);
       tree.expandPath(e.getTreePath());
       tree.scrollPathToVisible(e.getTreePath());
       tree.repaint();
@@ -1013,13 +962,13 @@ public class JreepadView extends Box
 
     public void treeNodesRemoved(TreeModelEvent e)
     {
-      warnAboutUnsaved = true;
+      treeModel.setContentSaved(false);
       tree.repaint();
     }
 
     public void treeStructureChanged(TreeModelEvent e)
     {
-      warnAboutUnsaved = true;
+      treeModel.setContentSaved(false);
       tree.repaint();
     }
   } // End of: class JreepadTreeModelListener

@@ -20,7 +20,10 @@
 package jreepad;
 
 import java.text.CharacterIterator;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.text.StringCharacterIterator;
+import java.util.Date;
 
 import javax.swing.undo.UndoManager;
 
@@ -33,6 +36,11 @@ import org.philwilson.JTextile;
  */
 public class JreepadArticle
 {
+    /**
+     * The default name for unnamed nodes.
+     */
+    public static final String UNTITLED_NODE_TEXT = "<Untitled node>";
+
     public static final int ARTICLEMODE_ORDINARY = 1;
     public static final int ARTICLEMODE_HTML = 2;
     public static final int ARTICLEMODE_CSV = 3;
@@ -60,12 +68,12 @@ public class JreepadArticle
 
     public JreepadArticle()
     {
-        this("");
+        this(getNewContent());
     }
 
     public JreepadArticle(String content)
     {
-        this("", content);
+        this(UNTITLED_NODE_TEXT, content);
     }
 
     public JreepadArticle(String title, String content)
@@ -75,7 +83,10 @@ public class JreepadArticle
 
     public JreepadArticle(String title, String content, int articleMode)
     {
-        this.title = title;
+        if (title == null || title.equals(""))
+            this.title = UNTITLED_NODE_TEXT;
+        else
+            this.title = title;
         this.content = content;
         this.articleMode = articleMode;
         undoMgr = new UndoManager();
@@ -108,7 +119,10 @@ public class JreepadArticle
 
     public void setTitle(String title)
     {
-        this.title = title;
+        if (title == null || title.equals(""))
+            this.title = UNTITLED_NODE_TEXT;
+        else
+            this.title = title;
     }
 
     public UndoManager getUndoMgr()
@@ -498,5 +512,43 @@ public class JreepadArticle
             o.append("\n");
         }
         setContent(o.toString());
+    }
+
+    /**
+     * Returns the content for a new node. It is either empty or with a timestamp.
+     */
+    public static String getNewContent()
+    {
+        if (JreepadView.getPrefs().autoDateInArticles)
+            return getCurrentDate();
+        return "";
+    }
+
+    /**
+     * Returns the current time and date. The date is formatted acording to the
+     * preferences. If the format is not set in thepreferences, the default
+     * format is used.
+     */
+    public static String getCurrentDate()
+    {
+        DateFormat dateFormat = null;
+        String format = JreepadView.getPrefs().dateFormat;
+
+        if (!format.equals(""))
+        {
+            try
+            {
+                dateFormat = new SimpleDateFormat(format);
+            }
+            catch (IllegalArgumentException e)
+            {
+                // Default format will be set
+                // TODO: Log this
+            }
+        }
+        if (dateFormat == null)
+            dateFormat = DateFormat.getDateInstance();
+
+        return dateFormat.format(new Date());
     }
 }
