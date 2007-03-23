@@ -267,7 +267,7 @@ public class JreepadViewer extends JFrame // implements ApplicationListener
     					        sleep(60000L * getPrefs().autoSavePeriod);
     					        yield();
     					        // ...then if the saveLocation != null, trigger saveAction()
-    					        if(getPrefs().autoSave && getPrefs().saveLocation != null)
+    					        if(getPrefs().autoSave && document.getSaveLocation() != null)
                                   new SaveAction().actionPerformed(null);
                                 else
 								  updateWindowTitle();
@@ -293,28 +293,27 @@ public class JreepadViewer extends JFrame // implements ApplicationListener
     File firstTimeFile = null;
     if(fileNameToLoad != "")
       firstTimeFile = new File(fileNameToLoad);
-    else if(getPrefs().loadLastFileOnOpen && getPrefs().saveLocation != null)
-      firstTimeFile = getPrefs().saveLocation;
+    else if(getPrefs().loadLastFileOnOpen && getPrefs().getMostRecentFile() != null)
+      firstTimeFile = getPrefs().getMostRecentFile();
 
     if(firstTimeFile != null && firstTimeFile.isFile())
     {
       try
       {
-        getPrefs().openLocation = firstTimeFile;
+        getPrefs().openLocation = firstTimeFile; // Remember the open directory
         content.remove(theJreepad);
 
-        InputStream in = new FileInputStream(getPrefs().openLocation);
+        InputStream in = new FileInputStream(firstTimeFile);
         JreepadReader reader = new AutoDetectReader(getPrefs().getEncoding(), getPrefs().autoDetectHtmlArticles);
         document = new JreepadTreeModel(reader.read(in));
+        document.setSaveLocation(firstTimeFile);
         theJreepad = new JreepadView(document);
 
-        getPrefs().saveLocation = getPrefs().exportLocation = getPrefs().importLocation = getPrefs().openLocation;
+        getPrefs().exportLocation = getPrefs().importLocation = firstTimeFile;
         content.add(theJreepad);
         searchDialog.setJreepad(theJreepad);
 
-	    getPrefs().saveLocation = getPrefs().openLocation;
-        setTitleBasedOnFilename(getPrefs().openLocation.getName());
-        document.setContentSaved(true);
+        setTitleBasedOnFilename(firstTimeFile.getName());
       }
       catch(IOException err)
       {
@@ -327,8 +326,6 @@ public class JreepadViewer extends JFrame // implements ApplicationListener
         setTitleBasedOnFilename("");
       }
     }
-    else
-      getPrefs().saveLocation = null;
 
     // Set close operation
     setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
@@ -359,15 +356,10 @@ public class JreepadViewer extends JFrame // implements ApplicationListener
     macOSXRegistration();
 
     setVisible(true);
-        // If loading the last-saved file, expand the nodes we last had open
-        if(fileNameToLoad == ""
-             && getPrefs().loadLastFileOnOpen
-             && getPrefs().saveLocation != null
-             && getPrefs().treePathCollection != null
-             && getPrefs().treePathCollection.paths != null)
-        {
-          theJreepad.expandPaths(getPrefs().treePathCollection.paths);
-        }
+    // If loading the last-saved file, expand the nodes we last had open
+    if(document.getSaveLocation() != null)
+        theJreepad.expandPaths(getPrefs().treePathCollection.paths);
+
     theJreepad.returnFocusToTree();
   }
 
@@ -1280,7 +1272,7 @@ public class JreepadViewer extends JFrame // implements ApplicationListener
    */
   private boolean askAndSave(String prompt)
   {
-    if (document == null || document.isContentSaved())
+    if (document.isContentSaved())
       return true;
     int answer = JOptionPane.showConfirmDialog(this, prompt,
                        "Save?" , JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE);
@@ -1304,7 +1296,6 @@ public class JreepadViewer extends JFrame // implements ApplicationListener
 	content.remove(theJreepad);
     document = new JreepadTreeModel();
 	theJreepad = new JreepadView(document);
-	getPrefs().saveLocation = null;
 	content.add(theJreepad);
     searchDialog.setJreepad(theJreepad);
 
@@ -1335,20 +1326,19 @@ public class JreepadViewer extends JFrame // implements ApplicationListener
         getPrefs().openLocation = f;
         content.remove(theJreepad);
 
-        InputStream in = new FileInputStream(getPrefs().openLocation);
+        InputStream in = new FileInputStream(f);
         JreepadReader reader = new AutoDetectReader(getPrefs().getEncoding(), getPrefs().autoDetectHtmlArticles);
         document = new JreepadTreeModel(reader.read(in));
+        document.setSaveLocation(f);
         theJreepad = new JreepadView(document);
 
-        getPrefs().saveLocation = getPrefs().openLocation;
         content.add(theJreepad);
         searchDialog.setJreepad(theJreepad);
 
-        addToOpenRecentMenu(getPrefs().openLocation);
-        setTitleBasedOnFilename(getPrefs().openLocation.getName());
+        addToOpenRecentMenu(f);
+        setTitleBasedOnFilename(f.getName());
         validate();
         repaint();
-        document.setContentSaved(true);
 //DEL        theJreepad.clearUndoCache();
         setCursor(Cursor.getDefaultCursor());
       }
@@ -1394,11 +1384,12 @@ public class JreepadViewer extends JFrame // implements ApplicationListener
     public void actionPerformed(ActionEvent e)
     {
         int fileType = getPrefs().mainFileType;
-        if(askForFilename || getPrefs().saveLocation==null || (getPrefs().saveLocation.isFile() && !getPrefs().saveLocation.canWrite()))
+        File saveLocation = document.getSaveLocation();
+        if(askForFilename || saveLocation==null || (saveLocation.isFile() && !saveLocation.canWrite()))
         {
           // Ask for filename
           JFileChooser fileChooser = new SaveFileChooser();
-          fileChooser.setCurrentDirectory(getPrefs().saveLocation);
+          fileChooser.setCurrentDirectory(getPrefs().openLocation);
           fileChooser.addChoosableFileFilter(JREEPAD_FILE_FILTER);
           fileChooser.addChoosableFileFilter(TREEPAD_FILE_FILTER);
           if (getPrefs().mainFileType == JreepadPrefs.FILETYPE_XML)
@@ -1413,12 +1404,13 @@ public class JreepadViewer extends JFrame // implements ApplicationListener
               successful = false;
               return; // No file chosen
           }
-          getPrefs().saveLocation = fileChooser.getSelectedFile();
+          saveLocation = fileChooser.getSelectedFile();
           if (fileChooser.getFileFilter() == JREEPAD_FILE_FILTER)
               fileType = JreepadPrefs.FILETYPE_XML;
           else if (fileChooser.getFileFilter() == TREEPAD_FILE_FILTER)
               fileType = JreepadPrefs.FILETYPE_HJT;
         }
+        getPrefs().openLocation = saveLocation; // Remember the file's directory
 
         // Save the file
         try
@@ -1431,16 +1423,17 @@ public class JreepadViewer extends JFrame // implements ApplicationListener
             writer = new XmlWriter(getPrefs().getEncoding());
           else
             writer = new TreepadWriter(getPrefs().getEncoding());
-          OutputStream fos = new FileOutputStream(getPrefs().saveLocation);
+          OutputStream fos = new FileOutputStream(saveLocation);
           writer.write(fos, document.getRootNode());
           fos.close();
 
           if(MAC_OS_X){
-            com.apple.eio.FileManager.setFileTypeAndCreator(getPrefs().saveLocation.toString(),
+            com.apple.eio.FileManager.setFileTypeAndCreator(saveLocation.toString(),
                     appleAppCode, appleAppCode);
           }
-          document.setContentSaved(true);
+          document.setSaveLocation(saveLocation);
           updateWindowTitle();
+          addToOpenRecentMenu(saveLocation);
           savePreferencesFile();
           setCursor(Cursor.getDefaultCursor());
           successful = true;
@@ -1501,7 +1494,7 @@ public class JreepadViewer extends JFrame // implements ApplicationListener
 
   private void updateWindowTitle()
   {
-    setTitle(windowTitle + ((document == null || document.isContentSaved())?"":"*") + (getPrefs().autoSave?" ["+lang.getString("AUTOSAVE_ACTIVE")+"]":""));
+    setTitle(windowTitle + (document.isContentSaved()?"":"*") + (getPrefs().autoSave?" ["+lang.getString("AUTOSAVE_ACTIVE")+"]":""));
   }
 
   private static final int FILE_FORMAT_HJT=1;

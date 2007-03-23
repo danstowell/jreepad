@@ -40,7 +40,7 @@ permanent way which can be carried across from different versions
 public class JreepadPrefs //implements Serializable
 {
   Preferences prefs;
-  File openLocation, saveLocation, importLocation, exportLocation, backupLocation;
+  File openLocation, importLocation, exportLocation, backupLocation;
 
   boolean seenLicense;
 
@@ -76,7 +76,7 @@ public class JreepadPrefs //implements Serializable
 
   Vector openRecentList;
   int openRecentListLength;
-  File getMostRecentFile() // This is used, specifically, by the command-line "find" tool
+  File getMostRecentFile()
   {
     if(openRecentList.size()==0)
       return null;
@@ -142,7 +142,6 @@ public class JreepadPrefs //implements Serializable
     prefs = Preferences.userNodeForPackage(this.getClass());
 
     openLocation = new File(prefs.get("OPENLOCATION", System.getProperty("user.home")));
-    saveLocation = new File(prefs.get("SAVELOCATION", System.getProperty("user.home")));
     importLocation = new File(prefs.get("IMPORTLOCATION", System.getProperty("user.home")));
     exportLocation = new File(prefs.get("EXPORTLOCATION", System.getProperty("user.home")));
     backupLocation = new File(prefs.get("BACKUPLOCATION", System.getProperty("user.home")));
@@ -252,7 +251,6 @@ treePathCollection = new TreePathCollection(new javax.swing.tree.TreePath[0]);
   void save()
   {
     prefs.put("OPENLOCATION",""+openLocation);
-    prefs.put("SAVELOCATION", ""+saveLocation);
     prefs.put("IMPORTLOCATION", ""+importLocation);
     prefs.put("EXPORTLOCATION", ""+exportLocation);
     prefs.put("BACKUPLOCATION", ""+backupLocation);

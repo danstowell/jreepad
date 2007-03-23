@@ -1,15 +1,22 @@
 package jreepad;
 
+import java.io.File;
+
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreePath;
 
 /**
  * The tree model.
  *
- * @version $Id: JreepadTreeModel.java,v 1.3 2007-03-21 09:40:52 pewu Exp $
+ * @version $Id: JreepadTreeModel.java,v 1.4 2007-03-23 09:37:36 pewu Exp $
  */
 public class JreepadTreeModel extends DefaultTreeModel
 {
+    /**
+     * The location, where the document was last saved.
+     */
+    private File saveLocation = null;
+
     /**
      * True if the current document content has been saved.
      */
@@ -65,5 +72,16 @@ public class JreepadTreeModel extends DefaultTreeModel
     public void setContentSaved(boolean contentSaved)
     {
         this.contentSaved = contentSaved;
+    }
+
+    public void setSaveLocation(File saveLocation)
+    {
+        this.saveLocation = saveLocation;
+        setContentSaved(true);
+    }
+
+    public File getSaveLocation()
+    {
+        return saveLocation;
     }
 }
