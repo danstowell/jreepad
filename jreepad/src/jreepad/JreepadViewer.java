@@ -74,7 +74,6 @@ import javax.swing.JTextField;
 import javax.swing.KeyStroke;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.UIManager;
-import javax.swing.filechooser.FileFilter;
 import javax.swing.undo.CannotRedoException;
 import javax.swing.undo.CannotUndoException;
 import javax.swing.undo.UndoManager;
@@ -85,7 +84,6 @@ import jreepad.io.JreepadReader;
 import jreepad.io.JreepadWriter;
 import jreepad.io.TreepadWriter;
 import jreepad.io.XmlWriter;
-import jreepad.ui.ExtensionFileFilter;
 import jreepad.ui.SaveFileChooser;
 import edu.stanford.ejalbert.BrowserLauncher;
 import edu.stanford.ejalbert.exception.BrowserLaunchingExecutionException;
@@ -176,16 +174,6 @@ public class JreepadViewer extends JFrame // implements ApplicationListener
   presumably we use 0x4A524545
   */
   public static final int appleAppCode = 0x4A524545;
-
-  /**
-   * File filter for Jreepad XML .jree files.
-   */
-  private static final FileFilter JREEPAD_FILE_FILTER = new ExtensionFileFilter("Jreepad XML file (*.jree)", "jree");
-
-  /**
-   * File filter for Treepad .hjt files.
-   */
-  private static final FileFilter TREEPAD_FILE_FILTER = new ExtensionFileFilter("Treepad file (*.hjt)", "hjt");
 
   public JreepadViewer()
   {
@@ -297,35 +285,7 @@ public class JreepadViewer extends JFrame // implements ApplicationListener
       firstTimeFile = getPrefs().getMostRecentFile();
 
     if(firstTimeFile != null && firstTimeFile.isFile())
-    {
-      try
-      {
-        getPrefs().openLocation = firstTimeFile; // Remember the open directory
-        content.remove(theJreepad);
-
-        InputStream in = new FileInputStream(firstTimeFile);
-        JreepadReader reader = new AutoDetectReader(getPrefs().getEncoding(), getPrefs().autoDetectHtmlArticles);
-        document = reader.read(in);
-        document.setSaveLocation(firstTimeFile);
-        theJreepad = new JreepadView(document);
-
-        getPrefs().exportLocation = getPrefs().importLocation = firstTimeFile;
-        content.add(theJreepad);
-        searchDialog.setJreepad(theJreepad);
-
-        setTitleBasedOnFilename(firstTimeFile.getName());
-      }
-      catch(IOException err)
-      {
-        JOptionPane.showMessageDialog(this, err, lang.getString("MSG_LOAD_FILE_FAILED") , JOptionPane.ERROR_MESSAGE);
-        content.remove(theJreepad);
-        document = new JreepadTreeModel();
-        theJreepad = new JreepadView(document);
-        content.add(theJreepad);
-        searchDialog.setJreepad(theJreepad);
-        setTitleBasedOnFilename("");
-      }
-    }
+      openFile(firstTimeFile);
 
     // Set close operation
     setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
@@ -1313,43 +1273,41 @@ public class JreepadViewer extends JFrame // implements ApplicationListener
       return;
 
     fileChooser.setCurrentDirectory(getPrefs().openLocation);
-    if(fileChooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION)
-    {
-      openHjtFile(fileChooser.getSelectedFile());
-    }
+    if(fileChooser.showOpenDialog(this) != JFileChooser.APPROVE_OPTION)
+        return;
+
+    setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+    openFile(fileChooser.getSelectedFile());
+    setCursor(Cursor.getDefaultCursor());
+    updateUndoRedoMenuState();
+    validate();
+    repaint();
   } // End of: openAction()
-  protected void openHjtFile(File f)
+
+  public boolean openFile(File file)
   {
-      try
-      {
-        setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-        getPrefs().openLocation = f;
-        content.remove(theJreepad);
+    getPrefs().openLocation = file; // Remember the open directory
+    try
+    {
+      InputStream in = new FileInputStream(file);
+      JreepadReader reader = new AutoDetectReader(getPrefs().getEncoding(), getPrefs().autoDetectHtmlArticles);
+      document = reader.read(in);
+      document.setSaveLocation(file);
+    }
+    catch(IOException e)
+    {
+      JOptionPane.showMessageDialog(this, e, lang.getString("MSG_LOAD_FILE_FAILED") , JOptionPane.ERROR_MESSAGE);
+      return false;
+    }
+    content.remove(theJreepad);
+    theJreepad = new JreepadView(document);
+    content.add(theJreepad);
+    searchDialog.setJreepad(theJreepad);
 
-        InputStream in = new FileInputStream(f);
-        JreepadReader reader = new AutoDetectReader(getPrefs().getEncoding(), getPrefs().autoDetectHtmlArticles);
-        document = reader.read(in);
-        document.setSaveLocation(f);
-        theJreepad = new JreepadView(document);
-
-        content.add(theJreepad);
-        searchDialog.setJreepad(theJreepad);
-
-        addToOpenRecentMenu(f);
-        setTitleBasedOnFilename(f.getName());
-        validate();
-        repaint();
-//DEL        theJreepad.clearUndoCache();
-        setCursor(Cursor.getDefaultCursor());
-      }
-      catch(IOException err)
-      {
-        setCursor(Cursor.getDefaultCursor());
-        JOptionPane.showMessageDialog(this, err, lang.getString("TITLE_FILE_ERROR") , JOptionPane.ERROR_MESSAGE);
-      }
-	updateUndoRedoMenuState();
-  } // End of: openHjtFile()
-
+    getPrefs().exportLocation = getPrefs().importLocation = file;
+    setTitleBasedOnFilename(file.getName());
+    return true;
+  }
 
   private class SaveAction extends AbstractAction
   {
@@ -1388,14 +1346,8 @@ public class JreepadViewer extends JFrame // implements ApplicationListener
         if(askForFilename || saveLocation==null || (saveLocation.isFile() && !saveLocation.canWrite()))
         {
           // Ask for filename
-          JFileChooser fileChooser = new SaveFileChooser();
+          JFileChooser fileChooser = new SaveFileChooser(getPrefs().mainFileType);
           fileChooser.setCurrentDirectory(getPrefs().openLocation);
-          fileChooser.addChoosableFileFilter(JREEPAD_FILE_FILTER);
-          fileChooser.addChoosableFileFilter(TREEPAD_FILE_FILTER);
-          if (getPrefs().mainFileType == JreepadPrefs.FILETYPE_XML)
-              fileChooser.setFileFilter(JREEPAD_FILE_FILTER);
-          else
-              fileChooser.setFileFilter(TREEPAD_FILE_FILTER);
 
           fileChooser.setSelectedFile(new File(document.getRootNode().getTitle() +
                        (fileType==JreepadPrefs.FILETYPE_XML?".jree":".hjt")));
@@ -1405,9 +1357,9 @@ public class JreepadViewer extends JFrame // implements ApplicationListener
               return; // No file chosen
           }
           saveLocation = fileChooser.getSelectedFile();
-          if (fileChooser.getFileFilter() == JREEPAD_FILE_FILTER)
+          if (fileChooser.getFileFilter() == SaveFileChooser.JREEPAD_FILE_FILTER)
               fileType = JreepadPrefs.FILETYPE_XML;
-          else if (fileChooser.getFileFilter() == TREEPAD_FILE_FILTER)
+          else if (fileChooser.getFileFilter() == SaveFileChooser.TREEPAD_FILE_FILTER)
               fileType = JreepadPrefs.FILETYPE_HJT;
         }
         getPrefs().openLocation = saveLocation; // Remember the file's directory
@@ -2016,7 +1968,7 @@ lang.getString("HELP_LICENSE") + "\n\n           http://www.gnu.org/copyleft/gpl
   {
     File f;
     FileOpeningActionListener(File f) 		   {this.f = f;}
-    public void actionPerformed(ActionEvent e) {openHjtFile(f);}
+    public void actionPerformed(ActionEvent e) {openFile(f);}
   } // End of:   private class FileOpeningActionListener extends ActionListener
 
 

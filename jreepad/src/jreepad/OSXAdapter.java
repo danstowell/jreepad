@@ -2,13 +2,13 @@
 
 File:		OSXAdapter.java
 
-Abstract:   A single class with clear, static entry points for 
-			hooking existing preferences, about, quit functionality 
+Abstract:   A single class with clear, static entry points for
+			hooking existing preferences, about, quit functionality
 			from an existing Java app into handlers for the Mac OS X
-			application menu.  Useful for developers looking to support 
-			multiple platforms with a single codebase, and support 
+			application menu.  Useful for developers looking to support
+			multiple platforms with a single codebase, and support
 			Mac OS X features with minimal impact.
-			
+
 Version:	1.1
 
 Disclaimer: IMPORTANT:  This Apple software is supplied to you by Apple
@@ -25,7 +25,7 @@ license, under Apple's copyrights in this original Apple software (the
 Software, with or without modifications, in source and/or binary forms;
 provided that if you redistribute the Apple Software in its entirety and
 without modifications, you must retain this notice and the following
-text and disclaimers in all such redistributions of the Apple Software. 
+text and disclaimers in all such redistributions of the Apple Software.
 Neither the name, trademarks, service marks or logos of Apple Computer,
 Inc. may be used to endorse or promote products derived from the Apple
 Software without specific prior written permission from Apple.  Except
@@ -49,9 +49,9 @@ AND WHETHER UNDER THEORY OF CONTRACT, TORT (INCLUDING NEGLIGENCE),
 STRICT LIABILITY OR OTHERWISE, EVEN IF APPLE HAS BEEN ADVISED OF THE
 POSSIBILITY OF SUCH DAMAGE.
 
-Copyright © 2004 Apple Computer, Inc., All Rights Reserved
+Copyright ï¿½ 2004 Apple Computer, Inc., All Rights Reserved
 
-*/ 
+*/
 
 package jreepad;
 
@@ -66,12 +66,12 @@ public class OSXAdapter extends ApplicationAdapter {
 
 	// reference to the app where the existing quit, about, prefs code is
 	private JreepadViewer									mainApp;
-	
+
 	private OSXAdapter (JreepadViewer inApp) {
 		mainApp = inApp;
 	}
-	
-	// implemented handler methods.  These are basically hooks into existing 
+
+	// implemented handler methods.  These are basically hooks into existing
 	// functionality from the main app, as if it came over from another platform.
 	public void handleAbout(ApplicationEvent ae) {
 		if (mainApp != null) {
@@ -81,7 +81,7 @@ public class OSXAdapter extends ApplicationAdapter {
 			throw new IllegalStateException("handleAbout: JreepadViewer instance detached from listener");
 		}
 	}
-	
+
 	public void handlePreferences(ApplicationEvent ae) {
 		if (mainApp != null) {
 			mainApp.preferences();
@@ -90,17 +90,17 @@ public class OSXAdapter extends ApplicationAdapter {
 			throw new IllegalStateException("handlePreferences: JreepadViewer instance detached from listener");
 		}
 	}
-	
+
 	// Added by Dan
 	public void handleOpenFile(ApplicationEvent ae)
 	{
 	   //System.err.println("Jreepad.handleOpenFile() - ApplicationEvent is " + ae);
-       mainApp.openHjtFile(new java.io.File(ae.getFilename()));
+       mainApp.openFile(new java.io.File(ae.getFilename()));
 	}
-	
+
 	public void handleQuit(ApplicationEvent ae) {
 		if (mainApp != null) {
-			/*	
+			/*
 			/	You MUST setHandled(false) if you want to delay or cancel the quit.
 			/	This is important for cross-platform development -- have a universal quit
 			/	routine that chooses whether or not to quit, so the functionality is identical
@@ -113,24 +113,24 @@ public class OSXAdapter extends ApplicationAdapter {
 			throw new IllegalStateException("handleQuit: JreepadViewer instance detached from listener");
 		}
 	}
-	
-	
+
+
 	// The main entry-point for this functionality.  This is the only method
 	// that needs to be called at runtime, and it can easily be done using
-	// reflection (see JreepadViewer.java) 
+	// reflection (see JreepadViewer.java)
 	public static void registerMacOSXApplication(JreepadViewer inApp) {
 		if (theApplication == null) {
 			theApplication = new com.apple.eawt.Application();
-		}			
-		
+		}
+
 		if (theAdapter == null) {
 			theAdapter = new OSXAdapter(inApp);
 		}
 		theApplication.addApplicationListener(theAdapter);
 	}
-	
-	// Another static entry point for EAWT functionality.  Enables the 
-	// "Preferences..." menu item in the application menu. 
+
+	// Another static entry point for EAWT functionality.  Enables the
+	// "Preferences..." menu item in the application menu.
 	public static void enablePrefs(boolean enabled) {
 		if (theApplication == null) {
 			theApplication = new com.apple.eawt.Application();
