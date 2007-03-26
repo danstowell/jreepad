@@ -235,7 +235,7 @@ public class find
 	{
         InputStream in = new FileInputStream(userFile);
         JreepadReader reader = new AutoDetectReader(encoding, false);
-        root = reader.read(in);
+        root = reader.read(in).getRootNode();
 	}
 	catch(IOException err)
 	{
@@ -279,7 +279,7 @@ public class find
             writer= new XmlWriter(outputEncoding);
         else
             writer= new TreepadWriter(outputEncoding);
-        writer.write(System.out, resultsParent);
+        writer.write(System.out, new JreepadTreeModel(resultsParent));
         break;
       case OUTPUT_TITLES:
         for(int i=0; i<res.length; i++)

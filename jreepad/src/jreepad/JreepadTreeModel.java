@@ -8,7 +8,7 @@ import javax.swing.tree.TreePath;
 /**
  * The tree model.
  *
- * @version $Id: JreepadTreeModel.java,v 1.4 2007-03-23 09:37:36 pewu Exp $
+ * @version $Id: JreepadTreeModel.java,v 1.5 2007-03-26 11:49:24 pewu Exp $
  */
 public class JreepadTreeModel extends DefaultTreeModel
 {
@@ -16,6 +16,16 @@ public class JreepadTreeModel extends DefaultTreeModel
      * The location, where the document was last saved.
      */
     private File saveLocation = null;
+
+    /**
+     * Format of the loaded file.
+     */
+    private int fileFormat = -1;
+
+    /**
+     * Encoding of the loaded file.
+     */
+    private String encoding = null;
 
     /**
      * True if the current document content has been saved.
@@ -80,8 +90,28 @@ public class JreepadTreeModel extends DefaultTreeModel
         setContentSaved(true);
     }
 
+    public void setFileFormat(int fileFormat)
+    {
+        this.fileFormat = fileFormat;
+    }
+
     public File getSaveLocation()
     {
         return saveLocation;
+    }
+
+    public int getFileFormat()
+    {
+        return fileFormat;
+    }
+
+    public String getEncoding()
+    {
+        return encoding;
+    }
+
+    public void setEncoding(String encoding)
+    {
+        this.encoding = encoding;
     }
 }

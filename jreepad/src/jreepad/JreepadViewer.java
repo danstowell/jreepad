@@ -305,7 +305,7 @@ public class JreepadViewer extends JFrame // implements ApplicationListener
 
         InputStream in = new FileInputStream(firstTimeFile);
         JreepadReader reader = new AutoDetectReader(getPrefs().getEncoding(), getPrefs().autoDetectHtmlArticles);
-        document = new JreepadTreeModel(reader.read(in));
+        document = reader.read(in);
         document.setSaveLocation(firstTimeFile);
         theJreepad = new JreepadView(document);
 
@@ -1328,7 +1328,7 @@ public class JreepadViewer extends JFrame // implements ApplicationListener
 
         InputStream in = new FileInputStream(f);
         JreepadReader reader = new AutoDetectReader(getPrefs().getEncoding(), getPrefs().autoDetectHtmlArticles);
-        document = new JreepadTreeModel(reader.read(in));
+        document = reader.read(in);
         document.setSaveLocation(f);
         theJreepad = new JreepadView(document);
 
@@ -1417,14 +1417,21 @@ public class JreepadViewer extends JFrame // implements ApplicationListener
         {
           setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 
+          // Select default application encoding or document encoding
+          String encoding;
+          if (askForFilename || document.getEncoding() == null)
+            encoding = getPrefs().getEncoding();
+          else
+            encoding = document.getEncoding();
+
           // Write to either HJT or XML
           JreepadWriter writer;
           if(fileType == JreepadPrefs.FILETYPE_XML)
-            writer = new XmlWriter(getPrefs().getEncoding());
+            writer = new XmlWriter(encoding);
           else
-            writer = new TreepadWriter(getPrefs().getEncoding());
+            writer = new TreepadWriter(encoding);
           OutputStream fos = new FileOutputStream(saveLocation);
-          writer.write(fos, document.getRootNode());
+          writer.write(fos, document);
           fos.close();
 
           if(MAC_OS_X){
@@ -1465,7 +1472,7 @@ public class JreepadViewer extends JFrame // implements ApplicationListener
         // Write to either HJT
         JreepadWriter writer = new TreepadWriter(getPrefs().getEncoding());
         OutputStream fos = new FileOutputStream(getPrefs().backupLocation);
-        writer.write(fos, document.getRootNode());
+        writer.write(fos, document);
         fos.close();
 
         setCursor(Cursor.getDefaultCursor());
@@ -1526,7 +1533,7 @@ public class JreepadViewer extends JFrame // implements ApplicationListener
 		  case FILE_FORMAT_HJT:
             InputStream in = new FileInputStream(getPrefs().importLocation);
             JreepadReader reader = new AutoDetectReader(getPrefs().getEncoding(), getPrefs().autoDetectHtmlArticles);
-            theJreepad.addChild(reader.read(in));
+            theJreepad.addChild(reader.read(in).getRootNode());
 			break;
 		  case FILE_FORMAT_TEXT:
 		    theJreepad.addChildrenFromTextFiles(fileChooser.getSelectedFiles());
@@ -1617,7 +1624,7 @@ public class JreepadViewer extends JFrame // implements ApplicationListener
         OutputStream fos = new FileOutputStream(getPrefs().exportLocation);
         if (writer != null)
         {
-          writer.write(fos, theJreepad.getCurrentNode());
+          writer.write(fos, new JreepadTreeModel(theJreepad.getCurrentNode()));
           fos.close();
         }
         else // assume (output != null)

@@ -26,6 +26,8 @@ import java.io.InputStreamReader;
 
 import jreepad.JreepadArticle;
 import jreepad.JreepadNode;
+import jreepad.JreepadPrefs;
+import jreepad.JreepadTreeModel;
 
 /**
  * Reads XML input into Jreepad.
@@ -46,7 +48,7 @@ public class XmlReader implements JreepadReader
         this.encoding = encoding;
     }
 
-    public JreepadNode read(InputStream in)
+    public JreepadTreeModel read(InputStream in)
         throws IOException
     {
         BufferedReader reader = new BufferedReader(new InputStreamReader(in, encoding));
@@ -75,7 +77,10 @@ public class XmlReader implements JreepadReader
         // System.out.println("XMLparse: I've stripped anything before the first node and content is
         // now: " + currentXmlContent);
 
-        return readNode(reader, currentXmlContent, 0).node;
+        JreepadTreeModel document = new JreepadTreeModel(readNode(reader, currentXmlContent, 0).node);
+        document.setFileFormat(JreepadPrefs.FILETYPE_XML);
+        document.setEncoding(encoding);
+        return document;
     }
 
     // This function should return any XML string content that remains unprocessed

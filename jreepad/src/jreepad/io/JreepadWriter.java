@@ -22,7 +22,7 @@ package jreepad.io;
 import java.io.IOException;
 import java.io.OutputStream;
 
-import jreepad.JreepadNode;
+import jreepad.JreepadTreeModel;
 
 /**
  * Interface for classes that export Jreepad trees.
@@ -32,5 +32,5 @@ import jreepad.JreepadNode;
  */
 public interface JreepadWriter
 {
-    public void write(OutputStream out, JreepadNode node) throws IOException;
+    public void write(OutputStream out, JreepadTreeModel document) throws IOException;
 }

@@ -27,6 +27,7 @@ import java.util.Enumeration;
 
 import jreepad.JreepadArticle;
 import jreepad.JreepadNode;
+import jreepad.JreepadTreeModel;
 
 /**
  * Writes the Jreepad tree as XML.
@@ -43,12 +44,12 @@ public class XmlWriter
         this.encoding = encoding;
     }
 
-    public void write(OutputStream out, JreepadNode node)
+    public void write(OutputStream out, JreepadTreeModel document)
         throws IOException
     {
         Writer writer = new OutputStreamWriter(out, encoding);
         writer.write("<?xml version=\"1.0\" encoding=\"" + encoding + "\"?>\n");
-        writeNode(writer, node, 0, true);
+        writeNode(writer, document.getRootNode(), 0, true);
         writer.close();
     }
 

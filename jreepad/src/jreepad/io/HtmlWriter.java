@@ -28,6 +28,7 @@ import java.util.Enumeration;
 
 import jreepad.JreepadArticle;
 import jreepad.JreepadNode;
+import jreepad.JreepadTreeModel;
 
 /**
  * Writes the Jreepad tree as HTML.
@@ -66,13 +67,13 @@ public class HtmlWriter
     /**
      * Writes the tree to the output stream starting from selected node.
      * @param out  output stream
-     * @param node  root node
+     * @param document  document to export
      */
-    public void write(OutputStream out, JreepadNode node)
+    public void write(OutputStream out, JreepadTreeModel document)
         throws IOException
     {
         Writer writer = new OutputStreamWriter(out, encoding);
-        write(writer, node);
+        write(writer, document.getRootNode());
         out.close();
     }
 

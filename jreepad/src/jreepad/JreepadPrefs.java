@@ -120,8 +120,8 @@ public class JreepadPrefs //implements Serializable
 
   public boolean addQuotesToCsvOutput;
 
-  static final int FILETYPE_XML = 0;
-  static final int FILETYPE_HJT = 1;
+  public static final int FILETYPE_XML = 0;
+  public static final int FILETYPE_HJT = 1;
   int mainFileType;
   public static final String[] mainFileTypes = {"Jreepad XML","Treepad HJT"};
 

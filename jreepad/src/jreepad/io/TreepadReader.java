@@ -27,6 +27,8 @@ import java.util.Stack;
 
 import jreepad.JreepadArticle;
 import jreepad.JreepadNode;
+import jreepad.JreepadPrefs;
+import jreepad.JreepadTreeModel;
 
 /**
  * Reads a treepad file into Jreepad.
@@ -48,7 +50,7 @@ public class TreepadReader implements JreepadReader
         this.autoDetectHtmlArticles = autoDetectHtmlArticles;
     }
 
-    public JreepadNode read(InputStream in)
+    public JreepadTreeModel read(InputStream in)
         throws IOException
     {
         LineNumberReader reader = new LineNumberReader(new InputStreamReader(in, encoding));
@@ -118,7 +120,11 @@ public class TreepadReader implements JreepadReader
             }
             nodeStack.push(newNode);
         }
-        return rootNode;
+
+        JreepadTreeModel document = new JreepadTreeModel(rootNode);
+        document.setFileFormat(JreepadPrefs.FILETYPE_HJT);
+        document.setEncoding(encoding);
+        return document;
     }
 
     public boolean isAutoDetectHtmlArticles()

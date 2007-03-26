@@ -22,7 +22,7 @@ package jreepad.io;
 import java.io.IOException;
 import java.io.InputStream;
 
-import jreepad.JreepadNode;
+import jreepad.JreepadTreeModel;
 
 /**
  * Interface for classes that read Jreepad trees.
@@ -32,5 +32,5 @@ import jreepad.JreepadNode;
  */
 public interface JreepadReader
 {
-    public JreepadNode read(InputStream in) throws IOException;
+    public JreepadTreeModel read(InputStream in) throws IOException;
 }

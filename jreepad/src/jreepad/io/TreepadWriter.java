@@ -26,6 +26,7 @@ import java.io.Writer;
 import java.util.Enumeration;
 
 import jreepad.JreepadNode;
+import jreepad.JreepadTreeModel;
 
 /**
  * Writes the Jreepad tree as a Treepad file.
@@ -43,12 +44,12 @@ public class TreepadWriter
         this.encoding = encoding;
     }
 
-    public void write(OutputStream out, JreepadNode node)
+    public void write(OutputStream out, JreepadTreeModel document)
         throws IOException
     {
         Writer writer = new OutputStreamWriter(out, encoding);
         writer.write("<Treepad version 2.7>\n");
-        writeNode(writer, node, 0);
+        writeNode(writer, document.getRootNode(), 0);
         writer.close();
     }
 
