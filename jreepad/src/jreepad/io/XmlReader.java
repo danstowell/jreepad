@@ -78,7 +78,7 @@ public class XmlReader implements JreepadReader
         // now: " + currentXmlContent);
 
         JreepadTreeModel document = new JreepadTreeModel(readNode(reader, currentXmlContent, 0).node);
-        document.setFileFormat(JreepadPrefs.FILETYPE_XML);
+        document.setFileType(JreepadPrefs.FILETYPE_XML);
         document.setEncoding(encoding);
         return document;
     }

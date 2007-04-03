@@ -8,7 +8,7 @@ import javax.swing.tree.TreePath;
 /**
  * The tree model.
  *
- * @version $Id: JreepadTreeModel.java,v 1.5 2007-03-26 11:49:24 pewu Exp $
+ * @version $Id: JreepadTreeModel.java,v 1.6 2007-04-03 12:41:30 pewu Exp $
  */
 public class JreepadTreeModel extends DefaultTreeModel
 {
@@ -20,7 +20,7 @@ public class JreepadTreeModel extends DefaultTreeModel
     /**
      * Format of the loaded file.
      */
-    private int fileFormat = -1;
+    private int fileType = -1;
 
     /**
      * Encoding of the loaded file.
@@ -90,9 +90,9 @@ public class JreepadTreeModel extends DefaultTreeModel
         setContentSaved(true);
     }
 
-    public void setFileFormat(int fileFormat)
+    public void setFileType(int fileType)
     {
-        this.fileFormat = fileFormat;
+        this.fileType = fileType;
     }
 
     public File getSaveLocation()
@@ -100,9 +100,9 @@ public class JreepadTreeModel extends DefaultTreeModel
         return saveLocation;
     }
 
-    public int getFileFormat()
+    public int getFileType()
     {
-        return fileFormat;
+        return fileType;
     }
 
     public String getEncoding()

@@ -1280,8 +1280,6 @@ public class JreepadViewer extends JFrame // implements ApplicationListener
     openFile(fileChooser.getSelectedFile());
     setCursor(Cursor.getDefaultCursor());
     updateUndoRedoMenuState();
-    validate();
-    repaint();
   } // End of: openAction()
 
   public boolean openFile(File file)
@@ -1306,6 +1304,8 @@ public class JreepadViewer extends JFrame // implements ApplicationListener
 
     getPrefs().exportLocation = getPrefs().importLocation = file;
     setTitleBasedOnFilename(file.getName());
+    validate();
+    repaint();
     return true;
   }
 
@@ -1342,11 +1342,14 @@ public class JreepadViewer extends JFrame // implements ApplicationListener
     public void actionPerformed(ActionEvent e)
     {
         int fileType = getPrefs().mainFileType;
+        if (document.getSaveLocation() != null)
+            fileType = document.getFileType();
+
         File saveLocation = document.getSaveLocation();
         if(askForFilename || saveLocation==null || (saveLocation.isFile() && !saveLocation.canWrite()))
         {
           // Ask for filename
-          JFileChooser fileChooser = new SaveFileChooser(getPrefs().mainFileType);
+          SaveFileChooser fileChooser = new SaveFileChooser(getPrefs().mainFileType);
           fileChooser.setCurrentDirectory(getPrefs().openLocation);
 
           fileChooser.setSelectedFile(new File(document.getRootNode().getTitle() +
@@ -1357,10 +1360,7 @@ public class JreepadViewer extends JFrame // implements ApplicationListener
               return; // No file chosen
           }
           saveLocation = fileChooser.getSelectedFile();
-          if (fileChooser.getFileFilter() == SaveFileChooser.JREEPAD_FILE_FILTER)
-              fileType = JreepadPrefs.FILETYPE_XML;
-          else if (fileChooser.getFileFilter() == SaveFileChooser.TREEPAD_FILE_FILTER)
-              fileType = JreepadPrefs.FILETYPE_HJT;
+          fileType = fileChooser.getFileType();
         }
         getPrefs().openLocation = saveLocation; // Remember the file's directory
 
@@ -1382,6 +1382,7 @@ public class JreepadViewer extends JFrame // implements ApplicationListener
             writer = new XmlWriter(encoding);
           else
             writer = new TreepadWriter(encoding);
+
           OutputStream fos = new FileOutputStream(saveLocation);
           writer.write(fos, document);
           fos.close();
@@ -1390,7 +1391,12 @@ public class JreepadViewer extends JFrame // implements ApplicationListener
             com.apple.eio.FileManager.setFileTypeAndCreator(saveLocation.toString(),
                     appleAppCode, appleAppCode);
           }
+          
+          // When calling "Save As..." remember the _new_ file settings
           document.setSaveLocation(saveLocation);
+          document.setFileType(fileType);
+          document.setEncoding(encoding);
+          
           updateWindowTitle();
           addToOpenRecentMenu(saveLocation);
           savePreferencesFile();

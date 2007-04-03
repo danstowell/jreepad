@@ -23,14 +23,38 @@ public class SaveFileChooser extends JFileChooser
      */
     public static final FileFilter TREEPAD_FILE_FILTER = new ExtensionFileFilter("Treepad file (*.hjt)", "hjt");
 
+    private int defaultFileFormat;
+
     public SaveFileChooser(int defaultFileFormat)
     {
+        this.defaultFileFormat = defaultFileFormat;
+
         addChoosableFileFilter(JREEPAD_FILE_FILTER);
         addChoosableFileFilter(TREEPAD_FILE_FILTER);
-        if (defaultFileFormat == JreepadPrefs.FILETYPE_XML)
-            setFileFilter(JREEPAD_FILE_FILTER);
-        else
+
+        switch (defaultFileFormat)
+        {
+        case JreepadPrefs.FILETYPE_HJT:
             setFileFilter(TREEPAD_FILE_FILTER);
+            break;
+        case JreepadPrefs.FILETYPE_XML: // default
+        default:
+            setFileFilter(JREEPAD_FILE_FILTER);
+            break;
+        }
+    }
+
+    /**
+     * Returns the selected file type or the default file type
+     * if "All files" filter is selected.
+     */
+    public int getFileType()
+    {
+        if (getFileFilter() == SaveFileChooser.JREEPAD_FILE_FILTER)
+            return JreepadPrefs.FILETYPE_XML;
+        if (getFileFilter() == SaveFileChooser.TREEPAD_FILE_FILTER)
+            return JreepadPrefs.FILETYPE_HJT;
+        return defaultFileFormat;
     }
 
     public void approveSelection()

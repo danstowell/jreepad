@@ -22,7 +22,7 @@ package jreepad.io;
 import java.io.IOException;
 import java.io.InputStream;
 
-import jreepad.JreepadNode;
+import jreepad.JreepadTreeModel;
 
 /**
  * Reads a Jreepad file automatically detecting file type (XML or HJT).
@@ -42,7 +42,7 @@ public class AutoDetectReader
         treepadReader = new TreepadReader(encoding, autoDetectHtmlArticles);
     }
 
-    public JreepadNode read(InputStream in)
+    public JreepadTreeModel read(InputStream in)
         throws IOException
     {
         in = new RewindableInputStream(in);

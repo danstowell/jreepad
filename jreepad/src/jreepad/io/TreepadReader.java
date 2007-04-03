@@ -122,7 +122,7 @@ public class TreepadReader implements JreepadReader
         }
 
         JreepadTreeModel document = new JreepadTreeModel(rootNode);
-        document.setFileFormat(JreepadPrefs.FILETYPE_HJT);
+        document.setFileType(JreepadPrefs.FILETYPE_HJT);
         document.setEncoding(encoding);
         return document;
     }
