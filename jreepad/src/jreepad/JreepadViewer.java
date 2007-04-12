@@ -556,6 +556,7 @@ public class JreepadViewer extends JFrame // implements ApplicationListener
 	  addChildMenuItem.setMnemonic('c');
 	  addChildMenuItem.setAccelerator(KeyStroke.getKeyStroke('D', MENU_MASK));
 	  newFromClipboardMenuItem.setAccelerator(KeyStroke.getKeyStroke('M', MENU_MASK));
+      editNodeTitleMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F2, 0));
 	  upMenuItem.setMnemonic('u');
 	  upMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_UP, MENU_MASK | java.awt.Event.ALT_MASK));
 	  downMenuItem.setMnemonic('d');

@@ -253,12 +253,14 @@ public class JreepadView extends Box
     this.add(splitPane);
 //      editorPane.setSize(articleView.getSize());
 //      editorPane.setSize(articleView.getViewport().getViewSize());
+    getPrefs().viewWhich = JreepadPrefs.VIEW_BOTH;
   }
   private void setViewTreeOnly()
   {   this.remove(splitPane);
       this.remove(articlePane);
       this.add(treeView);
       treeView.setSize(getSize());
+    getPrefs().viewWhich = JreepadPrefs.VIEW_TREE;
   }
   private void setViewArticleOnly()
   {
@@ -267,6 +269,7 @@ public class JreepadView extends Box
      ensureCorrectArticleRenderMode();
      this.add(articlePane);
      articlePane.setSize(getSize());
+    getPrefs().viewWhich = JreepadPrefs.VIEW_ARTICLE;
   }
 
   private void setCurrentNode(JreepadNode n)
@@ -936,6 +939,11 @@ public class JreepadView extends Box
 
   public void editNodeTitleAction()
   {
+    if(getPrefs().viewWhich == JreepadPrefs.VIEW_ARTICLE)
+    {
+      setViewMode(JreepadPrefs.VIEW_BOTH);
+    }
+    
     tree.startEditingAtPath(tree.getSelectionPath());
   }
 

@@ -151,7 +151,7 @@ public class JreepadPrefs //implements Serializable
     autoSavePeriod = prefs.getInt("AUTOSAVEPERIOD", 10);
     autoSave = prefs.getBoolean("AUTOSAVE", false);
 
-    viewWhich = prefs.getInt("VIEWWHICH", 0);
+    viewWhich = prefs.getInt("VIEWWHICH", VIEW_BOTH);
 
     viewToolbar = prefs.getBoolean("VIEWTOOLBAR", true);
 
