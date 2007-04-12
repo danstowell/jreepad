@@ -622,7 +622,7 @@ public class JreepadViewer extends JFrame // implements ApplicationListener
 
 	actionsMenu.add(new JSeparator());
 
-	characterWrapArticleMenuItem = new JMenuItem(lang.getString("MENUITEM_HARDWRAP1") + getPrefs().characterWrapWidth + lang.getString("MENUITEM_HARDWRAP2")); //);
+	characterWrapArticleMenuItem = new JMenuItem(lang.getString("MENUITEM_HARDWRAP1") + " " + getPrefs().characterWrapWidth + " " + lang.getString("MENUITEM_HARDWRAP2")); //);
 	characterWrapArticleMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { wrapContentToCharWidth(); }});
 	actionsMenu.add(characterWrapArticleMenuItem);
 
