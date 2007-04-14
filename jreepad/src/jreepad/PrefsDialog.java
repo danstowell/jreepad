@@ -46,30 +46,60 @@ public class PrefsDialog extends JDialog
     private JComboBox htmlExportAnchorTypeSelector;
     private JButton prefsOkButton;
     private JButton prefsCancelButton;
+    private JButton prefsDateInfoButton;
+    private PrefsDialog self; // bleh - yucky but needed by actionlistener
 
     public PrefsDialog(Frame owner)
     {
         super(owner, JreepadViewer.lang.getString("PREFS_WINDOWTITLE"), true);
         setVisible(false);
-
-        Box vBox = Box.createVerticalBox();
+        self = this;
+        
+        Box hBox, vBox;
+        
+        vBox = Box.createVerticalBox();
         vBox.setAlignmentX(Component.LEFT_ALIGNMENT);
         Box genPrefVBox = Box.createVerticalBox();
         vBox.setAlignmentX(Component.LEFT_ALIGNMENT);
+        
         genPrefVBox.add(loadLastFileOnOpenCheckBox = new JCheckBox(JreepadViewer.lang
             .getString("PREFS_LOADLASTFILEONOPEN"), getPrefs().loadLastFileOnOpen));
         loadLastFileOnOpenCheckBox.setHorizontalAlignment(SwingConstants.LEFT);
         loadLastFileOnOpenCheckBox.setAlignmentX(Component.LEFT_ALIGNMENT);
+        
         genPrefVBox.add(autoDateNodesCheckBox = new JCheckBox(JreepadViewer.lang
             .getString("PREFS_AUTODATE_NODES"), getPrefs().autoDateInArticles));
         autoDateNodesCheckBox.setHorizontalAlignment(SwingConstants.LEFT);
         autoDateNodesCheckBox.setAlignmentX(Component.LEFT_ALIGNMENT);
+        
+        hBox = Box.createHorizontalBox();
+        hBox.setAlignmentX(Component.LEFT_ALIGNMENT);
+        hBox.add(new JLabel(JreepadViewer.lang.getString("PREFS_DATEFORMAT_LABEL"), SwingConstants.LEFT));
+        dateFormatField = new JTextField(getPrefs().dateFormat, 20);
+        hBox.add(dateFormatField);
+        //hBox.add(new JLabel("(" + JreepadViewer.lang.getString("PREFS_DATEFORMAT_LABEL2") + ")", SwingConstants.LEFT));
+
+        hBox.add(prefsDateInfoButton = new JButton(JreepadViewer.lang.getString("INFO")));
+        prefsDateInfoButton.addActionListener(new ActionListener()
+            {
+                public void actionPerformed(ActionEvent e)
+                {
+                    JOptionPane.showMessageDialog(self,
+                    JreepadViewer.lang.getString("HELP_DATEFORMAT")
+                    ,
+                    JreepadViewer.lang.getString("HELP_DATEFORMAT_TITLE"),
+                    JOptionPane.INFORMATION_MESSAGE);
+                }
+            });
+
+        genPrefVBox.add(hBox);
+
         genPrefVBox.add(autoDetectHtmlCheckBox = new JCheckBox(JreepadViewer.lang
             .getString("PREFS_AUTODETECT_HTML"), getPrefs().autoDetectHtmlArticles));
         autoDetectHtmlCheckBox.setHorizontalAlignment(SwingConstants.LEFT);
         autoDetectHtmlCheckBox.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        Box hBox = Box.createHorizontalBox();
+        hBox = Box.createHorizontalBox();
         hBox.setAlignmentX(Component.LEFT_ALIGNMENT);
         // hBox.add(Box.createGlue());
         hBox.add(new JLabel(JreepadViewer.lang.getString("PREFS_CHAR_ENCODING"), SwingConstants.LEFT));
@@ -97,14 +127,6 @@ public class PrefsDialog extends JDialog
             getPrefs().showGreenStrip));
         showGreenStripCheckBox.setAlignmentX(Component.LEFT_ALIGNMENT);
         showGreenStripCheckBox.setHorizontalAlignment(SwingConstants.LEFT);
-
-        hBox = Box.createHorizontalBox();
-        hBox.setAlignmentX(Component.LEFT_ALIGNMENT);
-        hBox.add(new JLabel(JreepadViewer.lang.getString("PREFS_DATEFORMAT_LABEL"), SwingConstants.LEFT));
-        dateFormatField = new JTextField(getPrefs().dateFormat, 30);
-        hBox.add(dateFormatField);
-        hBox.add(new JLabel("(" + JreepadViewer.lang.getString("PREFS_DATEFORMAT_LABEL2") + ")", SwingConstants.LEFT));
-        genPrefVBox.add(hBox);
 
         JPanel genPanel = new JPanel();
         genPanel.setAlignmentX(Component.LEFT_ALIGNMENT);

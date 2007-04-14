@@ -2278,6 +2278,7 @@ lang.getString("HELP_LICENSE") + "\n\n           http://www.gnu.org/copyleft/gpl
               JOptionPane.INFORMATION_MESSAGE);
   }
 
+
 /*
   // Replacement for the "JSpinner" which is not available in Java 1.3 or 1.2
   static class DSpinner extends Box
