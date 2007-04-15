@@ -4,7 +4,7 @@
 		Java treepad - personal information manager
 	</description>
 
-	<property name="curVersion" value="1.6dev" />
+	<property name="curVersion" value="1.6rc1" />
 
 
 	<property name="srcDir" location="src" />

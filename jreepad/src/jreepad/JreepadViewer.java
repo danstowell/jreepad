@@ -92,6 +92,9 @@ import edu.stanford.ejalbert.exception.UnsupportedOperatingSystemException;
 
 public class JreepadViewer extends JFrame // implements ApplicationListener
 {
+  // Jreepad version, to appear in "about" box etc
+  public static String version = "1.6 rc1";
+
   private static Vector theApps = new Vector(1,1);
   private Box toolBar, toolBarIconic;
   private JreepadView theJreepad;
@@ -1820,15 +1823,12 @@ public class JreepadViewer extends JFrame // implements ApplicationListener
   private void aboutAction()
   {
               JOptionPane.showMessageDialog(this,
+              "Jreepad v " + version + "\n\n" + 
               lang.getString("HELP_ABOUT") +
               "\n" +
-              "\nJreepad \u00A9 2004 Dan Stowell" +
+              "\nJreepad \u00A9 2004-2007 Dan Stowell" +
               "\n" +
-              "\nJreepad project website:" +
-              "\n  http://jreepad.sourceforge.net" +
-              "\n" +
-              "\nTreepad website:" +
-              "\n  http://www.treepad.com"
+              "\nhttp://jreepad.sourceforge.net"
               ,
               "About Jreepad",
               JOptionPane.INFORMATION_MESSAGE);
