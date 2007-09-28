@@ -57,21 +57,6 @@ public class AutoDetectReader
 
         if (currentLine.startsWith("<?xml"))
         {
-            // Try and find out what character encoding to use
-            int encPos = currentLine.indexOf("encoding=");
-            String xmlEncoding = null;
-            if (encPos != -1)
-            {
-                xmlEncoding = currentLine.substring(encPos + 10);
-                encPos = xmlEncoding.indexOf("\"");
-                if (encPos == -1)
-                    encPos = xmlEncoding.indexOf("'");
-                if (encPos != -1)
-                    xmlEncoding = xmlEncoding.substring(0, encPos);
-                // System.out.println("Start of XML loading: decided on the following character
-                // encoding: " + xmlEncoding);
-            }
-            xmlReader.setEncoding(xmlEncoding);
             return xmlReader.read(in);
         }
         else if ((currentLine.toLowerCase().startsWith("<treepad") && currentLine.endsWith(">")))

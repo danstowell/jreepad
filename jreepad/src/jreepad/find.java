@@ -30,10 +30,14 @@ import java.awt.event.*;
 import java.util.Enumeration;
 import java.awt.print.*;
 */
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.ObjectInputStream;
+import java.util.Vector;
 
 import javax.swing.tree.TreePath;
-import java.util.Vector;
 
 import jreepad.io.AutoDetectReader;
 import jreepad.io.JreepadReader;
@@ -197,9 +201,9 @@ public class find
      {
       // De-serialize the prefs file (i.e. load it)...
       JreepadPrefs jreepref;
-	  ObjectInputStream prefsLoader = new ObjectInputStream(new FileInputStream(prefsFile));
-	  jreepref = (JreepadPrefs)prefsLoader.readObject();
-	  prefsLoader.close();
+      ObjectInputStream prefsLoader = new ObjectInputStream(new FileInputStream(prefsFile));
+      jreepref = (JreepadPrefs)prefsLoader.readObject();
+      prefsLoader.close();
 
       // ...and take some data from it
       encoding = jreepref.getEncoding();
@@ -231,29 +235,29 @@ public class find
 
     // Load the file to be searched
     JreepadNode root = new JreepadNode();
-	try
-	{
+    try
+    {
         InputStream in = new FileInputStream(userFile);
         JreepadReader reader = new AutoDetectReader(encoding, false);
         root = reader.read(in).getRootNode();
-	}
-	catch(IOException err)
-	{
-	  System.out.println("File input error: " + err);
-	  System.exit(1);
-	}
+    }
+    catch(IOException err)
+    {
+      System.out.println("File input error: " + err);
+      System.exit(1);
+    }
 
 
     // Carry out the search
     JreepadSearcher searcher = new JreepadSearcher(root);
     searcher.performSearch(inNodes, inArticles, new TreePath(root),
-  							orNotAnd, caseSensitive, maxResults);
+                              orNotAnd, caseSensitive, maxResults);
     JreepadSearcher.JreepadSearchResult[] res = searcher.getSearchResults();
 
     if(res.length==0)
     {
-	  System.out.println("No matches.");
-	  System.exit(1);
+      System.out.println("No matches.");
+      System.exit(1);
     }
 
     // Output the results
@@ -276,7 +280,7 @@ public class find
         String outputEncoding = "ISO-8859-1"; // FIXME: What should the encoding be?
         JreepadWriter writer;
         if (outputFormat == OUTPUT_XML)
-            writer= new XmlWriter(outputEncoding);
+            writer= new XmlWriter();
         else
             writer= new TreepadWriter(outputEncoding);
         writer.write(System.out, new JreepadTreeModel(resultsParent));

@@ -79,11 +79,13 @@ import javax.swing.undo.CannotUndoException;
 import javax.swing.undo.UndoManager;
 
 import jreepad.io.AutoDetectReader;
+import jreepad.io.EncryptedWriter;
 import jreepad.io.HtmlWriter;
 import jreepad.io.JreepadReader;
 import jreepad.io.JreepadWriter;
 import jreepad.io.TreepadWriter;
 import jreepad.io.XmlWriter;
+import jreepad.ui.PasswordDialog;
 import jreepad.ui.SaveFileChooser;
 import edu.stanford.ejalbert.BrowserLauncher;
 import edu.stanford.ejalbert.exception.BrowserLaunchingExecutionException;
@@ -155,9 +157,9 @@ public class JreepadViewer extends JFrame // implements ApplicationListener
   private JMenuItem redoMenuItem;
   private JMenuItem webSearchMenuItem;
   private JMenuItem characterWrapArticleMenuItem;
-	private JCheckBoxMenuItem viewToolbarIconsMenuItem;
-	private JCheckBoxMenuItem viewToolbarTextMenuItem;
-	private JCheckBoxMenuItem viewToolbarOffMenuItem;
+    private JCheckBoxMenuItem viewToolbarIconsMenuItem;
+    private JCheckBoxMenuItem viewToolbarTextMenuItem;
+    private JCheckBoxMenuItem viewToolbarOffMenuItem;
 
   private ColouredStrip funkyGreenStrip;
 
@@ -247,26 +249,26 @@ public class JreepadViewer extends JFrame // implements ApplicationListener
 
     // Establish the autosave thread
     autoSaveThread = new Thread("Autosave thread")
-    					{
-    					  public void run()
-    					  {
-    					    while(getPrefs().autoSave)
-    					    {
-    					      try
-    					      {
-    					        // Sleep for a bit...
-    					        sleep(60000L * getPrefs().autoSavePeriod);
-    					        yield();
-    					        // ...then if the saveLocation != null, trigger saveAction()
-    					        if(getPrefs().autoSave && document.getSaveLocation() != null)
+                        {
+                          public void run()
+                          {
+                            while(getPrefs().autoSave)
+                            {
+                              try
+                              {
+                                // Sleep for a bit...
+                                sleep(60000L * getPrefs().autoSavePeriod);
+                                yield();
+                                // ...then if the saveLocation != null, trigger saveAction()
+                                if(getPrefs().autoSave && document.getSaveLocation() != null)
                                   new SaveAction().actionPerformed(null);
                                 else
-								  updateWindowTitle();
-    					      }
-    					      catch(InterruptedException e){}
-    					    }
-    					  }
-    					};
+                                  updateWindowTitle();
+                              }
+                              catch(InterruptedException e){}
+                            }
+                          }
+                        };
     autoSaveThread.setPriority(Thread.MIN_PRIORITY);
     if(getPrefs().autoSave)
       autoSaveThread.start();
@@ -330,13 +332,13 @@ public class JreepadViewer extends JFrame // implements ApplicationListener
   private void establishMenus()
   {
     // Create the menu bar
-	JMenuBar menuBar = new JMenuBar();
+    JMenuBar menuBar = new JMenuBar();
 
     // Add menus
     menuBar.add(createFileMenu());
-	menuBar.add(createEditMenu());
-	menuBar.add(createActionsMenu());
-	menuBar.add(createViewMenu());
+    menuBar.add(createEditMenu());
+    menuBar.add(createActionsMenu());
+    menuBar.add(createViewMenu());
     menuBar.add(createOptionsMenu());
     menuBar.add(createHelpMenu());
     setJMenuBar(menuBar);
@@ -347,81 +349,81 @@ public class JreepadViewer extends JFrame // implements ApplicationListener
    */
   private JMenu createFileMenu()
   {
-	  JMenu fileMenu = new JMenu(lang.getString("MENU_FILE")); //"File");
-	  fileMenu.setMnemonic(KeyEvent.VK_F);
+      JMenu fileMenu = new JMenu(lang.getString("MENU_FILE")); //"File");
+      fileMenu.setMnemonic(KeyEvent.VK_F);
 
-	  JMenuItem newMenuItem = new JMenuItem(lang.getString("MENUITEM_NEW")); //"New");
-	  newMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { newAction();}});
-	  fileMenu.add(newMenuItem);
+      JMenuItem newMenuItem = new JMenuItem(lang.getString("MENUITEM_NEW")); //"New");
+      newMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { newAction();}});
+      fileMenu.add(newMenuItem);
 
-	  JMenuItem openMenuItem = new JMenuItem(lang.getString("MENUITEM_OPEN")); //"Open");
-	  openMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {openAction();}});
-	  fileMenu.add(openMenuItem);
+      JMenuItem openMenuItem = new JMenuItem(lang.getString("MENUITEM_OPEN")); //"Open");
+      openMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {openAction();}});
+      fileMenu.add(openMenuItem);
 
-	  openRecentMenu = new JMenu(lang.getString("MENUITEM_OPENRECENT")); //"Open recent");
-	  updateOpenRecentMenu();
-	  fileMenu.add(openRecentMenu);
+      openRecentMenu = new JMenu(lang.getString("MENUITEM_OPENRECENT")); //"Open recent");
+      updateOpenRecentMenu();
+      fileMenu.add(openRecentMenu);
 
       fileMenu.add(new SaveAction()); // Save
       fileMenu.add(new SaveAction(true)); // Save As
 
-	  JMenuItem backupToMenuItem = new JMenuItem(lang.getString("MENUITEM_BACKUPTO")); //"Backup to...");
-	  backupToMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {backupToAction();}});
-	  fileMenu.add(backupToMenuItem);
+      JMenuItem backupToMenuItem = new JMenuItem(lang.getString("MENUITEM_BACKUPTO")); //"Backup to...");
+      backupToMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {backupToAction();}});
+      fileMenu.add(backupToMenuItem);
 
-	  fileMenu.add(new JSeparator());
+      fileMenu.add(new JSeparator());
 
-	  JMenuItem printSubtreeMenuItem = new JMenuItem(lang.getString("MENUITEM_PRINTSUBTREE")); //"Print subtree");
-	  printSubtreeMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {subtreeToBrowserForPrintAction();}});
-	  fileMenu.add(printSubtreeMenuItem);
+      JMenuItem printSubtreeMenuItem = new JMenuItem(lang.getString("MENUITEM_PRINTSUBTREE")); //"Print subtree");
+      printSubtreeMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {subtreeToBrowserForPrintAction();}});
+      fileMenu.add(printSubtreeMenuItem);
 
-	  JMenuItem printArticleMenuItem = new JMenuItem(lang.getString("MENUITEM_PRINTARTICLE")); //"Print article");
-	  printArticleMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {articleToBrowserForPrintAction();}});
-	  fileMenu.add(printArticleMenuItem);
+      JMenuItem printArticleMenuItem = new JMenuItem(lang.getString("MENUITEM_PRINTARTICLE")); //"Print article");
+      printArticleMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {articleToBrowserForPrintAction();}});
+      fileMenu.add(printArticleMenuItem);
 
-	  fileMenu.add(new JSeparator());
-	  JMenu importMenu = new JMenu(lang.getString("MENUITEM_IMPORT")); //"Import...");
-	  fileMenu.add(importMenu);
+      fileMenu.add(new JSeparator());
+      JMenu importMenu = new JMenu(lang.getString("MENUITEM_IMPORT")); //"Import...");
+      fileMenu.add(importMenu);
 
-	  JMenuItem importHjtMenuItem = new JMenuItem(lang.getString("MENUITEM_IMPORT_HJT")); //"...Treepad file as subtree");
-	  importHjtMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {importAction(FILE_FORMAT_HJT);}});
-	  importMenu.add(importHjtMenuItem);
+      JMenuItem importHjtMenuItem = new JMenuItem(lang.getString("MENUITEM_IMPORT_HJT")); //"...Treepad file as subtree");
+      importHjtMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {importAction(FILE_FORMAT_HJT);}});
+      importMenu.add(importHjtMenuItem);
 
-	  JMenuItem importTextMenuItem = new JMenuItem(lang.getString("MENUITEM_IMPORT_TEXTFILES")); //"...text file(s) as child node(s)");
-	  importTextMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {importAction(FILE_FORMAT_TEXT);}});
-	  importMenu.add(importTextMenuItem);
+      JMenuItem importTextMenuItem = new JMenuItem(lang.getString("MENUITEM_IMPORT_TEXTFILES")); //"...text file(s) as child node(s)");
+      importTextMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {importAction(FILE_FORMAT_TEXT);}});
+      importMenu.add(importTextMenuItem);
 
-	  JMenuItem importTextAsListMenuItem = new JMenuItem(lang.getString("MENUITEM_IMPORT_TEXTLIST")); //"...text list file, one-child-per-line");
-	  importTextAsListMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {importAction(FILE_FORMAT_TEXTASLIST);}});
-	  importMenu.add(importTextAsListMenuItem);
+      JMenuItem importTextAsListMenuItem = new JMenuItem(lang.getString("MENUITEM_IMPORT_TEXTLIST")); //"...text list file, one-child-per-line");
+      importTextAsListMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {importAction(FILE_FORMAT_TEXTASLIST);}});
+      importMenu.add(importTextAsListMenuItem);
 
-	  fileMenu.add(createExportMenu());
+      fileMenu.add(createExportMenu());
 
-	  fileMenu.add(new JSeparator());
-	  if(!MAC_OS_X)
-	  {
-		  JMenuItem quitMenuItem = new JMenuItem(lang.getString("MENUITEM_QUIT")); //"Quit");
-		  quitMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { quitAction(); }});
-		  fileMenu.add(quitMenuItem);
-		  quitMenuItem.setMnemonic('Q');
-		  quitMenuItem.setAccelerator(KeyStroke.getKeyStroke('Q', MENU_MASK));
-	  }
+      fileMenu.add(new JSeparator());
+      if(!MAC_OS_X)
+      {
+          JMenuItem quitMenuItem = new JMenuItem(lang.getString("MENUITEM_QUIT")); //"Quit");
+          quitMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { quitAction(); }});
+          fileMenu.add(quitMenuItem);
+          quitMenuItem.setMnemonic('Q');
+          quitMenuItem.setAccelerator(KeyStroke.getKeyStroke('Q', MENU_MASK));
+      }
 
-	  newMenuItem.setMnemonic('N');
-	  newMenuItem.setAccelerator(KeyStroke.getKeyStroke('N', MENU_MASK));
-	  openMenuItem.setMnemonic('O');
-	  openMenuItem.setAccelerator(KeyStroke.getKeyStroke('O', MENU_MASK));
-	  openRecentMenu.setMnemonic('R');
-	  printSubtreeMenuItem.setMnemonic('P');
-	  printSubtreeMenuItem.setAccelerator(KeyStroke.getKeyStroke('P', MENU_MASK));
-	  printArticleMenuItem.setAccelerator(KeyStroke.getKeyStroke('P', MENU_MASK | java.awt.Event.SHIFT_MASK));
-	  backupToMenuItem.setMnemonic('B');
-	  importMenu.setMnemonic('I');
-	  importHjtMenuItem.setMnemonic('f');
-	  importTextMenuItem.setMnemonic('t');
-	  importTextAsListMenuItem.setMnemonic('l');
+      newMenuItem.setMnemonic('N');
+      newMenuItem.setAccelerator(KeyStroke.getKeyStroke('N', MENU_MASK));
+      openMenuItem.setMnemonic('O');
+      openMenuItem.setAccelerator(KeyStroke.getKeyStroke('O', MENU_MASK));
+      openRecentMenu.setMnemonic('R');
+      printSubtreeMenuItem.setMnemonic('P');
+      printSubtreeMenuItem.setAccelerator(KeyStroke.getKeyStroke('P', MENU_MASK));
+      printArticleMenuItem.setAccelerator(KeyStroke.getKeyStroke('P', MENU_MASK | java.awt.Event.SHIFT_MASK));
+      backupToMenuItem.setMnemonic('B');
+      importMenu.setMnemonic('I');
+      importHjtMenuItem.setMnemonic('f');
+      importTextMenuItem.setMnemonic('t');
+      importTextAsListMenuItem.setMnemonic('l');
 
-	  return fileMenu;
+      return fileMenu;
   }
 
   /**
@@ -429,41 +431,41 @@ public class JreepadViewer extends JFrame // implements ApplicationListener
    */
   private JMenu createExportMenu()
   {
-	  JMenu exportMenu = new JMenu(lang.getString("MENUITEM_EXPORT")); //"Export selected...");
+      JMenu exportMenu = new JMenu(lang.getString("MENUITEM_EXPORT")); //"Export selected...");
 
-	  JMenuItem exportHjtMenuItem = new JMenuItem(lang.getString("MENUITEM_EXPORT_HJT")); //"...subtree to Treepad HJT file");
-	  exportHjtMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {exportAction(FILE_FORMAT_HJT);}});
-	  exportMenu.add(exportHjtMenuItem);
+      JMenuItem exportHjtMenuItem = new JMenuItem(lang.getString("MENUITEM_EXPORT_HJT")); //"...subtree to Treepad HJT file");
+      exportHjtMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {exportAction(FILE_FORMAT_HJT);}});
+      exportMenu.add(exportHjtMenuItem);
 
-	  JMenuItem exportHtmlMenuItem = new JMenuItem(lang.getString("MENUITEM_EXPORT_HTML")); //"...subtree to HTML");
-	  exportHtmlMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {exportAction(FILE_FORMAT_HTML);}});
-	  exportMenu.add(exportHtmlMenuItem);
+      JMenuItem exportHtmlMenuItem = new JMenuItem(lang.getString("MENUITEM_EXPORT_HTML")); //"...subtree to HTML");
+      exportHtmlMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {exportAction(FILE_FORMAT_HTML);}});
+      exportMenu.add(exportHtmlMenuItem);
 
-	  JMenuItem exportSimpleXmlMenuItem = new JMenuItem(lang.getString("MENUITEM_EXPORT_XML")); //"...subtree to XML");
-	  exportSimpleXmlMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {exportAction(FILE_FORMAT_XML);}});
-	  exportMenu.add(exportSimpleXmlMenuItem);
+      JMenuItem exportSimpleXmlMenuItem = new JMenuItem(lang.getString("MENUITEM_EXPORT_XML")); //"...subtree to XML");
+      exportSimpleXmlMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {exportAction(FILE_FORMAT_XML);}});
+      exportMenu.add(exportSimpleXmlMenuItem);
 
-	  JMenuItem exportListMenuItem = new JMenuItem(lang.getString("MENUITEM_EXPORT_TEXTLIST")); //"...subtree to text list (node titles only)");
-	  exportListMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {exportAction(FILE_FORMAT_TEXTASLIST);}});
-	  exportMenu.add(exportListMenuItem);
+      JMenuItem exportListMenuItem = new JMenuItem(lang.getString("MENUITEM_EXPORT_TEXTLIST")); //"...subtree to text list (node titles only)");
+      exportListMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {exportAction(FILE_FORMAT_TEXTASLIST);}});
+      exportMenu.add(exportListMenuItem);
 
-	  exportMenu.add(new JSeparator());
+      exportMenu.add(new JSeparator());
 
-	  JMenuItem exportTextMenuItem = new JMenuItem(lang.getString("MENUITEM_EXPORT_ARTICLE")); //"...article to text file");
-	  exportTextMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {exportAction(FILE_FORMAT_TEXT);}});
-	  exportMenu.add(exportTextMenuItem);
+      JMenuItem exportTextMenuItem = new JMenuItem(lang.getString("MENUITEM_EXPORT_ARTICLE")); //"...article to text file");
+      exportTextMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {exportAction(FILE_FORMAT_TEXT);}});
+      exportMenu.add(exportTextMenuItem);
 
-	  JMenuItem exportSubtreeTextMenuItem = new JMenuItem(lang.getString("MENUITEM_EXPORT_ARTICLES")); //"...subtree articles to text file");
-	  exportSubtreeTextMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {exportAction(FILE_FORMAT_ARTICLESTOTEXT);}});
-	  exportMenu.add(exportSubtreeTextMenuItem);
+      JMenuItem exportSubtreeTextMenuItem = new JMenuItem(lang.getString("MENUITEM_EXPORT_ARTICLES")); //"...subtree articles to text file");
+      exportSubtreeTextMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {exportAction(FILE_FORMAT_ARTICLESTOTEXT);}});
+      exportMenu.add(exportSubtreeTextMenuItem);
 
-	  exportMenu.setMnemonic('E');
-	  exportHjtMenuItem.setMnemonic('f');
-	  exportHtmlMenuItem.setMnemonic('h');
-	  exportSimpleXmlMenuItem.setMnemonic('x');
-	  exportTextMenuItem.setMnemonic('t');
+      exportMenu.setMnemonic('E');
+      exportHjtMenuItem.setMnemonic('f');
+      exportHtmlMenuItem.setMnemonic('h');
+      exportSimpleXmlMenuItem.setMnemonic('x');
+      exportTextMenuItem.setMnemonic('t');
 
-	  return exportMenu;
+      return exportMenu;
   }
 
   /**
@@ -471,137 +473,137 @@ public class JreepadViewer extends JFrame // implements ApplicationListener
    */
   private JMenu createEditMenu()
   {
-	  JMenu editMenu = new JMenu(lang.getString("MENU_EDIT")); //"Edit");
-	  editMenu.setMnemonic(KeyEvent.VK_E);
+      JMenu editMenu = new JMenu(lang.getString("MENU_EDIT")); //"Edit");
+      editMenu.setMnemonic(KeyEvent.VK_E);
 
-	  undoMenuItem = new JMenuItem(lang.getString("MENUITEM_UNDO")); //"Undo");
-	  undoMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {
-		  undoAction();
-		  updateUndoRedoMenuState();}});
-	  editMenu.add(undoMenuItem);
+      undoMenuItem = new JMenuItem(lang.getString("MENUITEM_UNDO")); //"Undo");
+      undoMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {
+          undoAction();
+          updateUndoRedoMenuState();}});
+      editMenu.add(undoMenuItem);
 
-	  redoMenuItem = new JMenuItem(lang.getString("MENUITEM_REDO")); //"Redo");
-	  redoMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {
-		  redoAction();
-		  updateUndoRedoMenuState();}});
-	  editMenu.add(redoMenuItem);
+      redoMenuItem = new JMenuItem(lang.getString("MENUITEM_REDO")); //"Redo");
+      redoMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {
+          redoAction();
+          updateUndoRedoMenuState();}});
+      editMenu.add(redoMenuItem);
 
-	  editMenu.add(new JSeparator());
+      editMenu.add(new JSeparator());
 
-	  JMenuItem addAboveMenuItem = new JMenuItem(lang.getString("MENUITEM_ADDABOVE")); //"Add sibling above");
-	  addAboveMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { theJreepad.addNodeAbove(); updateWindowTitle();}});
-	  editMenu.add(addAboveMenuItem);
+      JMenuItem addAboveMenuItem = new JMenuItem(lang.getString("MENUITEM_ADDABOVE")); //"Add sibling above");
+      addAboveMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { theJreepad.addNodeAbove(); updateWindowTitle();}});
+      editMenu.add(addAboveMenuItem);
 
-	  JMenuItem addBelowMenuItem = new JMenuItem(lang.getString("MENUITEM_ADDBELOW")); //"Add sibling below");
-	  addBelowMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { theJreepad.addNodeBelow(); updateWindowTitle();}});
-	  editMenu.add(addBelowMenuItem);
+      JMenuItem addBelowMenuItem = new JMenuItem(lang.getString("MENUITEM_ADDBELOW")); //"Add sibling below");
+      addBelowMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { theJreepad.addNodeBelow(); updateWindowTitle();}});
+      editMenu.add(addBelowMenuItem);
 
-	  JMenuItem addChildMenuItem = new JMenuItem(lang.getString("MENUITEM_ADDCHILD")); //"Add child");
-	  addChildMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { theJreepad.addNode(); updateWindowTitle(); }});
-	  editMenu.add(addChildMenuItem);
+      JMenuItem addChildMenuItem = new JMenuItem(lang.getString("MENUITEM_ADDCHILD")); //"Add child");
+      addChildMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { theJreepad.addNode(); updateWindowTitle(); }});
+      editMenu.add(addChildMenuItem);
 
-	  editMenu.add(new JSeparator());
+      editMenu.add(new JSeparator());
 
-	  JMenuItem newFromClipboardMenuItem = new JMenuItem(lang.getString("MENUITEM_NEWFROMCLIPBOARD")); //"New node from clipboard");
-	  newFromClipboardMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { systemClipboardToNewNode(); }});
-	  editMenu.add(newFromClipboardMenuItem);
+      JMenuItem newFromClipboardMenuItem = new JMenuItem(lang.getString("MENUITEM_NEWFROMCLIPBOARD")); //"New node from clipboard");
+      newFromClipboardMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { systemClipboardToNewNode(); }});
+      editMenu.add(newFromClipboardMenuItem);
 
-	  editMenu.add(new JSeparator());
+      editMenu.add(new JSeparator());
 
-	  JMenuItem editNodeTitleMenuItem = new JMenuItem(lang.getString("MENUITEM_EDITNODETITLE")); //"Edit node title");
-	  editNodeTitleMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { theJreepad.editNodeTitleAction(); }});
-	  editMenu.add(editNodeTitleMenuItem);
+      JMenuItem editNodeTitleMenuItem = new JMenuItem(lang.getString("MENUITEM_EDITNODETITLE")); //"Edit node title");
+      editNodeTitleMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { theJreepad.editNodeTitleAction(); }});
+      editMenu.add(editNodeTitleMenuItem);
 
-	  editMenu.add(new JSeparator());
+      editMenu.add(new JSeparator());
 
-	  JMenuItem deleteMenuItem = new JMenuItem(lang.getString("MENUITEM_DELETENODE")); //"Delete node");
-	  deleteMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { deleteNodeAction(); }});
-	  editMenu.add(deleteMenuItem);
+      JMenuItem deleteMenuItem = new JMenuItem(lang.getString("MENUITEM_DELETENODE")); //"Delete node");
+      deleteMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { deleteNodeAction(); }});
+      editMenu.add(deleteMenuItem);
 
-	  editMenu.add(new JSeparator());
+      editMenu.add(new JSeparator());
 
-	  JMenuItem upMenuItem = new JMenuItem(lang.getString("MENUITEM_MOVEUP")); //"Move node up");
-	  upMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { theJreepad.moveCurrentNodeUp(); theJreepad.returnFocusToTree(); updateWindowTitle(); }});
-	  editMenu.add(upMenuItem);
+      JMenuItem upMenuItem = new JMenuItem(lang.getString("MENUITEM_MOVEUP")); //"Move node up");
+      upMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { theJreepad.moveCurrentNodeUp(); theJreepad.returnFocusToTree(); updateWindowTitle(); }});
+      editMenu.add(upMenuItem);
 
-	  JMenuItem downMenuItem = new JMenuItem(lang.getString("MENUITEM_MOVEDOWN")); //"Move node down");
-	  downMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { theJreepad.moveCurrentNodeDown(); theJreepad.returnFocusToTree(); updateWindowTitle(); }});
-	  editMenu.add(downMenuItem);
+      JMenuItem downMenuItem = new JMenuItem(lang.getString("MENUITEM_MOVEDOWN")); //"Move node down");
+      downMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { theJreepad.moveCurrentNodeDown(); theJreepad.returnFocusToTree(); updateWindowTitle(); }});
+      editMenu.add(downMenuItem);
 
-	  editMenu.add(new JSeparator());
+      editMenu.add(new JSeparator());
 
-	  JMenuItem indentMenuItem = new JMenuItem(lang.getString("MENUITEM_MOVEIN")); //"Indent node (demote)");
-	  indentMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { theJreepad.indentCurrentNode(); theJreepad.returnFocusToTree(); updateWindowTitle(); }});
-	  editMenu.add(indentMenuItem);
+      JMenuItem indentMenuItem = new JMenuItem(lang.getString("MENUITEM_MOVEIN")); //"Indent node (demote)");
+      indentMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { theJreepad.indentCurrentNode(); theJreepad.returnFocusToTree(); updateWindowTitle(); }});
+      editMenu.add(indentMenuItem);
 
-	  JMenuItem outdentMenuItem = new JMenuItem(lang.getString("MENUITEM_MOVEOUT")); //"Outdent node (promote)");
-	  outdentMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { theJreepad.outdentCurrentNode(); theJreepad.returnFocusToTree(); updateWindowTitle(); }});
-	  editMenu.add(outdentMenuItem);
+      JMenuItem outdentMenuItem = new JMenuItem(lang.getString("MENUITEM_MOVEOUT")); //"Outdent node (promote)");
+      outdentMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { theJreepad.outdentCurrentNode(); theJreepad.returnFocusToTree(); updateWindowTitle(); }});
+      editMenu.add(outdentMenuItem);
 
-	  editMenu.add(new JSeparator());
+      editMenu.add(new JSeparator());
 
-	  JMenuItem expandAllMenuItem = new JMenuItem(lang.getString("MENUITEM_EXPAND")); //"Expand subtree");
-	  expandAllMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { theJreepad.expandAllCurrentNode(); }});
-	  editMenu.add(expandAllMenuItem);
+      JMenuItem expandAllMenuItem = new JMenuItem(lang.getString("MENUITEM_EXPAND")); //"Expand subtree");
+      expandAllMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { theJreepad.expandAllCurrentNode(); }});
+      editMenu.add(expandAllMenuItem);
 
-	  JMenuItem collapseAllMenuItem = new JMenuItem(lang.getString("MENUITEM_COLLAPSE")); //"Collapse subtree");
-	  collapseAllMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { theJreepad.collapseAllCurrentNode(); }});
-	  editMenu.add(collapseAllMenuItem);
+      JMenuItem collapseAllMenuItem = new JMenuItem(lang.getString("MENUITEM_COLLAPSE")); //"Collapse subtree");
+      collapseAllMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { theJreepad.collapseAllCurrentNode(); }});
+      editMenu.add(collapseAllMenuItem);
 
-	  undoMenuItem.setMnemonic('u');
-	  undoMenuItem.setAccelerator(KeyStroke.getKeyStroke('Z', MENU_MASK));
-	  redoMenuItem.setMnemonic('r');
-	  redoMenuItem.setAccelerator(KeyStroke.getKeyStroke('Z', MENU_MASK | java.awt.event.InputEvent.SHIFT_MASK));
-	  addAboveMenuItem.setMnemonic('a');
-	  addAboveMenuItem.setAccelerator(KeyStroke.getKeyStroke('T', MENU_MASK));
-	  addBelowMenuItem.setMnemonic('b');
-	  addBelowMenuItem.setAccelerator(KeyStroke.getKeyStroke('B', MENU_MASK));
-	  addChildMenuItem.setMnemonic('c');
-	  addChildMenuItem.setAccelerator(KeyStroke.getKeyStroke('D', MENU_MASK));
-	  newFromClipboardMenuItem.setAccelerator(KeyStroke.getKeyStroke('M', MENU_MASK));
+      undoMenuItem.setMnemonic('u');
+      undoMenuItem.setAccelerator(KeyStroke.getKeyStroke('Z', MENU_MASK));
+      redoMenuItem.setMnemonic('r');
+      redoMenuItem.setAccelerator(KeyStroke.getKeyStroke('Z', MENU_MASK | java.awt.event.InputEvent.SHIFT_MASK));
+      addAboveMenuItem.setMnemonic('a');
+      addAboveMenuItem.setAccelerator(KeyStroke.getKeyStroke('T', MENU_MASK));
+      addBelowMenuItem.setMnemonic('b');
+      addBelowMenuItem.setAccelerator(KeyStroke.getKeyStroke('B', MENU_MASK));
+      addChildMenuItem.setMnemonic('c');
+      addChildMenuItem.setAccelerator(KeyStroke.getKeyStroke('D', MENU_MASK));
+      newFromClipboardMenuItem.setAccelerator(KeyStroke.getKeyStroke('M', MENU_MASK));
       editNodeTitleMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F2, 0));
-	  upMenuItem.setMnemonic('u');
-	  upMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_UP, MENU_MASK | java.awt.Event.ALT_MASK));
-	  downMenuItem.setMnemonic('d');
-	  downMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_DOWN, MENU_MASK | java.awt.Event.ALT_MASK));
-	  indentMenuItem.setMnemonic('i');
-	  indentMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_RIGHT, MENU_MASK | java.awt.Event.ALT_MASK));
-	  outdentMenuItem.setMnemonic('o');
-	  outdentMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_LEFT, MENU_MASK | java.awt.Event.ALT_MASK));
-	  expandAllMenuItem.setMnemonic('x');
-	  expandAllMenuItem.setAccelerator(KeyStroke.getKeyStroke('=', MENU_MASK));
-	  collapseAllMenuItem.setMnemonic('l');
-	  collapseAllMenuItem.setAccelerator(KeyStroke.getKeyStroke('-', MENU_MASK));
-	  deleteMenuItem.setMnemonic('k');
-	  deleteMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_DELETE, MENU_MASK));
+      upMenuItem.setMnemonic('u');
+      upMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_UP, MENU_MASK | java.awt.Event.ALT_MASK));
+      downMenuItem.setMnemonic('d');
+      downMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_DOWN, MENU_MASK | java.awt.Event.ALT_MASK));
+      indentMenuItem.setMnemonic('i');
+      indentMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_RIGHT, MENU_MASK | java.awt.Event.ALT_MASK));
+      outdentMenuItem.setMnemonic('o');
+      outdentMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_LEFT, MENU_MASK | java.awt.Event.ALT_MASK));
+      expandAllMenuItem.setMnemonic('x');
+      expandAllMenuItem.setAccelerator(KeyStroke.getKeyStroke('=', MENU_MASK));
+      collapseAllMenuItem.setMnemonic('l');
+      collapseAllMenuItem.setAccelerator(KeyStroke.getKeyStroke('-', MENU_MASK));
+      deleteMenuItem.setMnemonic('k');
+      deleteMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_DELETE, MENU_MASK));
 
-	  undoMenuItem.setMnemonic('u');
-	  undoMenuItem.setAccelerator(KeyStroke.getKeyStroke('Z', MENU_MASK));
-	  redoMenuItem.setMnemonic('r');
-	  redoMenuItem.setAccelerator(KeyStroke.getKeyStroke('Z', MENU_MASK | java.awt.event.InputEvent.SHIFT_MASK));
-	  addAboveMenuItem.setMnemonic('a');
-	  addAboveMenuItem.setAccelerator(KeyStroke.getKeyStroke('T', MENU_MASK));
-	  addBelowMenuItem.setMnemonic('b');
-	  addBelowMenuItem.setAccelerator(KeyStroke.getKeyStroke('B', MENU_MASK));
-	  addChildMenuItem.setMnemonic('c');
-	  addChildMenuItem.setAccelerator(KeyStroke.getKeyStroke('D', MENU_MASK));
-	  newFromClipboardMenuItem.setAccelerator(KeyStroke.getKeyStroke('M', MENU_MASK));
-	  upMenuItem.setMnemonic('u');
-	  upMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_UP, MENU_MASK | java.awt.Event.ALT_MASK));
-	  downMenuItem.setMnemonic('d');
-	  downMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_DOWN, MENU_MASK | java.awt.Event.ALT_MASK));
-	  indentMenuItem.setMnemonic('i');
-	  indentMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_RIGHT, MENU_MASK | java.awt.Event.ALT_MASK));
-	  outdentMenuItem.setMnemonic('o');
-	  outdentMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_LEFT, MENU_MASK | java.awt.Event.ALT_MASK));
-	  expandAllMenuItem.setMnemonic('x');
-	  expandAllMenuItem.setAccelerator(KeyStroke.getKeyStroke('=', MENU_MASK));
-	  collapseAllMenuItem.setMnemonic('l');
-	  collapseAllMenuItem.setAccelerator(KeyStroke.getKeyStroke('-', MENU_MASK));
-	  deleteMenuItem.setMnemonic('k');
-	  deleteMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_DELETE, MENU_MASK));
+      undoMenuItem.setMnemonic('u');
+      undoMenuItem.setAccelerator(KeyStroke.getKeyStroke('Z', MENU_MASK));
+      redoMenuItem.setMnemonic('r');
+      redoMenuItem.setAccelerator(KeyStroke.getKeyStroke('Z', MENU_MASK | java.awt.event.InputEvent.SHIFT_MASK));
+      addAboveMenuItem.setMnemonic('a');
+      addAboveMenuItem.setAccelerator(KeyStroke.getKeyStroke('T', MENU_MASK));
+      addBelowMenuItem.setMnemonic('b');
+      addBelowMenuItem.setAccelerator(KeyStroke.getKeyStroke('B', MENU_MASK));
+      addChildMenuItem.setMnemonic('c');
+      addChildMenuItem.setAccelerator(KeyStroke.getKeyStroke('D', MENU_MASK));
+      newFromClipboardMenuItem.setAccelerator(KeyStroke.getKeyStroke('M', MENU_MASK));
+      upMenuItem.setMnemonic('u');
+      upMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_UP, MENU_MASK | java.awt.Event.ALT_MASK));
+      downMenuItem.setMnemonic('d');
+      downMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_DOWN, MENU_MASK | java.awt.Event.ALT_MASK));
+      indentMenuItem.setMnemonic('i');
+      indentMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_RIGHT, MENU_MASK | java.awt.Event.ALT_MASK));
+      outdentMenuItem.setMnemonic('o');
+      outdentMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_LEFT, MENU_MASK | java.awt.Event.ALT_MASK));
+      expandAllMenuItem.setMnemonic('x');
+      expandAllMenuItem.setAccelerator(KeyStroke.getKeyStroke('=', MENU_MASK));
+      collapseAllMenuItem.setMnemonic('l');
+      collapseAllMenuItem.setAccelerator(KeyStroke.getKeyStroke('-', MENU_MASK));
+      deleteMenuItem.setMnemonic('k');
+      deleteMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_DELETE, MENU_MASK));
 
-	  return editMenu;
+      return editMenu;
   }
 
   /**
@@ -609,59 +611,59 @@ public class JreepadViewer extends JFrame // implements ApplicationListener
    */
   private JMenu createActionsMenu()
   {
-	JMenu actionsMenu = new JMenu(lang.getString("MENU_ACTIONS")); // "Actions");
-	actionsMenu.setMnemonic(KeyEvent.VK_T);
+    JMenu actionsMenu = new JMenu(lang.getString("MENU_ACTIONS")); // "Actions");
+    actionsMenu.setMnemonic(KeyEvent.VK_T);
 
-	JMenuItem searchMenuItem = new JMenuItem(lang.getString("MENUITEM_SEARCH")); //"Search");
-	searchMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { searchDialog.open(); }});
-	actionsMenu.add(searchMenuItem);
+    JMenuItem searchMenuItem = new JMenuItem(lang.getString("MENUITEM_SEARCH")); //"Search");
+    searchMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { searchDialog.open(); }});
+    actionsMenu.add(searchMenuItem);
 
-	JMenuItem launchUrlMenuItem = new JMenuItem(lang.getString("MENUITEM_FOLLOWLINK")); //"Follow highlighted link");
-	launchUrlMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { theJreepad.openURLSelectedInArticle(); }});
-	actionsMenu.add(launchUrlMenuItem);
+    JMenuItem launchUrlMenuItem = new JMenuItem(lang.getString("MENUITEM_FOLLOWLINK")); //"Follow highlighted link");
+    launchUrlMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { theJreepad.openURLSelectedInArticle(); }});
+    actionsMenu.add(launchUrlMenuItem);
 
-	webSearchMenuItem = new JMenuItem(getPrefs().webSearchName);
-	webSearchMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { theJreepad.webSearchTextSelectedInArticle(); }});
-	actionsMenu.add(webSearchMenuItem);
+    webSearchMenuItem = new JMenuItem(getPrefs().webSearchName);
+    webSearchMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { theJreepad.webSearchTextSelectedInArticle(); }});
+    actionsMenu.add(webSearchMenuItem);
 
-	actionsMenu.add(new JSeparator());
+    actionsMenu.add(new JSeparator());
 
-	characterWrapArticleMenuItem = new JMenuItem(lang.getString("MENUITEM_HARDWRAP1") + " " + getPrefs().characterWrapWidth + " " + lang.getString("MENUITEM_HARDWRAP2")); //);
-	characterWrapArticleMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { wrapContentToCharWidth(); }});
-	actionsMenu.add(characterWrapArticleMenuItem);
+    characterWrapArticleMenuItem = new JMenuItem(lang.getString("MENUITEM_HARDWRAP1") + " " + getPrefs().characterWrapWidth + " " + lang.getString("MENUITEM_HARDWRAP2")); //);
+    characterWrapArticleMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { wrapContentToCharWidth(); }});
+    actionsMenu.add(characterWrapArticleMenuItem);
 
-	JMenuItem stripTagsMenuItem = new JMenuItem(lang.getString("MENUITEM_STRIPTAGS")); //"Strip <tags> from article");
-	stripTagsMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { stripAllTags(); }});
-	actionsMenu.add(stripTagsMenuItem);
+    JMenuItem stripTagsMenuItem = new JMenuItem(lang.getString("MENUITEM_STRIPTAGS")); //"Strip <tags> from article");
+    stripTagsMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { stripAllTags(); }});
+    actionsMenu.add(stripTagsMenuItem);
 
-	JMenuItem insertDateMenuItem = new JMenuItem(lang.getString("MENUITEM_INSERTDATE")); //"Insert date");
-	insertDateMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { insertDate(); }});
-	actionsMenu.add(insertDateMenuItem);
+    JMenuItem insertDateMenuItem = new JMenuItem(lang.getString("MENUITEM_INSERTDATE")); //"Insert date");
+    insertDateMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { insertDate(); }});
+    actionsMenu.add(insertDateMenuItem);
 
-	actionsMenu.add(new JSeparator());
+    actionsMenu.add(new JSeparator());
 
-	JMenuItem sortMenuItem = new JMenuItem(lang.getString("MENUITEM_SORTONELEVEL")); //"Sort children (one level)");
-	sortMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { theJreepad.sortChildren(); updateWindowTitle(); }});
-	actionsMenu.add(sortMenuItem);
+    JMenuItem sortMenuItem = new JMenuItem(lang.getString("MENUITEM_SORTONELEVEL")); //"Sort children (one level)");
+    sortMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { theJreepad.sortChildren(); updateWindowTitle(); }});
+    actionsMenu.add(sortMenuItem);
 
-	JMenuItem sortRecursiveMenuItem = new JMenuItem(lang.getString("MENUITEM_SORTALLLEVELS")); //"Sort children (all levels)");
-	sortRecursiveMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { theJreepad.sortChildrenRecursive(); updateWindowTitle(); }});
-	actionsMenu.add(sortRecursiveMenuItem);
+    JMenuItem sortRecursiveMenuItem = new JMenuItem(lang.getString("MENUITEM_SORTALLLEVELS")); //"Sort children (all levels)");
+    sortRecursiveMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) { theJreepad.sortChildrenRecursive(); updateWindowTitle(); }});
+    actionsMenu.add(sortRecursiveMenuItem);
 
-	searchMenuItem.setMnemonic('s');
-	searchMenuItem.setAccelerator(KeyStroke.getKeyStroke('F', MENU_MASK));
-	webSearchMenuItem.setMnemonic('g');
-	webSearchMenuItem.setAccelerator(KeyStroke.getKeyStroke('G', MENU_MASK));
+    searchMenuItem.setMnemonic('s');
+    searchMenuItem.setAccelerator(KeyStroke.getKeyStroke('F', MENU_MASK));
+    webSearchMenuItem.setMnemonic('g');
+    webSearchMenuItem.setAccelerator(KeyStroke.getKeyStroke('G', MENU_MASK));
     characterWrapArticleMenuItem.setAccelerator(KeyStroke.getKeyStroke('R', MENU_MASK));
     characterWrapArticleMenuItem.setMnemonic('r');
-	launchUrlMenuItem.setAccelerator(KeyStroke.getKeyStroke('L', MENU_MASK));
-	launchUrlMenuItem.setMnemonic('l');
-	stripTagsMenuItem.setAccelerator(KeyStroke.getKeyStroke('T', MENU_MASK));
-	stripTagsMenuItem.setMnemonic('t');
-	insertDateMenuItem.setAccelerator(KeyStroke.getKeyStroke('E', MENU_MASK));
-	insertDateMenuItem.setMnemonic('e');
+    launchUrlMenuItem.setAccelerator(KeyStroke.getKeyStroke('L', MENU_MASK));
+    launchUrlMenuItem.setMnemonic('l');
+    stripTagsMenuItem.setAccelerator(KeyStroke.getKeyStroke('T', MENU_MASK));
+    stripTagsMenuItem.setMnemonic('t');
+    insertDateMenuItem.setAccelerator(KeyStroke.getKeyStroke('E', MENU_MASK));
+    insertDateMenuItem.setMnemonic('e');
 
-	return actionsMenu;
+    return actionsMenu;
   }
 
   /**
@@ -685,21 +687,21 @@ public class JreepadViewer extends JFrame // implements ApplicationListener
 
     JMenu viewToolbarMenu = new JMenu(lang.getString("MENUITEM_TOOLBAR")); //"Toolbar");
     viewMenu.add(viewToolbarMenu);
-	  viewToolbarIconsMenuItem = new JCheckBoxMenuItem(lang.getString("MENUITEM_TOOLBAR_ICONS")); //"Icons", true);
-	  viewToolbarIconsMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {
-	                                              setToolbarMode(JreepadPrefs.TOOLBAR_ICON);
-	                                              }});
-	  viewToolbarMenu.add(viewToolbarIconsMenuItem);
-	  viewToolbarTextMenuItem = new JCheckBoxMenuItem(lang.getString("MENUITEM_TOOLBAR_TEXT")); //"Text", true);
-	  viewToolbarTextMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {
-	                                              setToolbarMode(JreepadPrefs.TOOLBAR_TEXT);
-	                                              }});
-	  viewToolbarMenu.add(viewToolbarTextMenuItem);
-	  viewToolbarOffMenuItem = new JCheckBoxMenuItem(lang.getString("MENUITEM_TOOLBAR_OFF")); //"Off", true);
-	  viewToolbarOffMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {
-	                                              setToolbarMode(JreepadPrefs.TOOLBAR_OFF);
-	                                              }});
-	  viewToolbarMenu.add(viewToolbarOffMenuItem);
+      viewToolbarIconsMenuItem = new JCheckBoxMenuItem(lang.getString("MENUITEM_TOOLBAR_ICONS")); //"Icons", true);
+      viewToolbarIconsMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {
+                                                  setToolbarMode(JreepadPrefs.TOOLBAR_ICON);
+                                                  }});
+      viewToolbarMenu.add(viewToolbarIconsMenuItem);
+      viewToolbarTextMenuItem = new JCheckBoxMenuItem(lang.getString("MENUITEM_TOOLBAR_TEXT")); //"Text", true);
+      viewToolbarTextMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {
+                                                  setToolbarMode(JreepadPrefs.TOOLBAR_TEXT);
+                                                  }});
+      viewToolbarMenu.add(viewToolbarTextMenuItem);
+      viewToolbarOffMenuItem = new JCheckBoxMenuItem(lang.getString("MENUITEM_TOOLBAR_OFF")); //"Off", true);
+      viewToolbarOffMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {
+                                                  setToolbarMode(JreepadPrefs.TOOLBAR_OFF);
+                                                  }});
+      viewToolbarMenu.add(viewToolbarOffMenuItem);
 
 
 
@@ -707,29 +709,29 @@ public class JreepadViewer extends JFrame // implements ApplicationListener
 
     JMenuItem articleViewModeMenuItem = new JMenu(lang.getString("MENUITEM_ARTICLEFORMAT")); //"View this article as...");
     JMenuItem articleViewModeTextMenuItem = new JMenuItem(lang.getString("MENUITEM_ARTICLEFORMAT_TEXT")); //"Text");
-	  articleViewModeTextMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {
-				theJreepad.setArticleMode(JreepadArticle.ARTICLEMODE_ORDINARY);
-				updateUndoRedoMenuState();
-					   }});
-	  articleViewModeMenuItem.add(articleViewModeTextMenuItem);
-	  JMenuItem articleViewModeHtmlMenuItem = new JMenuItem(lang.getString("MENUITEM_ARTICLEFORMAT_HTML")); //"HTML");
-	  articleViewModeHtmlMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {
-				theJreepad.setArticleMode(JreepadArticle.ARTICLEMODE_HTML);
-				updateUndoRedoMenuState();
-					   }});
-	  articleViewModeMenuItem.add(articleViewModeHtmlMenuItem);
-	  JMenuItem articleViewModeCsvMenuItem = new JMenuItem(lang.getString("MENUITEM_ARTICLEFORMAT_CSV")); //"Table (comma-separated data)");
-	  articleViewModeCsvMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {
-				theJreepad.setArticleMode(JreepadArticle.ARTICLEMODE_CSV);
-				updateUndoRedoMenuState();
-					   }});
-	  articleViewModeMenuItem.add(articleViewModeCsvMenuItem);
-	  JMenuItem articleViewModeTextileMenuItem = new JMenuItem(lang.getString("MENUITEM_ARTICLEFORMAT_TEXTILE"));
-	  articleViewModeTextileMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {
-				theJreepad.setArticleMode(JreepadArticle.ARTICLEMODE_TEXTILEHTML);
-				updateUndoRedoMenuState();
-					   }});
-	  articleViewModeMenuItem.add(articleViewModeTextileMenuItem);
+      articleViewModeTextMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {
+                theJreepad.setArticleMode(JreepadArticle.ARTICLEMODE_ORDINARY);
+                updateUndoRedoMenuState();
+                       }});
+      articleViewModeMenuItem.add(articleViewModeTextMenuItem);
+      JMenuItem articleViewModeHtmlMenuItem = new JMenuItem(lang.getString("MENUITEM_ARTICLEFORMAT_HTML")); //"HTML");
+      articleViewModeHtmlMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {
+                theJreepad.setArticleMode(JreepadArticle.ARTICLEMODE_HTML);
+                updateUndoRedoMenuState();
+                       }});
+      articleViewModeMenuItem.add(articleViewModeHtmlMenuItem);
+      JMenuItem articleViewModeCsvMenuItem = new JMenuItem(lang.getString("MENUITEM_ARTICLEFORMAT_CSV")); //"Table (comma-separated data)");
+      articleViewModeCsvMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {
+                theJreepad.setArticleMode(JreepadArticle.ARTICLEMODE_CSV);
+                updateUndoRedoMenuState();
+                       }});
+      articleViewModeMenuItem.add(articleViewModeCsvMenuItem);
+      JMenuItem articleViewModeTextileMenuItem = new JMenuItem(lang.getString("MENUITEM_ARTICLEFORMAT_TEXTILE"));
+      articleViewModeTextileMenuItem.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {
+                theJreepad.setArticleMode(JreepadArticle.ARTICLEMODE_TEXTILEHTML);
+                updateUndoRedoMenuState();
+                       }});
+      articleViewModeMenuItem.add(articleViewModeTextileMenuItem);
     viewMenu.add(articleViewModeMenuItem);
 
 
@@ -917,73 +919,73 @@ public class JreepadViewer extends JFrame // implements ApplicationListener
         newIconButton.setIcon(this.getIcon("New16.gif"));
 
         // Open existing
-		openIconButton = new JButton();
-		openIconButton.setToolTipText(lang.getString("TOOLBAR_OPEN"));
-		openIconButton.setBorderPainted(false);
-		openIconButton.setIcon(this.getIcon("Open16.gif"));
+        openIconButton = new JButton();
+        openIconButton.setToolTipText(lang.getString("TOOLBAR_OPEN"));
+        openIconButton.setBorderPainted(false);
+        openIconButton.setIcon(this.getIcon("Open16.gif"));
 
-		// Save current
-	    JButton saveIconButton = new JButton(new SaveAction());
-	    saveIconButton.setBorderPainted(false);
+        // Save current
+        JButton saveIconButton = new JButton(new SaveAction());
+        saveIconButton.setBorderPainted(false);
         saveIconButton.setText(null); // Ignore action text
 
-		// Insert node before
-	    addAboveIconButton = new JButton(lang.getString("TOOLBAR_ADDABOVE"));
+        // Insert node before
+        addAboveIconButton = new JButton(lang.getString("TOOLBAR_ADDABOVE"));
 //	    addAboveIconButton = new JButton();
 //	    addAboveIconButton.setToolTipText(lang.getString("TOOLBAR_"));
 //	    addAboveIconButton.setBorderPainted(false);
 //	    addAboveIconButton.setMnemonic('a');
 //	    addAboveIconButton.setIcon(this.getIcon("InsertBefore16.gif"));
 
-	    // Insert node after
-	    addBelowIconButton = new JButton(lang.getString("TOOLBAR_ADDBELOW"));
+        // Insert node after
+        addBelowIconButton = new JButton(lang.getString("TOOLBAR_ADDBELOW"));
 //	    addBelowIconButton = new JButton();
-	    addBelowIconButton.setMnemonic('b');
+        addBelowIconButton.setMnemonic('b');
 //	    addBelowIconButton.setToolTipText("Add below");
 //	    addBelowIconButton.setBorderPainted(false);
 //	    addBelowIconButton.setIcon(this.getIcon("InsertAfter16.gif"));
 
-		// Add child node
-		addIconButton = new JButton();
-		addIconButton.setMnemonic('c');
-		addIconButton.setToolTipText(lang.getString("TOOLBAR_ADDCHILD"));
-		addIconButton.setBorderPainted(false);
-		addIconButton.setIcon(this.getIcon("Add16.gif"));
+        // Add child node
+        addIconButton = new JButton();
+        addIconButton.setMnemonic('c');
+        addIconButton.setToolTipText(lang.getString("TOOLBAR_ADDCHILD"));
+        addIconButton.setBorderPainted(false);
+        addIconButton.setIcon(this.getIcon("Add16.gif"));
 
-    	// Remove node
-	    removeIconButton = new JButton();
-	    removeIconButton.setMnemonic('k');
-	    removeIconButton.setToolTipText(lang.getString("TOOLBAR_DELETE"));
-	    removeIconButton.setBorderPainted(false);
-	    removeIconButton.setIcon(this.getIcon("Remove16.gif"));
+        // Remove node
+        removeIconButton = new JButton();
+        removeIconButton.setMnemonic('k');
+        removeIconButton.setToolTipText(lang.getString("TOOLBAR_DELETE"));
+        removeIconButton.setBorderPainted(false);
+        removeIconButton.setIcon(this.getIcon("Remove16.gif"));
 
-	    // Move node up
-	    upIconButton = new JButton();
-	    upIconButton.setMnemonic('u');
-	    upIconButton.setToolTipText(lang.getString("TOOLBAR_UP"));
-	    upIconButton.setBorderPainted(false);
-	    upIconButton.setIcon(this.getIcon("Up16.gif"));
+        // Move node up
+        upIconButton = new JButton();
+        upIconButton.setMnemonic('u');
+        upIconButton.setToolTipText(lang.getString("TOOLBAR_UP"));
+        upIconButton.setBorderPainted(false);
+        upIconButton.setIcon(this.getIcon("Up16.gif"));
 
-	    // Move node down
-	    downIconButton = new JButton();
-	    downIconButton.setMnemonic('d');
-	    downIconButton.setToolTipText(lang.getString("TOOLBAR_DOWN"));
-	    downIconButton.setBorderPainted(false);
-	    downIconButton.setIcon(this.getIcon("Down16.gif"));
+        // Move node down
+        downIconButton = new JButton();
+        downIconButton.setMnemonic('d');
+        downIconButton.setToolTipText(lang.getString("TOOLBAR_DOWN"));
+        downIconButton.setBorderPainted(false);
+        downIconButton.setIcon(this.getIcon("Down16.gif"));
 
-	    // Move node from current
-	    outdentIconButton = new JButton();
-	    outdentIconButton.setMnemonic('i');
-	    outdentIconButton.setToolTipText(lang.getString("TOOLBAR_IN"));
-	    outdentIconButton.setBorderPainted(false);
-	    outdentIconButton.setIcon(this.getIcon("Back16.gif"));
+        // Move node from current
+        outdentIconButton = new JButton();
+        outdentIconButton.setMnemonic('i');
+        outdentIconButton.setToolTipText(lang.getString("TOOLBAR_IN"));
+        outdentIconButton.setBorderPainted(false);
+        outdentIconButton.setIcon(this.getIcon("Back16.gif"));
 
-	    // Move node to previous
-	    indentIconButton = new JButton();
-	    indentIconButton.setMnemonic('o');
-	    indentIconButton.setToolTipText(lang.getString("TOOLBAR_OUT"));
-	    indentIconButton.setBorderPainted(false);
-	    indentIconButton.setIcon(this.getIcon("Forward16.gif"));
+        // Move node to previous
+        indentIconButton = new JButton();
+        indentIconButton.setMnemonic('o');
+        indentIconButton.setToolTipText(lang.getString("TOOLBAR_OUT"));
+        indentIconButton.setBorderPainted(false);
+        indentIconButton.setIcon(this.getIcon("Forward16.gif"));
 
     // Add the actions to the toolbar buttons
     newIconButton.addActionListener(new ActionListener(){
@@ -992,32 +994,32 @@ public class JreepadViewer extends JFrame // implements ApplicationListener
                                public void actionPerformed(ActionEvent e){ openAction(); } });
     upIconButton.addActionListener(new ActionListener(){
                                public void actionPerformed(ActionEvent e){ theJreepad.moveCurrentNodeUp(); repaint();
-		  theJreepad.returnFocusToTree();
+          theJreepad.returnFocusToTree();
           updateWindowTitle();} });
     downIconButton.addActionListener(new ActionListener(){
                                public void actionPerformed(ActionEvent e){ theJreepad.moveCurrentNodeDown(); repaint();
-		  theJreepad.returnFocusToTree();
-		  updateWindowTitle();} });
+          theJreepad.returnFocusToTree();
+          updateWindowTitle();} });
     indentIconButton.addActionListener(new ActionListener(){
                                public void actionPerformed(ActionEvent e){ theJreepad.indentCurrentNode(); repaint();
-		  theJreepad.returnFocusToTree();
-		  updateWindowTitle();} });
+          theJreepad.returnFocusToTree();
+          updateWindowTitle();} });
     outdentIconButton.addActionListener(new ActionListener(){
                                public void actionPerformed(ActionEvent e){ theJreepad.outdentCurrentNode(); repaint();
-		  theJreepad.returnFocusToTree();
-		  updateWindowTitle(); } });
+          theJreepad.returnFocusToTree();
+          updateWindowTitle(); } });
     addAboveIconButton.addActionListener(new ActionListener(){
                                public void actionPerformed(ActionEvent e){ theJreepad.addNodeAbove(); repaint(); /*
-		  theJreepad.returnFocusToTree(); */
-		  updateWindowTitle();} });
+          theJreepad.returnFocusToTree(); */
+          updateWindowTitle();} });
     addBelowIconButton.addActionListener(new ActionListener(){
                                public void actionPerformed(ActionEvent e){ theJreepad.addNodeBelow(); repaint(); /*
-		  theJreepad.returnFocusToTree(); */
-		  updateWindowTitle();} });
+          theJreepad.returnFocusToTree(); */
+          updateWindowTitle();} });
     addIconButton.addActionListener(new ActionListener(){
                                public void actionPerformed(ActionEvent e){ theJreepad.addNode(); repaint(); /*
-		  theJreepad.returnFocusToTree(); */
-		  updateWindowTitle();} });
+          theJreepad.returnFocusToTree(); */
+          updateWindowTitle();} });
     removeIconButton.addActionListener(new ActionListener(){
                                public void actionPerformed(ActionEvent e){ deleteNodeAction(); } });
     // Finished establishing the iconic buttons
@@ -1038,23 +1040,23 @@ public class JreepadViewer extends JFrame // implements ApplicationListener
     toolBar.add(Box.createGlue());
 
 
-	toolBarIconic.add(newIconButton);
-	toolBarIconic.add(openIconButton);
-	toolBarIconic.add(saveIconButton);
+    toolBarIconic.add(newIconButton);
+    toolBarIconic.add(openIconButton);
+    toolBarIconic.add(saveIconButton);
 //	if(!MAC_OS_X) // The separators look RUBBISH on OSX
 //	  toolBarIconic.add(new JSeparator(JSeparator.VERTICAL));
 //	  toolBarIconic.add(Box.createHorizontalStrut(16));
-	toolBarIconic.add(addAboveIconButton);
-	toolBarIconic.add(addBelowIconButton);
-	toolBarIconic.add(addIconButton);
-	toolBarIconic.add(removeIconButton);
+    toolBarIconic.add(addAboveIconButton);
+    toolBarIconic.add(addBelowIconButton);
+    toolBarIconic.add(addIconButton);
+    toolBarIconic.add(removeIconButton);
 //	if(!MAC_OS_X) // The separators look RUBBISH on OSX
 //	  toolBarIconic.add(new JSeparator(JSeparator.VERTICAL));
 //	  toolBarIconic.add(Box.createHorizontalStrut(16));
-	toolBarIconic.add(upIconButton);
-	toolBarIconic.add(downIconButton);
-	toolBarIconic.add(outdentIconButton);
-	toolBarIconic.add(indentIconButton);
+    toolBarIconic.add(upIconButton);
+    toolBarIconic.add(downIconButton);
+    toolBarIconic.add(outdentIconButton);
+    toolBarIconic.add(indentIconButton);
 //	if(!MAC_OS_X) // The separators look RUBBISH on OSX
 //	  toolBarIconic.add(new JSeparator(JSeparator.VERTICAL));
 //	  toolBarIconic.add(Box.createHorizontalStrut(16));
@@ -1124,16 +1126,16 @@ public class JreepadViewer extends JFrame // implements ApplicationListener
     hBox.add(autoSaveOkButton = new JButton(lang.getString("OK")));
     hBox.add(autoSaveCancelButton = new JButton(lang.getString("CANCEL")));
     autoSaveOkButton.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e){
-									getPrefs().autoSavePeriod = ((Integer)(autoSavePeriodSpinner.getValue())).intValue();
+                                    getPrefs().autoSavePeriod = ((Integer)(autoSavePeriodSpinner.getValue())).intValue();
 //									getPrefs().autoSavePeriod = autoSavePeriodSpinner.getValue();
-									getPrefs().autoSave = autoSaveCheckBox.isSelected();
+                                    getPrefs().autoSave = autoSaveCheckBox.isSelected();
                                     autoSaveDialog.setVisible(false);
-									if(getPrefs().autoSave && !(autoSaveThread.isAlive()))
-									{
-									  autoSaveWarningMessage();
-	  								  autoSaveThread.start();
-									}
-									updateWindowTitle();
+                                    if(getPrefs().autoSave && !(autoSaveThread.isAlive()))
+                                    {
+                                      autoSaveWarningMessage();
+                                        autoSaveThread.start();
+                                    }
+                                    updateWindowTitle();
                                    }});
     autoSaveCancelButton.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e){autoSaveDialog.setVisible(false);}});
     vBox.add(Box.createGlue());
@@ -1144,7 +1146,7 @@ public class JreepadViewer extends JFrame // implements ApplicationListener
 
   public void autoSaveWarningMessage()
   {
-	  JOptionPane.showMessageDialog(this, lang.getString("AUTOSAVE_ACTIVE_LONG"), lang.getString("AUTOSAVE_ACTIVE") , JOptionPane.INFORMATION_MESSAGE);
+      JOptionPane.showMessageDialog(this, lang.getString("AUTOSAVE_ACTIVE_LONG"), lang.getString("AUTOSAVE_ACTIVE") , JOptionPane.INFORMATION_MESSAGE);
   }
 
   public void establishNodeUrlDisplayDialogue()
@@ -1159,7 +1161,7 @@ public class JreepadViewer extends JFrame // implements ApplicationListener
     vBox.add(new JLabel(lang.getString("MSG_NODEURL2")));
     vBox.add(nodeUrlDisplayOkButton = new JButton(lang.getString("OK")));
     nodeUrlDisplayOkButton.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e){
-									nodeUrlDisplayDialog.setVisible(false);
+                                    nodeUrlDisplayDialog.setVisible(false);
                                    }});
     nodeUrlDisplayDialog.getContentPane().add(vBox);
     // Finished: Establish the nodeUrlDisplay dialogue box
@@ -1257,17 +1259,17 @@ public class JreepadViewer extends JFrame // implements ApplicationListener
     if (!askAndSave(lang.getString("PROMPT_SAVE_BEFORE_NEW")))
       return;
 
-	content.remove(theJreepad);
+    content.remove(theJreepad);
     document = new JreepadTreeModel();
-	theJreepad = new JreepadView(document);
-	content.add(theJreepad);
+    theJreepad = new JreepadView(document);
+    content.add(theJreepad);
     searchDialog.setJreepad(theJreepad);
 
-	setTitleBasedOnFilename("");
-	validate();
-	repaint();
-	document.setContentSaved(true);
-	updateUndoRedoMenuState();
+    setTitleBasedOnFilename("");
+    validate();
+    repaint();
+    document.setContentSaved(true);
+    updateUndoRedoMenuState();
 //	theJreepad.clearUndoCache();
   }
 
@@ -1383,7 +1385,22 @@ public class JreepadViewer extends JFrame // implements ApplicationListener
           // Write to either HJT or XML
           JreepadWriter writer;
           if(fileType == JreepadPrefs.FILETYPE_XML)
-            writer = new XmlWriter(encoding);
+            writer = new XmlWriter();
+          else if (fileType == JreepadPrefs.FILETYPE_XML_ENCRYPTED)
+          {
+              String password = document.getPassword();
+              if (password == null || askForFilename)
+                  password = PasswordDialog.showPasswordDialog(true);
+              if (password == null)
+              {
+                  successful = false; // "Cancel" was pressed
+                  return;
+              }
+              EncryptedWriter encryptedWriter = new EncryptedWriter(new XmlWriter());
+              encryptedWriter.setPassword(password);
+              writer = encryptedWriter;
+              document.setPassword(password);
+          }
           else
             writer = new TreepadWriter(encoding);
 
@@ -1395,12 +1412,12 @@ public class JreepadViewer extends JFrame // implements ApplicationListener
             com.apple.eio.FileManager.setFileTypeAndCreator(saveLocation.toString(),
                     appleAppCode, appleAppCode);
           }
-          
+
           // When calling "Save As..." remember the _new_ file settings
           document.setSaveLocation(saveLocation);
           document.setFileType(fileType);
           document.setEncoding(encoding);
-          
+
           updateWindowTitle();
           addToOpenRecentMenu(saveLocation);
           savePreferencesFile();
@@ -1490,25 +1507,25 @@ public class JreepadViewer extends JFrame // implements ApplicationListener
         setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
         getPrefs().importLocation = fileChooser.getSelectedFile();
 
-		switch(importFormat)
-		{
-		  case FILE_FORMAT_HJT:
+        switch(importFormat)
+        {
+          case FILE_FORMAT_HJT:
             InputStream in = new FileInputStream(getPrefs().importLocation);
             JreepadReader reader = new AutoDetectReader(getPrefs().getEncoding(), getPrefs().autoDetectHtmlArticles);
             theJreepad.addChild(reader.read(in).getRootNode());
-			break;
-		  case FILE_FORMAT_TEXT:
-		    theJreepad.addChildrenFromTextFiles(fileChooser.getSelectedFiles());
-			break;
-		  case FILE_FORMAT_TEXTASLIST:
-		    theJreepad.addChildrenFromListTextFile(new InputStreamReader(new FileInputStream(getPrefs().importLocation), getPrefs().getEncoding()));
-			break;
-		  default:
+            break;
+          case FILE_FORMAT_TEXT:
+            theJreepad.addChildrenFromTextFiles(fileChooser.getSelectedFiles());
+            break;
+          case FILE_FORMAT_TEXTASLIST:
+            theJreepad.addChildrenFromListTextFile(new InputStreamReader(new FileInputStream(getPrefs().importLocation), getPrefs().getEncoding()));
+            break;
+          default:
             setCursor(Cursor.getDefaultCursor());
-			JOptionPane.showMessageDialog(this,  "Unknown which format to import - coding error! Oops!",lang.getString("TITLE_MISC_ERROR") , JOptionPane.ERROR_MESSAGE);
-			return;
-		}
-	    updateWindowTitle();
+            JOptionPane.showMessageDialog(this,  "Unknown which format to import - coding error! Oops!",lang.getString("TITLE_MISC_ERROR") , JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        updateWindowTitle();
       }
       fileChooser.setMultiSelectionEnabled(false);
       setCursor(Cursor.getDefaultCursor());
@@ -1528,20 +1545,20 @@ public class JreepadViewer extends JFrame // implements ApplicationListener
       String suggestFilename = theJreepad.getCurrentNode().getTitle();
       switch(exportFormat)
       {
-		case FILE_FORMAT_HJT:
-		  suggestFilename += ".hjt";
-		  break;
-		case FILE_FORMAT_HTML:
-		  suggestFilename += ".html";
-		  break;
-		case FILE_FORMAT_XML:
-		  suggestFilename += ".xml";
-		  break;
-		case FILE_FORMAT_TEXT:
-		case FILE_FORMAT_TEXTASLIST:
-		case FILE_FORMAT_ARTICLESTOTEXT:
-		  suggestFilename += ".txt";
-		  break;
+        case FILE_FORMAT_HJT:
+          suggestFilename += ".hjt";
+          break;
+        case FILE_FORMAT_HTML:
+          suggestFilename += ".html";
+          break;
+        case FILE_FORMAT_XML:
+          suggestFilename += ".xml";
+          break;
+        case FILE_FORMAT_TEXT:
+        case FILE_FORMAT_TEXTASLIST:
+        case FILE_FORMAT_ARTICLESTOTEXT:
+          suggestFilename += ".txt";
+          break;
       }
       fileChooser.setSelectedFile(new File(suggestFilename));
       if(fileChooser.showSaveDialog(this) == JFileChooser.APPROVE_OPTION && checkOverwrite(fileChooser.getSelectedFile()))
@@ -1549,39 +1566,39 @@ public class JreepadViewer extends JFrame // implements ApplicationListener
         setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
         getPrefs().exportLocation = fileChooser.getSelectedFile();
 
-		String output = null;
+        String output = null;
         JreepadWriter writer = null;
-		switch(exportFormat)
-		{
-		  case FILE_FORMAT_HTML:
+        switch(exportFormat)
+        {
+          case FILE_FORMAT_HTML:
             writer = new HtmlWriter(getPrefs().getEncoding(),
                 getPrefs().htmlExportArticleType,
                 getPrefs().htmlExportUrlsToLinks,
-			    getPrefs().htmlExportAnchorLinkType);
-			break;
-		  case FILE_FORMAT_XML:
-            writer= new XmlWriter(getPrefs().getEncoding());
+                getPrefs().htmlExportAnchorLinkType);
+            break;
+          case FILE_FORMAT_XML:
+            writer= new XmlWriter();
             break;
           case FILE_FORMAT_HJT:
             writer= new TreepadWriter(getPrefs().getEncoding());
             break;
-		  case FILE_FORMAT_TEXT:
-			output = theJreepad.getCurrentNode().getContent();
-			break;
-		  case FILE_FORMAT_TEXTASLIST:
-			output = theJreepad.getCurrentNode().exportTitlesAsList();
-			break;
-		  case FILE_FORMAT_ARTICLESTOTEXT:
+          case FILE_FORMAT_TEXT:
+            output = theJreepad.getCurrentNode().getContent();
+            break;
+          case FILE_FORMAT_TEXTASLIST:
+            output = theJreepad.getCurrentNode().exportTitlesAsList();
+            break;
+          case FILE_FORMAT_ARTICLESTOTEXT:
             int answer = JOptionPane.showConfirmDialog(this, lang.getString("PROMPT_INCLUDE_TITLES"),
-	                   lang.getString("TITLE_INCLUDE_TITLES") , JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
-		    boolean titlesToo = (answer == JOptionPane.YES_OPTION);
-			output = theJreepad.getCurrentNode().exportArticlesToText(titlesToo);
-			break;
-		  default:
+                       lang.getString("TITLE_INCLUDE_TITLES") , JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+            boolean titlesToo = (answer == JOptionPane.YES_OPTION);
+            output = theJreepad.getCurrentNode().exportArticlesToText(titlesToo);
+            break;
+          default:
             setCursor(Cursor.getDefaultCursor());
-			JOptionPane.showMessageDialog(this,  "Unknown which format to export - coding error! Oops!",lang.getString("TITLE_MISC_ERROR") , JOptionPane.ERROR_MESSAGE);
-			return;
-		}
+            JOptionPane.showMessageDialog(this,  "Unknown which format to export - coding error! Oops!",lang.getString("TITLE_MISC_ERROR") , JOptionPane.ERROR_MESSAGE);
+            return;
+        }
 
         OutputStream fos = new FileOutputStream(getPrefs().exportLocation);
         if (writer != null)
@@ -1760,7 +1777,7 @@ public class JreepadViewer extends JFrame // implements ApplicationListener
     if(theJreepad.canWeUndo())
       theJreepad.undoAction();
     else
-	  JOptionPane.showMessageDialog(this, lang.getString("MSG_NOTHING_TO_UNDO"), "No change" , JOptionPane.INFORMATION_MESSAGE);
+      JOptionPane.showMessageDialog(this, lang.getString("MSG_NOTHING_TO_UNDO"), "No change" , JOptionPane.INFORMATION_MESSAGE);
 */
     UndoManager undoMgr = theJreepad.getCurrentNode().getArticle().getUndoMgr();
     String undoStyle = undoMgr.getUndoPresentationName();
@@ -1771,10 +1788,10 @@ public class JreepadViewer extends JFrame // implements ApplicationListener
       while(undoStyle.equals(undoMgr.getUndoPresentationName()))
         undoMgr.undo();
     }catch(CannotUndoException ex){
-	  //JOptionPane.showMessageDialog(this, lang.getString("MSG_NOTHING_TO_UNDO"), "No change" , JOptionPane.INFORMATION_MESSAGE);
+      //JOptionPane.showMessageDialog(this, lang.getString("MSG_NOTHING_TO_UNDO"), "No change" , JOptionPane.INFORMATION_MESSAGE);
     }
     updateWindowTitle();
-	updateUndoRedoMenuState();
+    updateUndoRedoMenuState();
   }
   private void redoAction(){
     UndoManager undoMgr = theJreepad.getCurrentNode().getArticle().getUndoMgr();
@@ -1783,10 +1800,10 @@ public class JreepadViewer extends JFrame // implements ApplicationListener
       while(redoStyle.equals(undoMgr.getRedoPresentationName()))
         undoMgr.redo();
     }catch(CannotRedoException ex){
-	  //JOptionPane.showMessageDialog(this, lang.getString("MSG_NOTHING_TO_UNDO"), "No change" , JOptionPane.INFORMATION_MESSAGE);
+      //JOptionPane.showMessageDialog(this, lang.getString("MSG_NOTHING_TO_UNDO"), "No change" , JOptionPane.INFORMATION_MESSAGE);
     }
     updateWindowTitle();
-	updateUndoRedoMenuState();
+    updateUndoRedoMenuState();
   }
 
   public void updateUndoRedoMenuState(){
@@ -1823,7 +1840,7 @@ public class JreepadViewer extends JFrame // implements ApplicationListener
   private void aboutAction()
   {
               JOptionPane.showMessageDialog(this,
-              "Jreepad v " + version + "\n\n" + 
+              "Jreepad v " + version + "\n\n" +
               lang.getString("HELP_ABOUT") +
               "\n" +
               "\nJreepad \u00A9 2004-2007 Dan Stowell" +
@@ -1869,7 +1886,7 @@ public class JreepadViewer extends JFrame // implements ApplicationListener
   {
 //    String ret = theJreepad.getTreepadNodeUrl();
     nodeUrlDisplayField.setText(theJreepad.getTreepadNodeUrl());
-	nodeUrlDisplayDialog.setVisible(true);
+    nodeUrlDisplayDialog.setVisible(true);
   }
 
   private boolean checkOverwrite(File theFile)
@@ -2139,19 +2156,19 @@ lang.getString("HELP_LICENSE") + "\n\n           http://www.gnu.org/copyleft/gpl
     if(MAC_OS_X)
       menuText = "Apple";
     else
-	  switch(MENU_MASK)
-	  {
-		case Event.ALT_MASK:
-		  menuText = "Alt";
-		  break;
-		case Event.META_MASK:
-		  menuText = "Meta";
-		  break;
-		case Event.CTRL_MASK:
-		default:
-		  menuText = "Ctrl";
-		  break;
-	  }
+      switch(MENU_MASK)
+      {
+        case Event.ALT_MASK:
+          menuText = "Alt";
+          break;
+        case Event.META_MASK:
+          menuText = "Meta";
+          break;
+        case Event.CTRL_MASK:
+        default:
+          menuText = "Ctrl";
+          break;
+      }
               JOptionPane.showMessageDialog(this,
               "\nNAVIGATING AROUND THE TREE:" +
               "\nUse the arrow (cursor) keys to navigate around the tree." +
@@ -2300,15 +2317,15 @@ lang.getString("HELP_LICENSE") + "\n\n           http://www.gnu.org/copyleft/gpl
       this.add(Box.createGlue());
 
       downBut.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {
-                  		    setValue(val-1);
-                  		    if(al!=null)
-                  		      al.actionPerformed(null);
-                  		    }});
+                              setValue(val-1);
+                              if(al!=null)
+                                al.actionPerformed(null);
+                              }});
       upBut.addActionListener(new ActionListener(){public void actionPerformed(ActionEvent e) {
-                  		    setValue(val+1);
-                  		    if(al!=null)
-                  		      al.actionPerformed(null);
-                  		    }});
+                              setValue(val+1);
+                              if(al!=null)
+                                al.actionPerformed(null);
+                              }});
       setValue(myVal);
     }
 
@@ -2386,15 +2403,15 @@ lang.getString("HELP_LICENSE") + "\n\n           http://www.gnu.org/copyleft/gpl
      ae.setHandled(true);
      toBrowserForPrintAction();
   }
-	public void handleAbout(ApplicationEvent ae) {
+    public void handleAbout(ApplicationEvent ae) {
         ae.setHandled(true);
         about();
-	}
-	public void handlePreferences(ApplicationEvent ae) {
+    }
+    public void handlePreferences(ApplicationEvent ae) {
         preferences();
         ae.setHandled(true);
-	}
-	public void handleQuit(ApplicationEvent ae) {
+    }
+    public void handleQuit(ApplicationEvent ae) {
         //
         //	You MUST setHandled(false) if you want to delay or cancel the quit.
         //	This is important for cross-platform development -- have a universal quit
@@ -2404,6 +2421,6 @@ lang.getString("HELP_LICENSE") + "\n\n           http://www.gnu.org/copyleft/gpl
         //
         ae.setHandled(false);
         quit();
-	}
+    }
 */
 }

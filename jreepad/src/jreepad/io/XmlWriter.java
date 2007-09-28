@@ -21,13 +21,20 @@ package jreepad.io;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.io.Writer;
 import java.util.Enumeration;
+
+import javax.xml.transform.TransformerConfigurationException;
+import javax.xml.transform.sax.SAXTransformerFactory;
+import javax.xml.transform.sax.TransformerHandler;
+import javax.xml.transform.stream.StreamResult;
 
 import jreepad.JreepadArticle;
 import jreepad.JreepadNode;
 import jreepad.JreepadTreeModel;
+
+import org.xml.sax.ContentHandler;
+import org.xml.sax.SAXException;
+import org.xml.sax.helpers.AttributesImpl;
 
 /**
  * Writes the Jreepad tree as XML.
@@ -37,81 +44,81 @@ import jreepad.JreepadTreeModel;
 public class XmlWriter
     implements JreepadWriter
 {
-    private String encoding;
+    public static final String NODE_TAG = "node";
+    public static final String TITLE_ATTRIBUTE = "title";
+    public static final String TYPE_ATTRIBUTE = "type";
+    public static final String NSU = "";
+    private AttributesImpl attributes = new AttributesImpl();
 
-    public XmlWriter(String encoding)
+    public XmlWriter()
     {
-        this.encoding = encoding;
+        attributes.addAttribute("", "", TITLE_ATTRIBUTE, "", "");
+        attributes.addAttribute("", "", TYPE_ATTRIBUTE, "", "");
     }
 
     public void write(OutputStream out, JreepadTreeModel document)
         throws IOException
     {
-        Writer writer = new OutputStreamWriter(out, encoding);
-        writer.write("<?xml version=\"1.0\" encoding=\"" + encoding + "\"?>\n");
-        writeNode(writer, document.getRootNode(), 0, true);
-        writer.close();
+        StreamResult result = new StreamResult(out);
+        SAXTransformerFactory factory = (SAXTransformerFactory)SAXTransformerFactory.newInstance();
+        TransformerHandler handler;
+        try
+        {
+             handler = factory.newTransformerHandler();
+        }
+        catch (TransformerConfigurationException e)
+        {
+            throw new IOException(e);
+        }
+        handler.setResult(result);
+
+        try
+        {
+            write(handler, document);
+        }
+        catch (SAXException e)
+        {
+            throw new IOException(e);
+        }
     }
 
-    private void writeNode(Writer writer, JreepadNode node, int depth, boolean includeChildren) throws IOException
+    private void write(ContentHandler handler, JreepadTreeModel document) throws SAXException
     {
-        writer.write("<node ");
-        if (depth == 0)
-            writer.write("xmlns=\"http://jreepad.sourceforge.net/formats\" ");
-        writer.write("title=\"" + xmlEscapeChars(node.getTitle()) + "\" type=\"");
+        handler.startDocument();
+        writeNode(handler, document.getRootNode());
+        handler.endDocument();
+    }
 
+    private void writeNode(ContentHandler handler, JreepadNode node) throws SAXException
+    {
+        String type;
         switch (node.getArticle().getArticleMode())
         {
         case JreepadArticle.ARTICLEMODE_HTML:
-            writer.write("text/html");
+            type = "text/html";
             break;
         case JreepadArticle.ARTICLEMODE_TEXTILEHTML:
-            writer.write("text/textile");
+            type = "text/textile";
             break;
         case JreepadArticle.ARTICLEMODE_CSV:
-            writer.write("text/csv");
+            type = "text/csv";
             break;
         default:
-            writer.write("text/plain");
+            type = "text/plain";
             break;
         }
-        writer.write("\">");
-        writer.write(xmlEscapeChars(node.getContent()));
-        if (includeChildren)
-        {
-            Enumeration kids = node.children();
-            while (kids.hasMoreElements())
-                writeNode(writer, (JreepadNode)kids.nextElement(), depth + 1,
-                    includeChildren);
-        }
-        writer.write("</node>\n");
-    }
 
-    public String getEncoding()
-    {
-        return encoding;
-    }
+        attributes.setValue(0, node.getTitle());
+        attributes.setValue(1, type);
 
-    public void setEncoding(String encoding)
-    {
-        this.encoding = encoding;
-    }
+        handler.startElement(NSU, NODE_TAG, NODE_TAG, attributes);
+        String content = node.getContent();
+        handler.characters(content.toCharArray(), 0, content.length());
 
-    private static String xmlEscapeChars(String in)
-    {
-        char[] c = in.toCharArray();
-        StringBuffer ret = new StringBuffer();
-        for (int i = 0; i < c.length; i++)
-            if (c[i] == '<')
-                ret.append("&lt;");
-            else if (c[i] == '>')
-                ret.append("&gt;");
-            else if (c[i] == '&')
-                ret.append("&amp;");
-            else if (c[i] == '"')
-                ret.append("&quot;");
-            else
-                ret.append(c[i]);
-        return ret.toString();
+        Enumeration kids = node.children();
+        while (kids.hasMoreElements())
+            writeNode(handler, (JreepadNode)kids.nextElement());
+
+        handler.endElement(NSU, NODE_TAG, NODE_TAG);
     }
 }
