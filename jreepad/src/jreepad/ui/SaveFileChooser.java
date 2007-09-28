@@ -23,6 +23,11 @@ public class SaveFileChooser extends JFileChooser
      */
     public static final FileFilter TREEPAD_FILE_FILTER = new ExtensionFileFilter("Treepad file (*.hjt)", "hjt");
 
+    /**
+     * File filter for Jreepad Encrypted XML .jree files.
+     */
+    public static final FileFilter JREEPAD_ENCRYPTED_FILE_FILTER = new ExtensionFileFilter("Jreepad Encrypted XML file (*.jree) [EXPERIMENTAL]", "jree");
+
     private int defaultFileFormat;
 
     public SaveFileChooser(int defaultFileFormat)
@@ -30,12 +35,16 @@ public class SaveFileChooser extends JFileChooser
         this.defaultFileFormat = defaultFileFormat;
 
         addChoosableFileFilter(JREEPAD_FILE_FILTER);
+        addChoosableFileFilter(JREEPAD_ENCRYPTED_FILE_FILTER);
         addChoosableFileFilter(TREEPAD_FILE_FILTER);
 
         switch (defaultFileFormat)
         {
         case JreepadPrefs.FILETYPE_HJT:
             setFileFilter(TREEPAD_FILE_FILTER);
+            break;
+        case JreepadPrefs.FILETYPE_XML_ENCRYPTED:
+            setFileFilter(JREEPAD_ENCRYPTED_FILE_FILTER);
             break;
         case JreepadPrefs.FILETYPE_XML: // default
         default:
@@ -54,6 +63,8 @@ public class SaveFileChooser extends JFileChooser
             return JreepadPrefs.FILETYPE_XML;
         if (getFileFilter() == SaveFileChooser.TREEPAD_FILE_FILTER)
             return JreepadPrefs.FILETYPE_HJT;
+        if (getFileFilter() == SaveFileChooser.JREEPAD_ENCRYPTED_FILE_FILTER)
+            return JreepadPrefs.FILETYPE_XML_ENCRYPTED;
         return defaultFileFormat;
     }
 

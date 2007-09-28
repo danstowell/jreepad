@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import jreepad.JreepadTreeModel;
+import jreepad.ui.PasswordDialog;
 
 /**
  * Reads a Jreepad file automatically detecting file type (XML or HJT).
@@ -36,10 +37,13 @@ public class AutoDetectReader
 
     TreepadReader treepadReader;
 
+    EncryptedReader encryptedReader;
+
     public AutoDetectReader(String encoding, boolean autoDetectHtmlArticles)
     {
         xmlReader = new XmlReader();
         treepadReader = new TreepadReader(encoding, autoDetectHtmlArticles);
+        encryptedReader = new EncryptedReader(this); // Use this reader as the underlying reader
     }
 
     public JreepadTreeModel read(InputStream in)
@@ -51,7 +55,7 @@ public class AutoDetectReader
         String currentLine = ((RewindableInputStream)in).readLine();
         in.reset(); // reset stream, so the specific readers read from the beginning
 
-        if (currentLine.startsWith("<?xml version=\"1.0\""))
+        if (currentLine.startsWith("<?xml"))
         {
             // Try and find out what character encoding to use
             int encPos = currentLine.indexOf("encoding=");
@@ -79,6 +83,14 @@ public class AutoDetectReader
         {
             treepadReader.setFileFormat(1);
             return treepadReader.read(in);
+        }
+        else if (currentLine.startsWith(EncryptedWriter.HEADER))
+        {
+            String password = PasswordDialog.showPasswordDialog("This file is encrypted. Please enter password:");
+            if (password == null)
+                throw new IOException("Could not decrypt. No password entered.");
+            encryptedReader.setPassword(password);
+            return encryptedReader.read(in);
         }
         else
         {

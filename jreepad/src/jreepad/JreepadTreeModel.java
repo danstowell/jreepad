@@ -8,7 +8,7 @@ import javax.swing.tree.TreePath;
 /**
  * The tree model.
  *
- * @version $Id: JreepadTreeModel.java,v 1.6 2007-04-03 12:41:30 pewu Exp $
+ * @version $Id: JreepadTreeModel.java,v 1.7 2007-09-28 14:29:22 pewu Exp $
  */
 public class JreepadTreeModel extends DefaultTreeModel
 {
@@ -26,6 +26,11 @@ public class JreepadTreeModel extends DefaultTreeModel
      * Encoding of the loaded file.
      */
     private String encoding = null;
+
+    /**
+     * Password for saving encrypted files.
+     */
+    private String password = null;
 
     /**
      * True if the current document content has been saved.
@@ -113,5 +118,15 @@ public class JreepadTreeModel extends DefaultTreeModel
     public void setEncoding(String encoding)
     {
         this.encoding = encoding;
+    }
+
+    public String getPassword()
+    {
+        return password;
+    }
+
+    public void setPassword(String password)
+    {
+        this.password = password;
     }
 }
