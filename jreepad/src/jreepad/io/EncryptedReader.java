@@ -35,7 +35,7 @@ import jreepad.JreepadTreeModel;
  * Reads encrypted input into Jreepad. This reader is constructed with
  * any other reader as the actual file format which will used when decrypted.
  *
- * @version $Id: EncryptedReader.java,v 1.1 2007-09-28 14:29:22 pewu Exp $
+ * @version $Id: EncryptedReader.java,v 1.2 2008-09-21 10:29:22 danstowell Exp $
  */
 public class EncryptedReader implements JreepadReader
 {
@@ -74,7 +74,7 @@ public class EncryptedReader implements JreepadReader
         }
         catch (IOException e)
         {
-            throw new IOException("Password incorrect or read problem occurred", e);
+            throw new IOException("Password incorrect or read problem occurred");
         }
         document.setFileType(JreepadPrefs.FILETYPE_XML_ENCRYPTED);
         document.setPassword(password);

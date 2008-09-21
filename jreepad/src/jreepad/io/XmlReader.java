@@ -59,11 +59,11 @@ public class XmlReader implements JreepadReader
         }
         catch (ParserConfigurationException e)
         {
-            throw new IOException(e);
+            throw new IOException(e.toString());
         }
         catch (SAXException e)
         {
-            throw new IOException(e);
+            throw new IOException(e.toString());
         }
 
         JreepadTreeModel document = new JreepadTreeModel(handler.getRoot());

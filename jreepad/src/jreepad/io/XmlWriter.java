@@ -68,7 +68,7 @@ public class XmlWriter
         }
         catch (TransformerConfigurationException e)
         {
-            throw new IOException(e);
+            throw new IOException(e.toString());
         }
         handler.setResult(result);
 
@@ -78,7 +78,7 @@ public class XmlWriter
         }
         catch (SAXException e)
         {
-            throw new IOException(e);
+            throw new IOException(e.toString());
         }
     }
 
