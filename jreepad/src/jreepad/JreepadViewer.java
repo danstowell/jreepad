@@ -91,9 +91,10 @@ import edu.stanford.ejalbert.BrowserLauncher;
 import edu.stanford.ejalbert.exception.BrowserLaunchingExecutionException;
 import edu.stanford.ejalbert.exception.BrowserLaunchingInitializingException;
 import edu.stanford.ejalbert.exception.UnsupportedOperatingSystemException;
+import jreepad.ui.FontHelper;
 
-public class JreepadViewer extends JFrame // implements ApplicationListener
-{
+public class JreepadViewer
+    extends JFrame { // implements ApplicationListener
   // Jreepad version, to appear in "about" box etc
   public static String version = "1.6 rc1";
 
@@ -235,6 +236,10 @@ public class JreepadViewer extends JFrame // implements ApplicationListener
 */
 
     fileChooser = new JFileChooser();
+    fileChooser.addChoosableFileFilter(SaveFileChooser.JREEPAD_FILE_FILTER);
+    fileChooser.addChoosableFileFilter(SaveFileChooser.JREEPAD_ENCRYPTED_FILE_FILTER);
+    fileChooser.addChoosableFileFilter(SaveFileChooser.TREEPAD_FILE_FILTER);
+
     content = getContentPane();
 
     document = new JreepadTreeModel();
@@ -755,6 +760,46 @@ public class JreepadViewer extends JFrame // implements ApplicationListener
     articleViewModeCsvMenuItem.setAccelerator(KeyStroke.getKeyStroke('9', MENU_MASK));
     articleViewModeTextileMenuItem.setAccelerator(KeyStroke.getKeyStroke('0', MENU_MASK));
     viewToolbarMenu.setMnemonic('o');
+
+    viewMenu.add(new JSeparator());
+    // section to adjust fonts
+    JMenu articleFontMenu = new JMenu(lang.getString("MENUITEM_FONT_ARTICLE"));
+    viewMenu.add(articleFontMenu);
+    JMenuItem increaseFontMenuItem = new JMenuItem(lang.getString(
+        "MENUITEM_FONT_INCREASE"));
+    increaseFontMenuItem.addActionListener(new ActionListener() {
+      public void actionPerformed(ActionEvent e) {
+        theJreepad.changeFont(FontHelper.FONT_DIR_UP, JreepadView.CHANGE_ARTICLE_FONT);
+      }
+    });
+    JMenuItem decreaseFontMenuItem = new JMenuItem(lang.getString(
+        "MENUITEM_FONT_DECREASE"));
+    decreaseFontMenuItem.addActionListener(new ActionListener() {
+      public void actionPerformed(ActionEvent e) {
+        theJreepad.changeFont(FontHelper.FONT_DIR_DOWN, JreepadView.CHANGE_ARTICLE_FONT);
+      }
+    });
+    articleFontMenu.add(increaseFontMenuItem);
+    articleFontMenu.add(decreaseFontMenuItem);
+
+    JMenu treeFontMenu = new JMenu(lang.getString("MENUITEM_FONT_TREE"));
+    viewMenu.add(treeFontMenu);
+    JMenuItem increaseTreeFontMenuItem = new JMenuItem(lang.getString(
+        "MENUITEM_FONT_INCREASE"));
+    increaseTreeFontMenuItem.addActionListener(new ActionListener() {
+      public void actionPerformed(ActionEvent e) {
+        theJreepad.changeFont(FontHelper.FONT_DIR_UP, JreepadView.CHANGE_TREE_FONT);
+      }
+    });
+    JMenuItem decreaseTreeFontMenuItem = new JMenuItem(lang.getString(
+        "MENUITEM_FONT_DECREASE"));
+    decreaseTreeFontMenuItem.addActionListener(new ActionListener() {
+      public void actionPerformed(ActionEvent e) {
+        theJreepad.changeFont(FontHelper.FONT_DIR_DOWN, JreepadView.CHANGE_TREE_FONT);
+      }
+    });
+    treeFontMenu.add(increaseTreeFontMenuItem);
+    treeFontMenu.add(decreaseTreeFontMenuItem);
 
     return viewMenu;
   }

@@ -29,6 +29,7 @@ import javax.swing.table.TableModel;
 import jreepad.JreepadArticle;
 import jreepad.JreepadPrefs;
 import jreepad.JreepadView;
+import jreepad.ui.FontHelper;
 
 /**
  * The table view pane.
@@ -48,6 +49,10 @@ public class TableViewer extends AbstractArticleView
 		table.setShowVerticalLines(true);
 		table.setShowHorizontalLines(true);
 	}
+
+        public void updateFont(int direction) {
+          FontHelper.updateFont(getComponent(), direction);
+        }
 
 	public JComponent getComponent()
 	{

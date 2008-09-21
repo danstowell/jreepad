@@ -27,7 +27,7 @@ import jreepad.JreepadArticle;
  * Interface for an article viewer or editor.
  *
  * @author <a href="mailto:pewu@losthive.org">Przemek Więch</a>
- * @version $Id: ArticleView.java,v 1.2 2007-02-07 21:10:43 pewu Exp $
+ * @version $Id: ArticleView.java,v 1.3 2008-09-21 11:06:49 danstowell Exp $
  */
 public interface ArticleView
 {
@@ -72,4 +72,6 @@ public interface ArticleView
 	 * Unlock editor - edits will now be allowed.
 	 */
 	public void unlockEdits();
+
+        public void updateFont(int direction);
 }

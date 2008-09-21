@@ -39,6 +39,7 @@ import javax.swing.event.TreeModelListener;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
 import javax.swing.tree.TreePath;
+import javax.swing.text.DefaultEditorKit;
 
 import jreepad.editor.ArticleView;
 import jreepad.editor.ContentChangeListener;
@@ -50,9 +51,14 @@ import edu.stanford.ejalbert.BrowserLauncher;
 import edu.stanford.ejalbert.exception.BrowserLaunchingExecutionException;
 import edu.stanford.ejalbert.exception.BrowserLaunchingInitializingException;
 import edu.stanford.ejalbert.exception.UnsupportedOperatingSystemException;
+import jreepad.ui.FontHelper;
+import jreepad.editor.EditPopupHandler;
+import jreepad.editor.TextTransferHandler;
+import javax.swing.text.JTextComponent;
+import java.util.ResourceBundle;
 
-public class JreepadView extends Box
-{
+public class JreepadView
+    extends Box {
 
   private static JreepadPrefs prefs;
   private JreepadNode root;
@@ -70,6 +76,9 @@ public class JreepadView extends Box
   private HtmlViewer editorPaneHtml;
   private TextileViewer editorPaneTextile;
   private TableViewer editorPaneCsv;
+
+  private EditPopupHandler editPopupHandler = new EditPopupHandler();
+  private TextTransferHandler textTransferHandler = new TextTransferHandler();
 
   private ArticleView currentArticleView;
 
@@ -158,10 +167,13 @@ public class JreepadView extends Box
 
     treeView.setViewportView(tree);
 
-
+    initEditPopupHandler();
     editorPanePlainText = new PlainTextEditor(root.getArticle());
+    initTextComponent((JTextComponent)editorPanePlainText.getComponent());
     editorPaneHtml = new HtmlViewer(root.getArticle());
+    initTextComponent((JTextComponent)editorPaneHtml.getComponent());
     editorPaneTextile = new TextileViewer(root.getArticle());
+    initTextComponent((JTextComponent)editorPaneTextile.getComponent());
     editorPaneCsv = new TableViewer(root.getArticle());
     currentArticleView = editorPanePlainText;
 
@@ -210,8 +222,40 @@ public class JreepadView extends Box
     tree.setSelectionRow(0);
   }
 
-  public void setViewMode(int mode)
-  {
+  private void initEditPopupHandler() {
+    ResourceBundle lang = ResourceBundle.getBundle(
+      "jreepad.lang.JreepadStrings");
+    editPopupHandler.addActionItem(new DefaultEditorKit.CopyAction(),
+                                   lang.getString("MENUITEM_COPY"),
+                                   EditPopupHandler.ITEM_COPY);
+    editPopupHandler.addActionItem(new DefaultEditorKit.CutAction(),
+                                   lang.getString("MENUITEM_CUT"),
+                                   EditPopupHandler.ITEM_CUT);
+    editPopupHandler.addActionItem(new DefaultEditorKit.PasteAction(),
+                                   lang.getString("MENUITEM_PASTE"),
+                                   EditPopupHandler.ITEM_PASTE);
+  }
+
+  private void initTextComponent(JTextComponent textComp) {
+    textComp.addMouseListener(editPopupHandler);
+    textComp.setTransferHandler(textTransferHandler);
+    textComp.setDragEnabled(true);
+  }
+
+  public static final int CHANGE_ARTICLE_FONT = 1;
+  public static final int CHANGE_TREE_FONT = 2;
+
+  public void changeFont(int direction,
+                         int comptype) {
+    if (comptype == CHANGE_ARTICLE_FONT && currentArticleView != null) {
+      currentArticleView.updateFont(direction);
+    }
+    if (comptype == CHANGE_TREE_FONT && tree != null) {
+      FontHelper.updateFont(tree, direction);
+    }
+  }
+
+  public void setViewMode(int mode) {
 //      System.out.println("-------------------------------------------------------------");
 //      System.out.println("editorPane size: " + editorPane.getSize());
 //      System.out.println("articleView size: " + articleView.getSize());

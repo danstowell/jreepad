@@ -19,24 +19,28 @@ The full license can be read online here:
 
 package jreepad.editor;
 
+import java.awt.Font;
 import javax.swing.JComponent;
 import javax.swing.JEditorPane;
+import javax.swing.text.MutableAttributeSet;
+import javax.swing.text.StyleConstants;
+import javax.swing.text.StyledDocument;
+import javax.swing.text.StyledEditorKit;
 
 import jreepad.JreepadArticle;
-
+import jreepad.ui.FontHelper;
 /**
  * Abstract article view in the form of a JEditorPane.
  *
  * @author <a href="mailto:pewu@losthive.org">Przemek Więch</a>
- * @version $Id: EditorPaneView.java,v 1.1 2007-02-07 21:10:43 pewu Exp $
+ * @version $Id: EditorPaneView.java,v 1.2 2008-09-21 11:06:50 danstowell Exp $
  */
-public abstract class EditorPaneView extends AbstractArticleView
-{
+public abstract class EditorPaneView
+    extends AbstractArticleView {
 
 	protected JEditorPane editorPane;
 
-	public EditorPaneView(String type, JreepadArticle article)
-	{
+	public EditorPaneView(String type, JreepadArticle article) {
 		super(article);
 		editorPane = new JEditorPane(type, "");
 		reloadArticle();
@@ -47,8 +51,25 @@ public abstract class EditorPaneView extends AbstractArticleView
 		editorPane.setText(article.getContent());
 	}
 
-	public JComponent getComponent()
-	{
+  public void updateFont(int direction) {
+    StyledEditorKit kit = (StyledEditorKit) editorPane.getEditorKit();
+    MutableAttributeSet set = kit.getInputAttributes();
+    StyledDocument doc = (StyledDocument) editorPane.getDocument();
+    Font currentFont = doc.getFont(set);
+    int currentFontSize = currentFont.getSize();
+    switch (direction) {
+      case FontHelper.FONT_DIR_UP:
+        currentFontSize++;
+        break;
+      case FontHelper.FONT_DIR_DOWN:
+        currentFontSize--;
+        break;
+    }
+    StyleConstants.setFontSize(set, currentFontSize);
+    doc.setCharacterAttributes(0, doc.getLength(), set, false);
+  }
+
+  public JComponent getComponent() {
 		return editorPane;
 	}
 
