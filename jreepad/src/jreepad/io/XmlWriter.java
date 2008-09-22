@@ -27,6 +27,7 @@ import javax.xml.transform.TransformerConfigurationException;
 import javax.xml.transform.sax.SAXTransformerFactory;
 import javax.xml.transform.sax.TransformerHandler;
 import javax.xml.transform.stream.StreamResult;
+import javax.xml.transform.OutputKeys;
 
 import jreepad.JreepadArticle;
 import jreepad.JreepadNode;
@@ -65,6 +66,7 @@ public class XmlWriter
         try
         {
              handler = factory.newTransformerHandler();
+             handler.getTransformer().setOutputProperty(OutputKeys.INDENT,"yes");
         }
         catch (TransformerConfigurationException e)
         {
