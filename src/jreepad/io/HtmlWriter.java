@@ -74,6 +74,7 @@ public class HtmlWriter
     {
         Writer writer = new OutputStreamWriter(out, encoding);
         write(writer, document.getRootNode());
+        out.flush();
         out.close();
     }
 

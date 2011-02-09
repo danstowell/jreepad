@@ -50,6 +50,7 @@ public class TreepadWriter
         Writer writer = new OutputStreamWriter(out, encoding);
         writer.write("<Treepad version 2.7>\n");
         writeNode(writer, document.getRootNode(), 0);
+        writer.flush();
         writer.close();
     }
 
