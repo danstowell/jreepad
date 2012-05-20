@@ -1,0 +1,133 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+"http://www.w3.org/TR/html4/loose.dtd">
+<html><!-- InstanceBegin template="/Templates/jreepad-may04.dwt" codeOutsideHTMLIsLocked="false" -->
+<head>
+<!-- InstanceBeginEditable name="doctitle" -->
+<title>Source code for Jreepad - Java Treepad Viewer/Editor</title>
+<!-- InstanceEndEditable --><meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<style type="text/css">
+body {
+	font-face: Verdana, Helvetica, sans-serif;
+	margin-left: 0px;
+	margin-top: 0px;
+	margin-right: 0px;
+	margin-bottom: 0px;
+}
+h1 { text-align: center; }
+
+.downloaddiv {margin: 10px 30px; border: 5px solid rgb(102,0,102); background: rgb(255,204,255); padding: 10px 30px; }
+
+.menutable {margin: 0px; border: none;}
+.menutable tr th {}
+.menutable tr td {background: white;}
+.menutable tr th a { text-decoration: none; color: black; }
+.menutable tr td a { text-decoration: none; }
+.menutable tr th a:hover { text-decoration: none; color: black; }
+.menutable tr td a:hover { text-decoration: underline; }
+
+.lefthandpanel { background: rgb(204,204,204); order-right: 1px solid black; text-align: center; }
+.mainpanel {padding: 5px;}
+
+.inlinecode {font-family: monospace; }
+
+.bigbox {margin: 10px; padding: 10px; border: 1px solid black;}
+
+</style>
+<!-- InstanceBeginEditable name="head" --><!-- InstanceEndEditable -->
+</head>
+<body marginwidth="0" marginheight="0" topmargin="0" leftmargin="0">
+<table width="100%"  border="0" cellspacing="0" cellpadding="0">
+  <tr valign="top">
+    <td width="100" align="center" class="lefthandpanel">
+     <center>
+	  <a href="/"><img src="../images/jreepadlogo-01-logosize.gif" alt="Jreepad" width="119" height="176" hspace="2" vspace="1" border="0"></a>
+      <table width="100%" border="0" cellpadding="3" cellspacing="2" class="menutable" summary="Navigation menu">
+          <tr>
+            <th scope="col"><a href="/">Jreepad</a></th>
+          </tr>
+          <tr>
+            <td><a href="http://sourceforge.net/project/showfiles.php?group_id=96093&package_id=102632">Downloads</a></td>
+          </tr>
+          <tr>
+            <td><a href="../developers">Source code</a> </td>
+          </tr>
+          <tr>
+            <td><a href="http://sourceforge.net/projects/jreepad/">Project page</a></td>
+          </tr>
+          <tr>
+            <td><a href="/screenshots/">Screenshots</a> </td>
+          </tr>
+          <tr>
+            <td><a href="../logo">Icon/logo</a></td>
+          </tr>
+      </table>      
+      <p>&nbsp;</p>
+      <a href="http://sourceforge.net"><img src="/images/sflogo-rotated.png" width="62" height="210" border="0" alt="SourceForge.net Logo" /></a>
+	  </center>	</td>
+	<td width="85%" class="mainpanel"><!-- InstanceBeginEditable name="Content" -->
+	<h1>Developing/compiling Jreepad</h1>
+	<div class="bigbox">
+	<h2>Source code</h2>
+	<p>Two ways to get the source code:</p>
+	<ul>
+	  <li>The <a href="http://sourceforge.net/project/showfiles.php?group_id=96093&package_id=102632">Jreepad downloads page</a> links to a source code file for each release (Jreepad-*-source.tar.gz). </li>
+	  <li>If you like CVS, use the <a href="http://jreepad.cvs.sourceforge.net/jreepad/jreepad/">Jreepad CVS tree</a> hosted by Sourceforge. </li>
+	  </ul>
+	<p>&nbsp;</p>
+	</div>
+	<div class="bigbox">
+	<h2>Compiling Jreepad</h2>
+	<p>Compiling Jreepad is easy - from the command-line I just type</p>
+	<blockquote>
+	  <p class="inlinecode">javac jreepad/JreepadViewer.java  </p>
+	  </blockquote>
+	<p>Actually, that's not quite true, because now I use <a href="http://ant.apache.org/">Apache Ant</a> which is an excellent tool to help you compile projects and do various other things, nice and automatically. So instead, I type </p>
+	<blockquote>
+	  <p class="inlinecode">ant</p>
+	  </blockquote>
+	<p>and that does everything for me (including moving files around, packaging up the source code for release, etc). Make sure you're in the directory which contains Jreepad's &quot;build.xml&quot; file when you do this. (Mac developers will also need the 'extra treat' mentioned below.)</p>
+	<h2>Non-Mac developers</h2>
+	<p>If you're compiling Jreepad on a non-Mac platform, you'll need to download a small JAR file from Apple and put it into your classpath:</p>
+	<blockquote>
+	  <p><a href="http://developer.apple.com/samplecode/AppleJavaExtensions/">AppleJavaExtensions</a> (ZIP file, 3.6kB)</p>
+	  </blockquote>
+	<p>Why?</p>
+	<p><strong>Jreepad is platform-neutral</strong>, but if you're on Mac OSX then a couple of little adjustments occur to make Jreepad fit more neatly into the OSX environment. If you're <em>not</em> on Mac then these adjustments <strong>simply don't happen</strong> - they <em><strong>should not cause any problems</strong></em>. </p>
+	<p>Jreepad users don't even need to have the &quot;AppleJavaExtensions&quot; in their systems, since if the extensions aren't found (by reflection) then Jreepad won't attempt to use them. But you do need those packages to exist if you're <em>compiling</em>.</p>
+	<h2>An extra treat for Mac developers</h2>
+	<p>The <a href="http://jarbundler.sourceforge.net/">Jarbundler ant task</a> makes it easy to create
+	  the Mac OSX application package, directly from the ant build. It even incorporates the icon files
+	  and document associations (if you're using v1.6.1 or later).</p>
+	<p>Thanks to Will Gilbert for maintaining and improving that tool.</p>
+	</div>
+	<div class="bigbox">
+	<h2>Contributors</h2>
+	<p>Jreepad was originated by Dan Stowell, and is maintained by:</p>
+	
+	<ul>
+	  <li>Dan Stowell</li>
+	  <li>Przemek Wiech</li>
+	</ul>
+	
+	<p>Thanks to the following other people (in no particular order) for contributing or suggesting code improvements:</p>
+	<ul>
+	  <li>Jason Lawrence Justice</li>
+	  <li>Coen Schalkwijk </li>
+	  <li>Mikhail Bakhtin</li>
+	  <li>&quot;ExileInParadise&quot;</li>
+	  <li>Phani Kandula </li>
+	  <li>Sander Oom</li>
+	  <li>Plus various anonymous people posting comments to the project page... </li>
+	</ul>
+	</div>
+	<!-- InstanceEndEditable -->
+      <hr noshade>
+      <p align="center">The Jreepad project was started by <a href="http://www.mcld.co.uk/">Dan Stowell</a>.</p>
+      <p align="center">This page last updated 
+        <!-- #BeginDate format:Sw1 -->12 February, 2006<!-- #EndDate -->. </p>
+      <hr noshade>
+      <p align="center"><a href="http://sourceforge.net"><img src="http://sourceforge.net/sflogo.php?group_id=96093&amp;type=5" width="210" height="62" border="0" alt="SourceForge.net Logo" /></a></p></td>
+  </tr>
+</table>
+</body>
+<!-- InstanceEnd --></html>
