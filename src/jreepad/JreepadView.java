@@ -19,6 +19,7 @@ The full license can be read online here:
 
 package jreepad;
 
+import java.awt.event.ActionEvent;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.io.BufferedReader;
@@ -38,6 +39,7 @@ import javax.swing.event.TreeModelEvent;
 import javax.swing.event.TreeModelListener;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
+import javax.swing.text.TextAction;
 import javax.swing.tree.TreePath;
 import javax.swing.text.DefaultEditorKit;
 
@@ -234,6 +236,14 @@ public class JreepadView
     editPopupHandler.addActionItem(new DefaultEditorKit.PasteAction(),
                                    lang.getString("MENUITEM_PASTE"),
                                    EditPopupHandler.ITEM_PASTE);
+	editPopupHandler.addActionItem(new TextAction(DefaultEditorKit.selectAllAction){
+												public void actionPerformed(ActionEvent e){
+													JTextComponent textComponent = (JTextComponent) editorPanePlainText.getComponent();
+													textComponent.selectAll();
+												}
+									},
+                                   lang.getString("MENUITEM_SELECTALL"),
+                                   EditPopupHandler.ITEM_SELECTALL);
   }
 
   private void initTextComponent(JTextComponent textComp) {
