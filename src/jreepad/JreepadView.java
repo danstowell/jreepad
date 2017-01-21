@@ -236,12 +236,12 @@ public class JreepadView
     editPopupHandler.addActionItem(new DefaultEditorKit.PasteAction(),
                                    lang.getString("MENUITEM_PASTE"),
                                    EditPopupHandler.ITEM_PASTE);
-	editPopupHandler.addActionItem(new TextAction(DefaultEditorKit.selectAllAction){
-												public void actionPerformed(ActionEvent e){
-													JTextComponent textComponent = (JTextComponent) editorPanePlainText.getComponent();
-													textComponent.selectAll();
-												}
-									},
+    editPopupHandler.addActionItem(new TextAction(DefaultEditorKit.selectAllAction){
+											    public void actionPerformed(ActionEvent e){
+												JTextComponent textComponent = (JTextComponent) editorPanePlainText.getComponent();
+												textComponent.selectAll();
+											    }
+									            },
                                    lang.getString("MENUITEM_SELECTALL"),
                                    EditPopupHandler.ITEM_SELECTALL);
   }
