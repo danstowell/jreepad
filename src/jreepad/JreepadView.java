@@ -19,6 +19,7 @@ The full license can be read online here:
 
 package jreepad;
 
+import java.awt.event.ActionEvent;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.io.BufferedReader;
@@ -38,6 +39,7 @@ import javax.swing.event.TreeModelEvent;
 import javax.swing.event.TreeModelListener;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
+import javax.swing.text.TextAction;
 import javax.swing.tree.TreePath;
 import javax.swing.text.DefaultEditorKit;
 
@@ -68,9 +70,9 @@ public class JreepadView
   private JScrollPane treeView;
   private JScrollPane articlePane;
 
-  // editorPane is supposed to represent the pane currently displayed/edited - so it's the one
-  //    to refer to when you're doing GUI-related stuff
-  // It will be equal to one of the content-type-specific panes. Need to set the content of BOTH of these...
+// editorPane is supposed to represent the pane currently displayed/edited - so it's the one
+//  to refer to when you're doing GUI-related stuff
+// It will be equal to one of the content-type-specific panes. Need to set the content of BOTH of these...
 //  private JEditorPane editorPane;
   private PlainTextEditor editorPanePlainText;
   private HtmlViewer editorPaneHtml;
@@ -83,14 +85,14 @@ public class JreepadView
   private ArticleView currentArticleView;
 
 
-  // Undo features
-//  protected UndoManager undoMgr;
+// Undo features
+// protected UndoManager undoMgr;
 
   private JSplitPane splitPane;
 
   private JreepadSearcher searcher;
 
-  // Things concerned with the "undo" function
+ // Things concerned with the "undo" function
  //OLD ATTEMPT private JreepadNode oldRootForUndo, oldCurrentNodeForUndo;
  //OLD ATTEMPT private TreePath[] oldExpandedPaths;
  //OLD ATTEMPT private TreePath oldSelectedPath;
@@ -223,8 +225,7 @@ public class JreepadView
   }
 
   private void initEditPopupHandler() {
-    ResourceBundle lang = ResourceBundle.getBundle(
-      "jreepad.lang.JreepadStrings");
+    ResourceBundle lang = ResourceBundle.getBundle("jreepad.lang.JreepadStrings");
     editPopupHandler.addActionItem(new DefaultEditorKit.CopyAction(),
                                    lang.getString("MENUITEM_COPY"),
                                    EditPopupHandler.ITEM_COPY);
@@ -234,6 +235,14 @@ public class JreepadView
     editPopupHandler.addActionItem(new DefaultEditorKit.PasteAction(),
                                    lang.getString("MENUITEM_PASTE"),
                                    EditPopupHandler.ITEM_PASTE);
+    editPopupHandler.addActionItem(new TextAction(DefaultEditorKit.selectAllAction){
+									public void actionPerformed(ActionEvent e){
+										JTextComponent textComponent = (JTextComponent) editorPanePlainText.getComponent();
+										textComponent.selectAll();
+									}
+						                      },
+                                   lang.getString("MENUITEM_SELECTALL"),
+                                   EditPopupHandler.ITEM_SELECTALL);
   }
 
   private void initTextComponent(JTextComponent textComp) {
@@ -304,7 +313,7 @@ public class JreepadView
       this.remove(articlePane);
       this.add(treeView);
       treeView.setSize(getSize());
-    getPrefs().viewWhich = JreepadPrefs.VIEW_TREE;
+      getPrefs().viewWhich = JreepadPrefs.VIEW_TREE;
   }
   private void setViewArticleOnly()
   {
@@ -313,7 +322,7 @@ public class JreepadView
      ensureCorrectArticleRenderMode();
      this.add(articlePane);
      articlePane.setSize(getSize());
-    getPrefs().viewWhich = JreepadPrefs.VIEW_ARTICLE;
+     getPrefs().viewWhich = JreepadPrefs.VIEW_ARTICLE;
   }
 
   private void setCurrentNode(JreepadNode n)
@@ -507,7 +516,7 @@ public class JreepadView
     TreePath nodePath = tree.getSelectionPath();
     treeModel.nodesWereInserted(currentNode, new int[]{currentNode.getIndex(ret)});
 
-//    tree.setSelectionPath(nodePath.pathByAddingChild(ret));
+//  tree.setSelectionPath(nodePath.pathByAddingChild(ret));
     tree.scrollPathToVisible(nodePath.pathByAddingChild(ret));
     tree.startEditingAtPath(nodePath.pathByAddingChild(ret));
     return ret;
@@ -610,7 +619,7 @@ public class JreepadView
   public void addChild(JreepadNode newKid)
   {
     //DEL storeForUndo();
-	getCurrentNode().add(newKid);
+    getCurrentNode().add(newKid);
     treeModel.reload(currentNode);
     tree.expandPath(tree.getSelectionPath());
   }
