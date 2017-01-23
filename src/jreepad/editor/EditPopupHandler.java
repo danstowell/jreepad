@@ -25,7 +25,7 @@ public class EditPopupHandler
     public static final String ITEM_CUT = "cut";
     public static final String ITEM_COPY = "copy";
     public static final String ITEM_PASTE = "paste";
-	public static final String ITEM_SELECTALL = "selectall";
+    public static final String ITEM_SELECTALL = "selectall";
     private final Map itemMap = new HashMap();
 
     public EditPopupHandler() {
@@ -33,7 +33,7 @@ public class EditPopupHandler
         itemMap.put(ITEM_COPY, null);
         itemMap.put(ITEM_CUT, null);
         itemMap.put(ITEM_PASTE, null);
-		itemMap.put(ITEM_SELECTALL, null);
+	itemMap.put(ITEM_SELECTALL, null);
     }
 
     public void addActionItem(TextAction action,
@@ -70,8 +70,8 @@ public class EditPopupHandler
         if (item != null) {
             item.setEnabled(hasTransferableText && isEditable);
         }
-		item = (JMenuItem) itemMap.get(ITEM_SELECTALL);
-		if (item != null) {
+	item = (JMenuItem) itemMap.get(ITEM_SELECTALL);
+	if (item != null) {
             item.setEnabled(true && isEditable);
         }
     }
