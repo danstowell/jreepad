@@ -33,7 +33,7 @@ public class EditPopupHandler
         itemMap.put(ITEM_COPY, null);
         itemMap.put(ITEM_CUT, null);
         itemMap.put(ITEM_PASTE, null);
-	itemMap.put(ITEM_SELECTALL, null);
+        itemMap.put(ITEM_SELECTALL, null);
     }
 
     public void addActionItem(TextAction action,
