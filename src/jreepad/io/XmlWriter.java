@@ -67,6 +67,7 @@ public class XmlWriter
         {
              handler = factory.newTransformerHandler();
              handler.getTransformer().setOutputProperty(OutputKeys.INDENT,"yes");
+             handler.getTransformer().setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "0");
         }
         catch (TransformerConfigurationException e)
         {
