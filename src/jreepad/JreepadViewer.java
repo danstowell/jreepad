@@ -96,7 +96,7 @@ import jreepad.ui.FontHelper;
 public class JreepadViewer
     extends JFrame { // implements ApplicationListener
   // Jreepad version, to appear in "about" box etc
-  public static String version = "1.6 rc1";
+  public static String version = "1.7 rc1";
 
   private static Vector theApps = new Vector(1,1);
   private Box toolBar, toolBarIconic;
