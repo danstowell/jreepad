@@ -1453,10 +1453,12 @@ public class JreepadViewer
           writer.write(fos, document);
           fos.close();
 
+	  /* not working in JDK 9+, see JEP 272 for alleged replacement http://openjdk.java.net/jeps/272
           if(MAC_OS_X){
             com.apple.eio.FileManager.setFileTypeAndCreator(saveLocation.toString(),
                     appleAppCode, appleAppCode);
           }
+	  */
 
           // When calling "Save As..." remember the _new_ file settings
           document.setSaveLocation(saveLocation);
@@ -2082,13 +2084,13 @@ lang.getString("HELP_LICENSE") + "\n\n           http://www.gnu.org/copyleft/gpl
 //  }
 
 
-
 // Generic registration with the Mac OS X application menu.  Checks the platform, then attempts
   // to register with the Apple EAWT.
   // This method calls OSXAdapter.registerMacOSXApplication() and OSXAdapter.enablePrefs().
   // See OSXAdapter.java for the signatures of these methods.
   public void macOSXRegistration() {
     if (MAC_OS_X) {
+      /* not working in JDK 9+, see JEP 272 for alleged replacement http://openjdk.java.net/jeps/272
       try {
         Class osxAdapter = Class.forName("jreepad.OSXAdapter");
 
@@ -2098,17 +2100,6 @@ lang.getString("HELP_LICENSE") + "\n\n           http://www.gnu.org/copyleft/gpl
           Object[] args = { this };
           registerMethod.invoke(osxAdapter, args);
         }
-/*
-        // This is slightly gross.  to reflectively access methods with boolean args,
-        // use "boolean.class", then pass a Boolean object in as the arg, which apparently
-        // gets converted for you by the reflection system.
-        defArgs[0] = boolean.class;
-        Method prefsEnableMethod =  osxAdapter.getDeclaredMethod("enablePrefs", defArgs);
-        if (prefsEnableMethod != null) {
-          Object args[] = {Boolean.TRUE};
-          prefsEnableMethod.invoke(osxAdapter, args);
-        }
-*/
       } catch (NoClassDefFoundError e) {
         // This will be thrown first if the OSXAdapter is loaded on a system without the EAWT
         // because OSXAdapter extends ApplicationAdapter in its def
@@ -2121,6 +2112,7 @@ lang.getString("HELP_LICENSE") + "\n\n           http://www.gnu.org/copyleft/gpl
         System.err.println("Exception while loading the OSXAdapter:");
         e.printStackTrace();
       }
+      */
     }
   }
 
